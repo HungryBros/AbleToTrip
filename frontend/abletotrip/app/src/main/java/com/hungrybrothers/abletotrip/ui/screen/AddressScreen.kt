@@ -23,4 +23,3 @@ fun PreviewAddressScreen() {
     // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
     AddressScreen(navController = rememberNavController())
 }
-
