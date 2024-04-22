@@ -2,6 +2,7 @@ package com.hungrybrothers.abletotrip.ui.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,11 +15,11 @@ import androidx.navigation.compose.rememberNavController
 fun LoginScreen(navController: NavController) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "Please log in to continue.")
-        Text(text = "Please log in to continue.")
-        Text(text = "Please log in to continue.")
-        Text(text = "Please log in to continue.")
-        Text(text = "Please log in to continue.")
-
+    }
+    Button(onClick = {
+        navController.navigateUp()
+    }) {
+        Text("Go back")
     }
 }
 

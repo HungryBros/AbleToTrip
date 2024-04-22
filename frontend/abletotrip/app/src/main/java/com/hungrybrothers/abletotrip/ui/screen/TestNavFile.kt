@@ -14,23 +14,28 @@ import androidx.navigation.compose.rememberNavController
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun TestNavFile(navController: NavController) {
     Column(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(text = "Welcome to the Home Screen!")
+        Text(text = "테스트!!!!!!!!!!!!!!!!!!!!!")
         Button(onClick = {
             navController.navigate(NavRoute.LOGIN.routeName)
         }) {
-            Text("Go to Login")
+            Text("로그인 하러가 임마")
+        }
+        Button(onClick = {
+            navController.navigateUp()
+        }) {
+            Text("뒤로가기 버튼임")
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewHomeScreen() {
+fun PreviewTestNavFile() {
     // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    HomeScreen(navController = rememberNavController())
+    TestNavFile(navController = rememberNavController())
 }

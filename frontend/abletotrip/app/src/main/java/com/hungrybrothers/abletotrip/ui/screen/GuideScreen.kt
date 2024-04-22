@@ -2,7 +2,6 @@ package com.hungrybrothers.abletotrip.ui.screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,7 +12,6 @@ import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun GuideScreen(navController: NavController) {
-
     Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "Guidance and tips for your trip.")
     }
