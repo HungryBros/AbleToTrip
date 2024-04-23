@@ -40,6 +40,9 @@
                     android:scheme="kakao3e467ddd4cc251a02dcd9b746240a5d6" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="yourapi" />
     </application>
 
 </manifest>
