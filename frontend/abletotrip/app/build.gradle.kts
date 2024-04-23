@@ -50,7 +50,7 @@ android {
 }
 
 dependencies {
-    val nav_version = "2.7.7"
+//    val nav_version = "2.7.7"
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -77,5 +77,14 @@ dependencies {
     implementation("com.kakao.sdk:v2-cert:2.20.1") // 카카오톡 인증 서비스 API 모듈
 
     // 네비게이션
-    implementation("androidx.navigation:navigation-compose:$nav_version")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // 구글 지도 라이브러리
+    implementation("com.google.maps.android:maps-compose:2.7.2")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+//    implementation("com.google.maps.android:maps-compose-utils:4.3.5")
+//    implementation("com.google.maps.android:maps-compose-widgets:4.3.5")
+
+    //    아이콘아티팩트 추가
+    implementation("androidx.compose.material:material-icons-extended")
 }
