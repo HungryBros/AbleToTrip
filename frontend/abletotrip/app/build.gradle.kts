@@ -51,6 +51,8 @@ android {
 
 dependencies {
 //    val nav_version = "2.7.7"
+    val ktor_version = "2.3.10"
+    val lifecycle_version = "2.7.0"
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -85,6 +87,22 @@ dependencies {
 //    implementation("com.google.maps.android:maps-compose-utils:4.3.5")
 //    implementation("com.google.maps.android:maps-compose-widgets:4.3.5")
 
-    //    아이콘아티팩트 추가
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-xml:$ktor_version")
+
+    // LiveData
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
+    // Lifecycles only (without ViewModel or LiveData)
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
+    // Lifecycle utilities for Compose
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version")
+    // Saved state module for ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
+    implementation("androidx.compose.runtime:runtime:1.6.6")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.6")
+    implementation("androidx.compose.runtime:runtime-rxjava2:1.6.6")
 }
