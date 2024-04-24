@@ -17,7 +17,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 object KtorClient {
-    private const val BASE_URL = "베이스유알엘주소/"
+    private const val BASE_URL = "http://127.0.0.1:8000/"
     var authToken: String? = null
 
     val client =
