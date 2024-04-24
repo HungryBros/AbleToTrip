@@ -42,7 +42,8 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
             } else if (user != null) {
                 Log.i(TAG, "카카오 사용자 정보 요청 성공")
                 val email = user.kakaoAccount?.email ?: ""
-                sendTokenAndEmailToServer(token.accessToken, email)
+                Log.d(TAG, "이메일 $email")
+                sendTokenAndEmailToServer(email)
             }
         }
     }
@@ -87,17 +88,17 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun sendTokenAndEmailToServer(
-        accessToken: String,
+//        accessToken: String,
         email: String,
     ) {
         viewModelScope.launch {
             try {
                 val response =
-                    KtorClient.client.post("가짜/") {
+                    KtorClient.client.post("member/signup/") {
                         contentType(ContentType.Application.Json)
                         setBody(
                             mapOf(
-                                "accessToken" to accessToken,
+//                                "accessToken" to accessToken,
                                 "email" to email,
                             ),
                         )

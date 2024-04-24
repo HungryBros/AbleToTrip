@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    kotlin("plugin.serialization") version "1.9.23"
 }
 
 android {
@@ -95,6 +96,7 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-xml:$ktor_version")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // LiveData
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
