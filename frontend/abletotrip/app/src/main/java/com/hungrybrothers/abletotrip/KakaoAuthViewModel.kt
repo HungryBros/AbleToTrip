@@ -3,6 +3,9 @@ package com.hungrybrothers.abletotrip
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
@@ -14,6 +17,13 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private val context = application.applicationContext
+    private val _loggedIn = MutableLiveData<Boolean>()
+    val loggedIn: LiveData<Boolean> = _loggedIn
+
+    // 로그인 상태를 변경하는 메서드
+    fun setLoggedIn(loggedIn: Boolean) {
+        _loggedIn.value = loggedIn
+    }
 
     fun handleKakaoLogin() {
         // 로그인 조합 예제
@@ -25,6 +35,8 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
                 Log.e(TAG, "카카오계정으로 로그인 실패", error)
             } else if (token != null) {
                 Log.i(TAG, "카카오계정으로 로그인 성공 ${token.accessToken}")
+                KtorClient.authToken = "${token.accessToken}"
+                setLoggedIn(true)
             }
         }
 
@@ -44,6 +56,8 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
                     UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
                 } else if (token != null) {
                     Log.i(TAG, "카카오톡으로 로그인 성공 ${token.accessToken}")
+                    KtorClient.authToken = "${token.accessToken}"
+                    setLoggedIn(true)
                 }
             }
         } else {

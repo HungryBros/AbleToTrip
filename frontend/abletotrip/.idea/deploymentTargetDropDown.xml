@@ -2,20 +2,24 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="PreviewHomeScreen">
-        <State />
-      </entry>
-      <entry key="PreviewLoginScreen">
-        <State />
-      </entry>
       <entry key="PreviewTestNavFile">
         <State />
       </entry>
-      <entry key="PreviewTotalRouteScreen">
-        <State />
-      </entry>
       <entry key="app">
-        <State />
+        <State>
+          <runningDeviceTargetSelectedWithDropDown>
+            <Target>
+              <type value="RUNNING_DEVICE_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="C:\Users\user\.android\avd\Pixel_5_API_30.avd" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </runningDeviceTargetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-04-23T12:43:01.814651700Z" />
+        </State>
       </entry>
     </value>
   </component>
