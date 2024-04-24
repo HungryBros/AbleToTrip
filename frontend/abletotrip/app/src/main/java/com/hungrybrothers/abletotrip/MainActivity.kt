@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 import com.hungrybrothers.abletotrip.ui.navigation.Navigation
 import com.hungrybrothers.abletotrip.ui.theme.AbletotripTheme
 import com.kakao.sdk.common.util.Utility
@@ -22,7 +23,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    Navigation()
+                    val navController = rememberNavController()
+                    Navigation(navController)
+//                    Navigation()
+
                     val keyHash = Utility.getKeyHash(this)
                     // 로그캣에서 확인 가능
                     Log.d("KeyHash", "KeyHash: $keyHash")
