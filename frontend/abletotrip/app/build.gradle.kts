@@ -86,6 +86,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
 //    implementation("com.google.maps.android:maps-compose-utils:4.3.5")
 //    implementation("com.google.maps.android:maps-compose-widgets:4.3.5")
+    //    아이콘아티팩트 추가
+    implementation("androidx.compose.material:material-icons-extended")
 
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
