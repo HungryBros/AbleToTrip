@@ -9,8 +9,6 @@ WORKDIR /app
 # 소스 코드 추가
 COPY . /app
 
-# .env 파일 복사
-COPY .env /app/.env
 
 # 필요한 패키지 설치
 RUN pip install --no-cache-dir -r requirements.txt
