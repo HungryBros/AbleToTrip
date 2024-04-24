@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
@@ -13,6 +12,5 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data['email'],
-            address=validated_data.get('address')  # 주소 정보 저장
         )
         return user
