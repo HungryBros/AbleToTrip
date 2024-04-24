@@ -35,7 +35,7 @@ def post_address(request):
         
 
 @api_view(['POST'])
-def user_login(request):
+def signin(request):
     if request.method == 'POST':
         email = request.data.get('email')
         access_token = request.data.get('access_token')

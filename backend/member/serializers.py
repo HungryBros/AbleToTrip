@@ -8,12 +8,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'address']  # 주소 필드 추가
+        fields = ['email', 'address']  # 주소 필드 추가
 
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data['email'],
-            password=validated_data['password'],
             address=validated_data.get('address')  # 주소 정보 저장
         )
         return user
