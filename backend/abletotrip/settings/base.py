@@ -20,6 +20,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'member',
     'attraction',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'rest_framework',
 ]
 
@@ -81,6 +83,8 @@ DATABASES = {
         'PORT': DB_PORT,       # 기본 PostgreSQL 포트
     }
 }
+
+AUTH_USER_MODEL = 'member.User'
 
 
 # Password validation
