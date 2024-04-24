@@ -5,11 +5,20 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
 import com.kakao.sdk.common.model.ClientErrorCause
 import com.kakao.sdk.user.UserApiClient
+import com.kakao.sdk.user.model.User
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.utils.EmptyContent.contentType
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import kotlinx.coroutines.launch
 
 class KakaoAuthViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
@@ -25,6 +34,20 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
         _loggedIn.value = loggedIn
     }
 
+    // 카카오 사용자 정보 요청 함수
+    fun fetchKakaoUserInfo(token: OAuthToken) {
+        UserApiClient.instance.me { user: User?, error: Throwable? ->
+            if (error != null) {
+                Log.e(TAG, "카카오 사용자 정보 요청 실패", error)
+            } else if (user != null) {
+                Log.i(TAG, "카카오 사용자 정보 요청 성공")
+                val email = user.kakaoAccount?.email ?: ""
+                Log.d(TAG, "이메일 $email")
+                sendTokenAndEmailToServer(email)
+            }
+        }
+    }
+
     fun handleKakaoLogin() {
         // 로그인 조합 예제
 
@@ -37,6 +60,7 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
                 Log.i(TAG, "카카오계정으로 로그인 성공 ${token.accessToken}")
                 KtorClient.authToken = "${token.accessToken}"
                 setLoggedIn(true)
+                fetchKakaoUserInfo(token = token)
             }
         }
 
@@ -56,12 +80,37 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
                     UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
                 } else if (token != null) {
                     Log.i(TAG, "카카오톡으로 로그인 성공 ${token.accessToken}")
-                    KtorClient.authToken = "${token.accessToken}"
-                    setLoggedIn(true)
                 }
             }
         } else {
             UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
+        }
+    }
+
+    private fun sendTokenAndEmailToServer(
+//        accessToken: String,
+        email: String,
+    ) {
+        viewModelScope.launch {
+            try {
+                val response =
+                    KtorClient.client.post("member/signup/") {
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            mapOf(
+//                                "accessToken" to accessToken,
+                                "email" to email,
+                            ),
+                        )
+                    }
+                if (response.status == HttpStatusCode.OK) {
+                    Log.d(TAG, "서버로 토큰과 이메일 전송 성공")
+                } else {
+                    Log.e(TAG, "서버로 토큰과 이메일 전송 실패: 상태 코드 ${response.status}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "서버로 토큰과 이메일 전송 중 오류 발생: ${e.message}")
+            }
         }
     }
 }
