@@ -14,8 +14,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['k10a607.p.ssafy.io', 'www.k10a607.p.ssafy.io', '127.0.0.1']
-
+ALLOWED_HOSTS = ["k10a607.p.ssafy.io", "www.k10a607.p.ssafy.io", "127.0.0.1"]
 
 
 # Application definition
@@ -113,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'Asia/Seoul'
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -125,11 +124,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = '/app/static/'
+STATIC_URL = "/static/"
+STATIC_ROOT = "/app/static/"
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/app/media/'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = "/app/media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
