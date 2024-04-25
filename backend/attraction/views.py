@@ -1,6 +1,7 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from .models import Attraction
 from .serializers import AttractionSerializer
 import os
@@ -9,12 +10,18 @@ import os
 # Create your views here.
 @api_view(["GET"])
 def attraction(request):
-    return Response({"response": "attraction"})
+    if request.method == 'GET':
+        attractions = Attraction.objects.all()
+        serializer = AttractionSerializer(attractions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
-def attraction_specific(request):
-    return Response({"response": "attraction_specific"})
+def attraction_specific(request, category):
+    if request.method == 'GET':
+        # attractions = Attraction.objects.filter(attraction=request.
+        serializer = AttractionSerializer(attractions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
