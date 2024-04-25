@@ -14,7 +14,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['k10a607.p.ssafy.io', 'www.k10a607.p.ssafy.io']
+ALLOWED_HOSTS = ['k10a607.p.ssafy.io', 'www.k10a607.p.ssafy.io', '127.0.0.1']
 
 
 
