@@ -164,8 +164,7 @@ def navigation(request):
 
         # 지하철 구간의 polyline을 얻기 위해
         # 지하철 구간만 추출
-        for i in range(1, step_length // 2):
-            subway_idx = (i + 2) - 1
+        for subway_idx in range(1, step_length, 2):
             subway_polyline_list.append(
                 step_list[subway_idx]
                 .get("polyline")
