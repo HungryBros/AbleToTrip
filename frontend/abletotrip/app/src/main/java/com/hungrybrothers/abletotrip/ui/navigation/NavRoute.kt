@@ -1,6 +1,7 @@
 package com.hungrybrothers.abletotrip.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -17,6 +18,7 @@ import com.hungrybrothers.abletotrip.ui.screen.SearchScreen
 import com.hungrybrothers.abletotrip.ui.screen.SplashScreen
 import com.hungrybrothers.abletotrip.ui.screen.TestNavFile
 import com.hungrybrothers.abletotrip.ui.screen.TotalRouteScreen
+import com.hungrybrothers.abletotrip.ui.viewmodel.AutoCompleteViewModel
 
 // 네비게이션 라우트 이넘(값을 가지는 이넘) -> 라우트액션에서 사용하기위해서
 // 라우트 네임이 키임
@@ -45,7 +47,8 @@ fun Navigation(navController: NavHostController) {
 fun NavGraphBuilder.auth(navController: NavController) {
     navigation(startDestination = NavRoute.LOGIN.routeName, route = "AUTHGRAPH") {
         composable(NavRoute.LOGIN.routeName) { LoginScreen(navController) }
-        composable(NavRoute.ADDRESS.routeName) { AddressScreen(navController) }
+        composable(NavRoute.ADDRESS.routeName) { val autocompleteViewModel = viewModel<AutoCompleteViewModel>()
+            AddressScreen(navController, autocompleteViewModel) }
     }
 }
 

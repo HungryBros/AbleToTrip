@@ -7,7 +7,7 @@
 
     <application
         android:allowBackup="true"
-        android:name=".KakaoApplication"
+        android:name=".MyAppApplication"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -37,7 +37,7 @@
 
                 <!-- Redirect URI: "kakao${NATIVE_APP_KEY}://oauth" -->
                 <data android:host="oauth"
-                    android:scheme="kakao14d175f0a7d8e81e92488ae6e5d9bdc8" />
+                    android:scheme="kakao3e467ddd4cc251a02dcd9b746240a5d6" />
             </intent-filter>
         </activity>
         <meta-data

@@ -52,7 +52,8 @@ android {
 }
 
 dependencies {
-//    val nav_version = "2.7.7"
+    implementation(libs.core.ktx)
+    //    val nav_version = "2.7.7"
     val ktor_version = "2.3.10"
     val lifecycle_version = "2.7.0"
 
@@ -113,6 +114,8 @@ dependencies {
     // 구글 autocomplete
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.23"))
     implementation("com.google.android.libraries.places:places:3.3.0")
+    // 레이아웃, 그리기, 입력등 기기와 상호작용할때 필요한 compose UI의 기본적인 구성요소
+    implementation("androidx.compose.ui:ui:1.6.6")
 }
 
 secrets {

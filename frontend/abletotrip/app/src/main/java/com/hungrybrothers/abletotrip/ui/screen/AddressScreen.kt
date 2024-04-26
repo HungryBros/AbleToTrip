@@ -1,10 +1,6 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
-import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,17 +9,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,28 +22,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.hungrybrothers.abletotrip.R
+import com.hungrybrothers.abletotrip.ui.components.AutocompleteTextField
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
+import com.hungrybrothers.abletotrip.ui.components.PlacesList
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
-import com.hungrybrothers.abletotrip.ui.network.KtorClient.client
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
-import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
-import com.hungrybrothers.abletotrip.ui.theme.CustomWhiteSmoke
-import io.ktor.client.request.get
+import com.hungrybrothers.abletotrip.ui.viewmodel.AutoCompleteViewModel
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.coroutines.CoroutineScope
@@ -100,7 +81,10 @@ suspend fun postAddress(address: String) {
 }
 
 @Composable
-fun AddressScreen(navController: NavController) {
+fun AddressScreen(
+    navController: NavController,
+    autocompleteViewModel: AutoCompleteViewModel,
+) {
     var addressInput by remember { mutableStateOf(TextFieldValue()) }
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -121,7 +105,8 @@ fun AddressScreen(navController: NavController) {
             ) {
                 Text(text = "원활한 사용을 위해 집 주소를 등록해 주세요")
                 Spacer(Modifier.height(16.dp))
-                SearchBar()
+                AutocompleteTextField(autocompleteViewModel)
+                PlacesList(places = autocompleteViewModel.places.value ?: emptyList())
             }
             Spacer(Modifier.weight(1f)) // 나머지 공간을 차지하도록 Spacer 설정
             CompleteButton(addressInput.text) {
@@ -167,50 +152,36 @@ fun CompleteButton(
     }
 }
 
-class YourFragment : Fragment() {
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View? {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                SearchBar()
-            }
-        }
-    }
-}
+// @Composable
+// fun SearchBar(modifier: Modifier = Modifier) {
+//    var addressInput by remember { mutableStateOf(TextFieldValue()) }
+//    TextField(
+//        value = addressInput,
+//        onValueChange = { newValue -> addressInput = newValue },
+//        leadingIcon = {
+//            Icon(
+//                imageVector = Icons.Default.Search,
+//                contentDescription = null,
+//            )
+//        },
+//        colors =
+//            TextFieldDefaults.colors(
+//                unfocusedContainerColor = CustomWhite,
+//                focusedContainerColor = CustomWhiteSmoke,
+//            ),
+//        placeholder = {
+//            Text(stringResource(id = R.string.find_address))
+//        },
+//        modifier =
+//            modifier
+//                .fillMaxWidth()
+//                .heightIn(min = 56.dp),
+//    )
+// }
 
-@Composable
-fun SearchBar(modifier: Modifier = Modifier) {
-    var addressInput by remember { mutableStateOf(TextFieldValue()) }
-    TextField(
-        value = addressInput,
-        onValueChange = { newValue -> addressInput = newValue },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-            )
-        },
-        colors =
-            TextFieldDefaults.colors(
-                unfocusedContainerColor = CustomWhite,
-                focusedContainerColor = CustomWhiteSmoke,
-            ),
-        placeholder = {
-            Text(stringResource(id = R.string.find_address))
-        },
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .heightIn(min = 56.dp),
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAddressScreen() {
-    // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    AddressScreen(navController = rememberNavController())
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewAddressScreen() {
+//    // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
+//    AddressScreen(navController = rememberNavController())
+//}
