@@ -20,6 +20,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.google.maps.android.compose.GoogleMap
@@ -822,9 +823,16 @@ fun TotalRouteGoogleMap(modifier: Modifier) {
     val decodedpolyline = parseCoordinates(jsonData)
     val mystartpoint = LatLng(37.501286, 127.0396029)
     val myendpoint = LatLng(37.579617, 126.977041)
+
+    val multicameraState =
+        LatLngBounds.Builder()
+            .include(mystartpoint)
+            .include(myendpoint)
+            .build()
+
     val cameraPositionState =
         rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(myendpoint, 12f)
+            position = CameraPosition.fromLatLngZoom(multicameraState.center, 11f)
         }
 
     GoogleMap(
