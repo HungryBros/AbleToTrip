@@ -1,6 +1,10 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
+import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,11 +32,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.hungrybrothers.abletotrip.R
@@ -157,6 +164,20 @@ fun CompleteButton(
         colors = buttonColors,
     ) {
         Text("완료", fontSize = 24.sp)
+    }
+}
+
+class YourFragment : Fragment() {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View? {
+        return ComposeView(requireContext()).apply {
+            setContent {
+                SearchBar()
+            }
+        }
     }
 }
 

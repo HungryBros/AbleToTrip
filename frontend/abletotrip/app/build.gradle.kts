@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     kotlin("plugin.serialization") version "1.9.23"
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -14,7 +15,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -39,6 +39,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -109,4 +110,15 @@ dependencies {
     implementation("androidx.compose.runtime:runtime:1.6.6")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.6")
     implementation("androidx.compose.runtime:runtime-rxjava2:1.6.6")
+    // 구글 autocomplete
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.23"))
+    implementation("com.google.android.libraries.places:places:3.3.0")
+}
+
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
+
+    ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
+    ignoreList.add("sdk.*") // Ignore all keys matching the regexp "sdk.*"
 }
