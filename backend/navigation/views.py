@@ -3,7 +3,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from decouple import config
 import requests
-from pprint import pprint
+
+# Import Models
+# from .models import Station, Elevator, Ramp, Lift, Restroom
 
 GOOGLE_MAPS_API_KEY = config("GOOGLE_MAPS_API_KEY")
 
@@ -55,6 +57,15 @@ def navigation_response_func(
     return response_value
 
 
+# 구글 지도 API의 response에서 steps를 추출하는 함수
+def get_steps_func(data):
+    routes = data.get("routes")
+    legs = routes[0].get("legs")
+    steps = legs[0].get("steps")
+
+    return steps
+
+
 @api_view(["POST"])
 def navigation(request):
     origin = request.data.get("departure")
@@ -67,9 +78,7 @@ def navigation(request):
     response_json = direction_request_func(origin, destination, mode, transit_mode)
 
     # Routes & Steps 데이터
-    routes = response_json.get("routes")
-    legs = routes[0].get("legs")
-    steps = legs[0].get("steps")
+    steps = get_steps_func(response_json)
 
     # Step, travel_mode 리스트 Init
     step_list = list()
@@ -114,9 +123,10 @@ def navigation(request):
     # 도보만 이용한 경우
     if not is_subway_exist:
 
-        ########################
-        # 도보 경로 안내하는 코드 #
-        ########################
+        """
+        도보 경로 안내하는 코드
+        작성 예정
+        """
 
         response_value = navigation_response_func(
             is_bus_exist,
@@ -129,10 +139,76 @@ def navigation(request):
 
     # 경로에 지하철과 도보가 섞인 경우
     else:
+        step_length = len(step_travel_mode_list)
 
-        ###################
-        # 경로 안내하는 코드 #
-        ###################
+        # 1) step_list의 길이가 3보다 크면 환승 구간 존재
+        # 2) step_list의 [0], [-1]번째 인덱스는 도보
+        #    그 사이는 홀수 인덱스는 지하철, 짝수 인덱스는 환승 구간
+
+        # 출발역, 호선 번호(n호선)
+        departure_station_name = (
+            step_list[1].get("transit_details").get("departure_stop").get("name")
+        )
+        departure_line_number = (
+            step_list[1].get("transit_details").get("line").get("short_name")
+        )
+        # 도착역, 호선 번호(n호선)
+        arrival_station_name = (
+            step_list[-2].get("transit_details").get("arrival_stop").get("name")
+        )
+        arrival_line_number = (
+            step_list[-2].get("transit_details").get("line").get("short_name")
+        )
+
+        subway_polyline_list = list()
+
+        # 지하철 구간의 polyline을 얻기 위해
+        # 지하철 구간만 추출
+        for subway_idx in range(1, step_length, 2):
+            subway_polyline_list.append(
+                step_list[subway_idx]
+                .get("polyline")
+                .get("points")  # 각 지하철 구간의 polyline
+            )
+
+        # 두 개의 도보 경로 새로 받아오기
+        walking_mode = "walking"
+
+        """
+        승하차 엘베 출구 찾는 코드
+        model 작성 이후 삽입 예정
+        """
+
+        # 출발지 - 승차역 엘레베이터 출구: 도보 경로
+        # departure_response_json = direction_request_func(origin, 승차엘베출구, walking_mode)
+
+        # # 도보 Steps 데이터
+        # departure_steps = get_steps_func(departure_response_json)
+
+        # # 도보의 상세 polyline 추출
+        # departure_polyline_list = list()
+        # for departure_step in departure_steps:
+        #     for detail_step in departure_step.get("steps"):
+        #         detail_polyline = detail_step.get("polyline").get("points")
+        #         departure_polyline_list.append(detail_polyline)
+
+        # 하차역 엘레베이터 출구 - 도착지: 도보 경로
+        # arrival_response_json = direction_request_func(하차엘베출구, destination, walking_mode)
+
+        # # 도보 Steps 데이터
+        # arrival_steps = get_steps_func(arrival_response_json)
+
+        # # 도보의 상세 polyline 추출
+        # arrival_polyline_list = list()
+        # for arrival_step in arrival_steps:
+        #     for detail_step in arrival_step.get("steps"):
+        #         detail_polyline = detail_step.get("polyline").get("points")
+        #         arrival_polyline_list.append(detail_polyline)
+
+        # # 전체 polyline 완성
+        # polyline_info.append(departure_polyline_list)
+        # polyline_info.append(subway_polyline_list)
+        # polyline_info.append(arrival_polyline_list)
 
         response_value = navigation_response_func(
             is_bus_exist,
