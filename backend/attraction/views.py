@@ -112,6 +112,7 @@ def attraction(request):
             'culture-famous': nearby_culture_famous,
         }
     }
+    print(data)
     return Response(data, status=status.HTTP_200_OK)
 
 
