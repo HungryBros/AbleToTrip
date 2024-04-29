@@ -34,7 +34,7 @@ def info(request):
         access_token = request.META.get('HTTP_AUTHORIZATION')
         user_info = kakao_user_info(access_token)
         if user_info:
-            email = user_info.kakao_account.email
+            email = user_info['kakao_account']['email']
             user = User.objects.get(email=email)  # 현재 로그인한 사용자
             address = request.data.get('address')  # 전송된 주소 데이터
             if user and address:
