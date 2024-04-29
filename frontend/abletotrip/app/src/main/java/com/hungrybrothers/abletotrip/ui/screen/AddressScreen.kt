@@ -5,10 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,27 +20,27 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-//suspend fun fetchUserData(): List<User> {
-//    return withContext(Dispatchers.IO) {
-//        try {
-//            Log.d("UserData", "요청보내는중...")
-//            val response = KtorClient.client.get("member/users")
-//            Log.d("UserData", "응답성공: ${response.status}")
-//
-//            if (response.status.isSuccess()) {
-//                val responseData = response.body<UserResponse>().users
-//                Log.d("UserData", "디코딩 성공: $responseData")
-//                responseData
-//            } else {
-//                Log.e("UserData", "통신실패: ${response.status}")
-//                emptyList()
-//            }
-//        } catch (e: Exception) {
-//            Log.e("UserData", "에러가 나버렸다", e)
-//            emptyList()
-//        }
-//    }
-//}
+suspend fun fetchUserData(): List<User> {
+    return withContext(Dispatchers.IO) {
+        try {
+            Log.d("UserData", "요청보내는중...")
+            val response = KtorClient.client.get("member/users")
+            Log.d("UserData", "응답성공: ${response.status}")
+
+            if (response.status.isSuccess()) {
+                val responseData = response.body<UserResponse>().users
+                Log.d("UserData", "디코딩 성공: $responseData")
+                responseData
+            } else {
+                Log.e("UserData", "통신실패: ${response.status}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("UserData", "에러가 나버렸다", e)
+            emptyList()
+        }
+    }
+}
 
 @Composable
 fun AddressScreen(navController: NavController) {
