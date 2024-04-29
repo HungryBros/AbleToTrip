@@ -7,7 +7,7 @@ urlpatterns = [
     path("", views.attraction, name="attraction"),
     # 홈 - 카테고리2 직접 선택
     path(
-        "specific/", views.attraction_specific, name="attraction_specific"
+        "by_category/", views.attraction_by_category, name="attraction_by_category"
     ),  # 특정 관광지 정보 요청
     # 홈 - 카테고리1 더보기
     path("more/", views.attraction_more, name="attraction_more"),
