@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     kotlin("plugin.serialization") version "1.9.23"
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -39,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -51,7 +53,8 @@ android {
 }
 
 dependencies {
-//    val nav_version = "2.7.7"
+    implementation(libs.core.ktx)
+    //    val nav_version = "2.7.7"
     val ktor_version = "2.3.10"
     val lifecycle_version = "2.7.0"
 
@@ -109,4 +112,17 @@ dependencies {
     implementation("androidx.compose.runtime:runtime:1.6.6")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.6")
     implementation("androidx.compose.runtime:runtime-rxjava2:1.6.6")
+    // 구글 autocomplete
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.23"))
+    implementation("com.google.android.libraries.places:places:3.3.0")
+    // 레이아웃, 그리기, 입력등 기기와 상호작용할때 필요한 compose UI의 기본적인 구성요소
+    implementation("androidx.compose.ui:ui:1.6.6")
+}
+
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
+
+    ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
+    ignoreList.add("sdk.*") // Ignore all keys matching the regexp "sdk.*"
 }
