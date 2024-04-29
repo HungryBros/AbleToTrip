@@ -41,15 +41,17 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     distance = R * c * 1000  # 거리 (단위: m)
     return distance
 
-
+import time
 # Create your views here.
 @api_view(["GET"])
 def attraction(request):
     user_latitude = float(request.META.get('HTTP_LATITUDE', 0))  # 'HTTP_LATITUDE' 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get('HTTP_LONGITUDE', 0)) # 유저 경도
-
+    start_time = time.time()
+    
     # 거리순 20개
     attractions = Attraction.objects.all()
+    print(attractions)
     nearby_attractions = []
     for attraction in attractions:
         distance = round(calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude))
@@ -58,7 +60,7 @@ def attraction(request):
             'distance': distance,
             "si": attraction.si,
             "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
+            # "attraction_image": attraction.attraction_image,
         })
     nearby_attractions = sorted(nearby_attractions, key=lambda x: x['distance'])[:20]
 
@@ -72,7 +74,7 @@ def attraction(request):
             'distance': distance,
             "si": attraction.si,
             "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
+            # "attraction_image": attraction.attraction_image,
         })
     nearby_exhibition_performance = sorted(nearby_exhibition_performance, key=lambda x: x['distance'])[:10]
 
@@ -86,7 +88,7 @@ def attraction(request):
             'distance': distance,
             "si": attraction.si,
             "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
+            # "attraction_image": attraction.attraction_image,
         })
     nearby_leisure_park = sorted(nearby_attractions, key=lambda x: x['distance'])[:10]
     
@@ -100,7 +102,7 @@ def attraction(request):
             'distance': distance,
             "si": attraction.si,
             "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
+            # "attraction_image": attraction.attraction_image,
         })
     nearby_culture_famous = sorted(nearby_attractions, key=lambda x: x['distance'])[:10]
 
@@ -113,6 +115,8 @@ def attraction(request):
         }
     }
     print(data)
+    end_time = time.time()
+    print('소요시간', end_time-start_time)
     return Response(data, status=status.HTTP_200_OK)
 
 
