@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -31,6 +33,7 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.theme.CustomTertiary
+import kotlinx.coroutines.launch
 
 @Composable
 fun TotalRouteScreen(navController: NavController) {
@@ -832,12 +835,18 @@ fun TotalRouteGoogleMap(modifier: Modifier) {
 
     val cameraPositionState =
         rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(multicameraState.center, 11f)
+            position = CameraPosition.fromLatLngZoom(multicameraState.center, 10f)
         }
+    val coroutineScope = rememberCoroutineScope()
 
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
+        onMapLoaded = {
+            coroutineScope.launch {
+                cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
+            }
+        },
     ) {
         Polyline(
             points = decodedpolyline,
