@@ -21,7 +21,7 @@ class MyAppApplication : Application() {
 
     private fun initializeKakaoSDK() {
         // "3e467ddd4cc251a02dcd9b746240a5d6"는 예시 키입니다. 실제 사용 시 안전한 저장 방법을 고려하세요.
-        KakaoSdk.init(this, "3e467ddd4cc251a02dcd9b746240a5d6")
+        KakaoSdk.init(this, "14d175f0a7d8e81e92488ae6e5d9bdc8")
         Log.d("카카오", "Kakao SDK initialized successfully")
     }
 

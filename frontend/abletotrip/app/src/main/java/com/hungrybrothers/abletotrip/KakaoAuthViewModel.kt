@@ -94,7 +94,7 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             try {
                 val response =
-                    KtorClient.client.post("member/signup/") {
+                    KtorClient.client.post("member/signin/") {
                         contentType(ContentType.Application.Json)
                         setBody(
                             mapOf(

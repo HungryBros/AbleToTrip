@@ -12,18 +12,21 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.hungrybrothers.abletotrip.BuildConfig
 
-class AutoCompleteViewModel(application: Application) : AndroidViewModel(application) {
+class PlaceCompleteViewModel(application: Application) : AndroidViewModel(application) {
     private val _places = MutableLiveData<List<Place>>()
     val places: LiveData<List<Place>> = _places
-    private var placesClient: PlacesClient = Places.createClient(application)
+    private val placesClient: PlacesClient by lazy {
+        Places.createClient(application)
+    }
 
     fun queryPlaces(query: String) {
+        Log.d("Place: newQueryString", "newQuery $query")
         val apiKey = BuildConfig.PLACES_API_KEY
         if (apiKey.isEmpty() || apiKey == "DEFAULT_API_KEY") {
-            Log.e("장소", "No api key")
+            Log.e("Place: Error ", "No api key")
             return
         }
-        Log.d("test성공", "테스트 성공")
+        Log.d("Place: api", "api로드 성공")
 
         val token = AutocompleteSessionToken.newInstance()
         val request =
@@ -43,10 +46,12 @@ class AutoCompleteViewModel(application: Application) : AndroidViewModel(applica
                         .setAddress(prediction.getSecondaryText(null).toString())
                         .build()
                 }
-            Log.d("Places API", "Predictions received: $placesList")
+            Log.d("Places: PlaceModelView : placeList", "Predictions received: $placesList")
+            Log.d("Places: PlaceModelView : placeList갯수", "Predictions received갯수: ${placesList.count()}")
             _places.postValue(placesList)
         }.addOnFailureListener { exception ->
-            Log.e("Places API", "Error fetching predictions", exception)
+            Log.e("Places: PlaceModelView Error", "Error fetching predictions", exception)
         }
+        Log.d("Places : _places값 ", "업데이트된 값 ${_places.value}")
     }
 }
