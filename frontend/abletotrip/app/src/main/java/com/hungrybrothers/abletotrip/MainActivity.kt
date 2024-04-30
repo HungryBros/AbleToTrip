@@ -27,6 +27,9 @@ class MainActivity : ComponentActivity() {
                     Navigation(navController)
 //                    Navigation()
 
+                    val oauthHost = getString(R.string.kakao_oauth_host)
+                    Log.d("MyApp", "OAuth Host from Resource: $oauthHost")
+
                     val keyHash = Utility.getKeyHash(this)
                     // 로그캣에서 확인 가능
                     Log.d("KeyHash", "KeyHash: $keyHash")
