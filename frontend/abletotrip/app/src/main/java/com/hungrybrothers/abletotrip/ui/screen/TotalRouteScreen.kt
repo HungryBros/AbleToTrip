@@ -30,6 +30,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.theme.CustomTertiary
@@ -41,6 +42,7 @@ fun TotalRouteScreen(navController: NavController) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
+            HeaderBar(navController = navController, true)
             TotalRouteGoogleMap(modifier = Modifier.weight(7f))
             TotalRouteBottomBox(modifier = Modifier.weight(1f))
         }
@@ -56,11 +58,11 @@ fun TotalRouteBottomBox(modifier: Modifier) {
     ) {
         Box(
             modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .background(CustomTertiary)
-                    .clickable(onClick = { /* TODO: Define what happens when the box is clicked */ }),
+            Modifier
+                .weight(1f)
+                .fillMaxSize()
+                .background(CustomTertiary)
+                .clickable(onClick = { /* TODO: Define what happens when the box is clicked */ }),
             contentAlignment = Alignment.Center,
             content = {
                 Text(
@@ -76,11 +78,11 @@ fun TotalRouteBottomBox(modifier: Modifier) {
         )
         Box(
             modifier =
-                Modifier
-                    .weight(2f)
-                    .fillMaxSize()
-                    .background(CustomPrimary)
-                    .clickable(onClick = { /* TODO: Define what happens when the box is clicked */ }),
+            Modifier
+                .weight(2f)
+                .fillMaxSize()
+                .background(CustomPrimary)
+                .clickable(onClick = { /* TODO: Define what happens when the box is clicked */ }),
             contentAlignment = Alignment.Center,
             content = {
                 Text(
