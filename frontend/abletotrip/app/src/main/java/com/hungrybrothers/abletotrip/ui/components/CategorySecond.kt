@@ -18,16 +18,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun CategorySecond(
-    iconBitmap: ImageBitmap,
+    icon: Painter,
     label: String,
 ) {
+    // TODO: [필수] 데이터 불러오고 나서 필터 기능 추가하기!
     var isSelected by rememberSaveable { mutableStateOf(false) }
 
     Column(
@@ -50,7 +51,7 @@ fun CategorySecond(
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                bitmap = iconBitmap,
+                painter = icon,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
             )
@@ -61,8 +62,6 @@ fun CategorySecond(
             fontSize = 12.sp,
             // TODO: [CSS] 컬러 커스텀 색깔로 수정
             color = Color.Black,
-            // TODO: [CSS] 카테고리 2 누르면 아래 폰트 색깔도 바꾸는 코드
-            // if (isSelected) Color(0xFF8AD6CB) else Color.Black
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
         )
     }

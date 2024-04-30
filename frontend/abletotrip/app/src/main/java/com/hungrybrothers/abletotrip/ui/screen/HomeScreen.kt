@@ -14,8 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -60,6 +59,12 @@ fun HomeScreen(navController: NavController) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+//                item {
+//                    CategorySecond(
+//                        icon = painterResource(id = R.drawable.ticket),
+//                        label = "영화/공연",
+//                    )
+//                }
                 val categories =
                     listOf(
                         Pair(R.drawable.ticket, "영화/공연"),
@@ -71,23 +76,13 @@ fun HomeScreen(navController: NavController) {
                         Pair(R.drawable.sunrise, "명승지"),
                     )
                 // TODO: 이렇게 불러오면 PNG 파일을 가끔 불러오지 못하는 오류 발생
-//                categories.forEach { item ->
-//                    item {
-//                        CategorySecond(
-//                            icon = Resource(id = item.first),
-//                            label = item.second,
-//                        )
-//                    }
-//                }
-
-                items(categories.size) { index ->
-                    val item = categories[index]
-                    val bitmap = ImageBitmap.imageResource(id = item.first)
-
-                    CategorySecond(
-                        iconBitmap = bitmap,
-                        label = item.second,
-                    )
+                categories.forEach { item ->
+                    item {
+                        CategorySecond(
+                            icon = painterResource(id = item.first),
+                            label = item.second,
+                        )
+                    }
                 }
             }
         }
