@@ -1,4 +1,4 @@
-from django.shortcuts import get_list_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -6,6 +6,7 @@ from .models import Attraction
 from .serializers import AttractionSerializer
 import os
 import base64
+import time
 from math import radians, sin, cos, sqrt, atan2
 from heapq import heappop, heappush
 
@@ -42,7 +43,6 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     distance = R * c * 1000  # 거리 (단위: m)
     return distance
 
-import time
 # Create your views here.
 @api_view(["GET"])
 def attraction(request):
@@ -222,3 +222,9 @@ def update_attraction_images(request):
             print(f"{attraction.attraction_name} 이미지 파일 없음")
 
     return Response({"message": "작업 완료"})
+
+@api_view(["GET"])
+def attraction_detail(request, id):
+    attraction = get_object_or_404(Attraction, pk=id)
+    serializer = AttractionSerializer(attraction)
+    return Response(serializer.data)
