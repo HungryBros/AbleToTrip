@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -19,8 +21,13 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        val kakaoOauthHost: String = properties["kakao_oauth_host"] as? String ?: "kakao_oauth_host"
-        resValue("string", "kakao_oauth_host", kakaoOauthHost)
+        val props =
+            Properties().apply {
+                file("../secrets.properties").inputStream().use {
+                    load(it)
+                }
+            }
+        resValue("string", "kakao_oauth_host", props.getProperty("kakao_oauth_host", "default_oauth_host"))
     }
 
     buildTypes {
