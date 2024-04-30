@@ -15,10 +15,4 @@ urlpatterns = [
     path("more/", views.attraction_more, name="attraction_more"),
     # 관광지 검색
     path("search/", views.attraction_search, name="attraction_search"),
-    # 이미지 저장 - admin용
-    path(
-        "update-attraction-images/",
-        views.update_attraction_images,
-        name="update_attraction_images",
-    ),
 ]

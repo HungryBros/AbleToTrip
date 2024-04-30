@@ -28,7 +28,6 @@ class Attraction(models.Model):
     is_disabled_parking = models.BooleanField(default=False)
     is_large_parking = models.BooleanField(default=False)
     is_audio_guide = models.BooleanField(default=False)
-    attraction_image = models.BinaryField(default=None, blank=True, null=True)
 
     def __str__(self):
         return self.attraction_name
