@@ -87,12 +87,12 @@ def attraction(request):
 
 @api_view(["GET"])
 def attraction_by_category(request):
-    scroll = int(request.GET.get("scroll", 0)) # 스크롤 횟수
+    scroll = int(request.GET.get("scroll", "0").rstrip("/")) # 스크롤 횟수
 
     user_latitude = float(request.META.get("HTTP_LATITUDE", 0))  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get("HTTP_LONGITUDE", 0)) # 유저 경도
 
-    categories = request.GET.get("category2", "").split("-") # 카테고리2를 케밥으로 묶기 대문에 split("-")한 리스트로 카테고리2 추출
+    categories = request.GET.get("category2", "").rstrip("/").split("-") # 카테고리2를 케밥으로 묶기 대문에 split("-")한 리스트로 카테고리2 추출
     category_list = []
 
     for category in categories:
@@ -123,12 +123,12 @@ def attraction_by_category(request):
 
 @api_view(["GET"])
 def attraction_more(request):
-    scroll = int(request.GET.get("scroll", 0)) # 스크롤 횟수
+    scroll = int(request.GET.get("scroll", "0").rstrip("/")) # 스크롤 횟수
 
     user_latitude = float(request.META.get("HTTP_LATITUDE", 0))  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get("HTTP_LONGITUDE", 0)) # 유저 경도
 
-    category1 = request.GET.get("category1", "").strip("/")
+    category1 = request.GET.get("category1", "").rstrip("/")
 
     if request.method == "GET":
         attractions = get_list_or_404(Attraction, category1=category1_map.get(category1, ""))
