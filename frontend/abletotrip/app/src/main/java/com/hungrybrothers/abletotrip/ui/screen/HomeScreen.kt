@@ -7,24 +7,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.hungrybrothers.abletotrip.R
-import com.hungrybrothers.abletotrip.ui.components.CategoryTwo
+import com.hungrybrothers.abletotrip.ui.components.CategorySecond
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
-import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -36,20 +34,24 @@ fun HomeScreen(navController: NavController) {
     // TODO: 로딩 애니메이션 넣을 때 사용할 코드(아직 사용 안 함)
     var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(key1 = true) {
-        data = fetchData()
-        isLoading = false
-    }
+    // TODO: 데이터 연결 시 주석 해제
+//    LaunchedEffect(key1 = true) {
+//        data = fetchData()
+//        isLoading = false
+//    }
 
     Column(
         modifier = Modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         HeaderBar(navController = navController, showBackButton = false)
+// TODO: 데이터 연결하면 isLoading 테스트
 //        if (isLoading) {
 //            Text("로딩 중입니다.")
 //        } else {
-        // TODO: 데이터 fetch 할 때 if 문 활성화
+//          (여기에 아래 코드를 넣어주세요, 검색창, CategorySecond는 그대로 두고)
+//        }
+
         Text(text = "검색 창 들어갈 곳")
 
         Box(
@@ -58,48 +60,37 @@ fun HomeScreen(navController: NavController) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                item {
-                    CategoryTwo(
-                        icon = painterResource(id = R.drawable.ticket),
-                        label = "영화/공연",
-                        modifier = Modifier.padding(start = 32.dp),
-                    )
-                }
-
                 val categories =
                     listOf(
+                        Pair(R.drawable.ticket, "영화/공연"),
                         Pair(R.drawable.palette, "전시/기념관"),
                         Pair(R.drawable.leisure, "레저"),
                         Pair(R.drawable.stadium, "스포츠"),
                         Pair(R.drawable.park, "공원"),
                         Pair(R.drawable.framed_picture, "관광지"),
+                        Pair(R.drawable.sunrise, "명승지"),
                     )
+                // TODO: 이렇게 불러오면 PNG 파일을 가끔 불러오지 못하는 오류 발생
+//                categories.forEach { item ->
+//                    item {
+//                        CategorySecond(
+//                            icon = Resource(id = item.first),
+//                            label = item.second,
+//                        )
+//                    }
+//                }
 
-                categories.forEach { item ->
-                    item {
-                        CategoryTwo(
-                            icon = painterResource(id = item.first),
-                            label = item.second,
-                        )
-                    }
-                }
+                items(categories.size) { index ->
+                    val item = categories[index]
+                    val bitmap = ImageBitmap.imageResource(id = item.first)
 
-                item {
-                    CategoryTwo(
-                        icon = painterResource(id = R.drawable.sunrise),
-                        label = "명승지",
-                        modifier = Modifier.padding(end = 32.dp),
+                    CategorySecond(
+                        iconBitmap = bitmap,
+                        label = item.second,
                     )
                 }
             }
         }
-
-        Button(onClick = {
-            navController.navigate(NavRoute.LOGIN.routeName)
-        }) {
-            Text("로그인하러 가기")
-        }
-//        }
     }
 }
 
