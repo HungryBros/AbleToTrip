@@ -87,7 +87,7 @@ def attraction(request):
 
 @api_view(["GET"])
 def attraction_by_category(request):
-    scroll = int(request.GET.get("scroll", 0)) # 스크롤 횟수
+    scroll = int(request.GET.get("scroll", 0).strip("/")) # 스크롤 횟수
 
     user_latitude = float(request.META.get("HTTP_LATITUDE", 0))  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get("HTTP_LONGITUDE", 0)) # 유저 경도
@@ -123,7 +123,7 @@ def attraction_by_category(request):
 
 @api_view(["GET"])
 def attraction_more(request):
-    scroll = int(request.GET.get("scroll", 0)) # 스크롤 횟수
+    scroll = int(request.GET.get("scroll", 0).strip("/")) # 스크롤 횟수
 
     user_latitude = float(request.META.get("HTTP_LATITUDE", 0))  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get("HTTP_LONGITUDE", 0)) # 유저 경도
