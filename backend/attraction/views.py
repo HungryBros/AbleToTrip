@@ -1,12 +1,14 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Attraction
 from .serializers import AttractionSerializer
 import os
+import base64
+import time
 from math import radians, sin, cos, sqrt, atan2
-
+from heapq import heappop, heappush
 
 category1_map = {
     'exhibition-performance': '전시/공연',
@@ -41,68 +43,74 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     distance = R * c * 1000  # 거리 (단위: m)
     return distance
 
-
 # Create your views here.
 @api_view(["GET"])
 def attraction(request):
     user_latitude = float(request.META.get('HTTP_LATITUDE', 0))  # 'HTTP_LATITUDE' 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get('HTTP_LONGITUDE', 0)) # 유저 경도
+    start_time = time.time()
+    
+    # 관광지 딕셔너리
+    attraction_dict = {}
+
 
     # 거리순 20개
-    attractions = Attraction.objects.all()
+    attractions_all = get_list_or_404(Attraction)
+    attractions = []
+    exhibition_performance = []
+    culture_famous = []
+    leisure_park = []
+    for attraction in attractions_all:
+        distance = round(calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude))
+        image_code = attraction.attraction_image
+        image = base64.b64encode(image_code).decode('utf-8')
+        attraction_data = {
+            "attraction_name": attraction.attraction_name,
+            "si": attraction.si,
+            "gu": attraction.gu,
+            "distance": distance,
+            "attraction_image": image,
+        }
+        attraction_name = attraction.attraction_name
+        attraction_dict.setdefault(attraction_name, attraction_data)
+
+        # 전시/공연
+        if attraction.category1 == category1_map["exhibition-performance"]:
+            heappush(exhibition_performance, [distance, attraction_name])
+
+        # 문화관광/명소
+        elif attraction.category1 == category1_map["culture-famous"]:
+            heappush(culture_famous, [distance, attraction_name])
+
+        # 레저/공원
+        elif attraction.category1 == category1_map["leisure-park"]:
+            heappush(leisure_park, [distance, attraction_name])
+        
+        # 전체
+        heappush(attractions, [distance, attraction_name])
+
+    # 전체 거리순 20개
     nearby_attractions = []
-    for attraction in attractions:
-        distance = round(calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude))
-        nearby_attractions.append({
-            'attraction_name': attraction.attraction_name,
-            'distance': distance,
-            "si": attraction.si,
-            "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
-        })
-    nearby_attractions = sorted(nearby_attractions, key=lambda x: x['distance'])[:20]
+    for _ in range(20):
+        distance, attraction_name = heappop(attractions)
+        nearby_attractions.append(attraction_dict.get(attraction_name))
 
-    # 전시/공연 거리순 10개
-    exhibition_performance = Attraction.objects.filter(category1=category1_map['exhibition-performance'])
+    # 각 테마별 거리순 10개
     nearby_exhibition_performance = []
-    for attraction in exhibition_performance:
-        distance = round(calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude))
-        nearby_exhibition_performance.append({
-            'attraction_name': attraction.attraction_name,
-            'distance': distance,
-            "si": attraction.si,
-            "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
-        })
-    nearby_exhibition_performance = sorted(nearby_exhibition_performance, key=lambda x: x['distance'])[:10]
-
-    # 레저/공원 거리순 10개
-    leisure_park = Attraction.objects.filter(category1=category1_map['leisure-park'])
-    nearby_leisure_park = []
-    for attraction in leisure_park:
-        distance = round(calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude))
-        nearby_leisure_park.append({
-            'attraction_name': attraction.attraction_name,
-            'distance': distance,
-            "si": attraction.si,
-            "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
-        })
-    nearby_leisure_park = sorted(nearby_attractions, key=lambda x: x['distance'])[:10]
-    
-    # 문화관광/명소 거리순 10개
-    culture_famous = Attraction.objects.filter(category1=category1_map['culture-famous'])
     nearby_culture_famous = []
-    for attraction in culture_famous:
-        distance = round(calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude))
-        nearby_culture_famous.append({
-            'attraction_name': attraction.attraction_name,
-            'distance': distance,
-            "si": attraction.si,
-            "gu": attraction.gu,
-            "attraction_image": attraction.attraction_image,
-        })
-    nearby_culture_famous = sorted(nearby_attractions, key=lambda x: x['distance'])[:10]
+    nearby_leisure_park = []
+    for _ in range(10):
+        if exhibition_performance:
+            distance, attraction_name = heappop(exhibition_performance)
+            nearby_exhibition_performance.append(attraction_dict.get(attraction_name))
+
+        if culture_famous:
+            distance, attraction_name = heappop(culture_famous)
+            nearby_culture_famous.append(attraction_dict.get(attraction_name))
+
+        if leisure_park:
+            distance, attraction_name = heappop(leisure_park)
+            nearby_leisure_park.append(attraction_dict.get(attraction_name))
 
     data = {
         'attractions': {
@@ -113,11 +121,13 @@ def attraction(request):
         }
     }
     print(data)
+    end_time = time.time()
+    print('소요시간', end_time-start_time)
     return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
-def attraction_specific(request):
+def attraction_by_category(request):
     scroll = request.GET.get('scroll', 0) # 스크롤 횟수
 
     user_latitude = float(request.META.get('HTTP_LATITUDE', 0))  # 'HTTP_LATITUDE' 헤더가 없으면 기본값으로 0 설정
