@@ -212,6 +212,8 @@ def attraction_search(request):
         distance = calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude)
         nearby_attractions.append({
             "attraction_name": attraction.attraction_name,
+            "longitude": attraction.longitude,
+            "latitude": attraction.latitude,
             "operation_hours": attraction.operation_hours,
             "closed_days": attraction.closed_days,
             "is_entrance_fee": attraction.is_entrance_fee,
