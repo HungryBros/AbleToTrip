@@ -8,7 +8,9 @@ urlpatterns = [
     # 홈 - 카테고리2 직접 선택
     path(
         "specific/", views.attraction_specific, name="attraction_specific"
-    ),  # 특정 관광지 정보 요청
+    ),  
+    # 특정 관광지 정보 요청
+    path( "detail/<int:id>", views.attraction_detail),
     # 홈 - 카테고리1 더보기
     path("more/", views.attraction_more, name="attraction_more"),
     # 관광지 검색

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -212,3 +212,9 @@ def update_attraction_images(request):
             print(f"{attraction.attraction_name} 이미지 파일 없음")
 
     return Response({"message": "작업 완료"})
+
+@api_view(["GET"])
+def attraction_detail(request, id):
+    attraction = get_object_or_404(Attraction, pk=id)
+    serializer = AttractionSerializer(attraction)
+    return Response(serializer.data)
