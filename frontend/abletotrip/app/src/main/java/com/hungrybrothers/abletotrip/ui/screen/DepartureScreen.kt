@@ -40,6 +40,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.hungrybrothers.abletotrip.R
+import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomDisable
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
@@ -51,6 +52,7 @@ fun DepartureScreen(navController: NavController) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
+            HeaderBar(navController = navController, true)
             DepartureTopBox(modifier = Modifier.weight(1f))
             PinGoogleMap(modifier = Modifier.weight(2f))
         }
