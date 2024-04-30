@@ -140,8 +140,9 @@ def find_exit_func(station_name):
         if info[0] != "승":
             return None
 
-        station_elevator_exit = re.findall(r"\d+번\s?출구", info)
-        station_elevator_exit = station_name + "호선 " + station_elevator_exit[0]
+        station_elevator_exit = (
+            station_name + "호선 " + re.findall(r"\d+번\s?출구", info)[0]
+        )
 
         return station_elevator_exit
 
