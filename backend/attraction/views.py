@@ -1,4 +1,6 @@
 from django.shortcuts import get_object_or_404, get_list_or_404
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -88,7 +90,7 @@ def attraction(request):
 
 @api_view(["GET"])
 def attraction_by_category(request):
-    scroll = int(request.GET.get("scroll", "0").rstrip("/")) # 스크롤 횟수
+    page = int(request.GET.get("page", "1").rstrip("/"))  # 페이지 번호
 
     user_latitude = float(request.META.get("HTTP_LATITUDE", 0))  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get("HTTP_LONGITUDE", 0)) # 유저 경도
@@ -115,16 +117,27 @@ def attraction_by_category(request):
                 "image_url": get_image_url(attraction.attraction_name),
                 "distance": distance,
             })
-        nearby_attractions = sorted(nearby_attractions, key=lambda x: x["distance"])[20*scroll:20*(scroll+1)]
+
+        nearby_attractions = sorted(nearby_attractions, key=lambda x: x["distance"])
+        paginator = Paginator(nearby_attractions, 20)
+        try:
+            nearby_attractions_page = paginator.page(page)
+            nearby_attractions_serialized = nearby_attractions_page.object_list
+        except PageNotAnInteger:
+            nearby_attractions_page = paginator.page(1)
+            nearby_attractions_serialized = nearby_attractions_page.object_list
+        except EmptyPage:
+            return Response({"message": "해당 페이지에 데이터가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
         data = {
-            "attractions": nearby_attractions,
+            "attractions": nearby_attractions_serialized,
         }
         return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
 def attraction_more(request):
-    scroll = int(request.GET.get("scroll", "0").rstrip("/")) # 스크롤 횟수
+    page = int(request.GET.get("page", "1").rstrip("/")) # 스크롤 횟수
 
     user_latitude = float(request.META.get("HTTP_LATITUDE", 0))  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
     user_longitude = float(request.META.get("HTTP_LONGITUDE", 0)) # 유저 경도
@@ -147,30 +160,91 @@ def attraction_more(request):
                 "image_url": get_image_url(attraction.attraction_name),
                 "distance": distance,
             })
-        nearby_attractions = sorted(nearby_attractions, key=lambda x: x["distance"])[20*scroll:20*(scroll+1)]
+        nearby_attractions = sorted(nearby_attractions, key=lambda x: x["distance"])
+        paginator = Paginator(nearby_attractions, 20)
+
+        try:
+            nearby_attractions_page = paginator.page(page)
+            nearby_attractions_serialized = nearby_attractions_page.object_list
+        except PageNotAnInteger:
+            nearby_attractions_page = paginator.page(1)
+            nearby_attractions_serialized = nearby_attractions_page.object_list
+        except EmptyPage:
+            # 페이지가 비어있는 경우 해당 페이지에 데이터가 없음을 반환합니다.
+            return Response({"message": "해당 페이지에 데이터가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
         data = {
-            "attractions": nearby_attractions,
+            "attractions": nearby_attractions_serialized,
         }
         return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
 def attraction_search(request):
-    keyword = request.GET.get("keyword")
+    keyword = request.GET.get("keyword", "").rstrip("/")
+    page = int(request.GET.get("page", "1").rstrip("/")) # 스크롤 횟수
+
+    user_latitude = float(request.META.get("HTTP_LATITUDE", 0))  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
+    user_longitude = float(request.META.get("HTTP_LONGITUDE", 0)) # 유저 경도
+
     # 적절한 검색 쿼리가 제공되지 않은 경우 에러를 반환합니다.
     if not keyword:
         return Response({"error": "검색어를 제공해야 합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 검색어를 포함하는 관광지를 필터링하여 가져옵니다.
-    attractions = Attraction.objects.filter(attraction_name__icontains=keyword)
+    # 여러 필드에서 키워드를 검색합니다.
+    attractions = get_list_or_404(
+        Attraction,
+        Q(attraction_name__icontains=keyword) |
+        Q(attraction_sub_name__icontains=keyword) |
+        Q(category1__icontains=keyword) |
+        Q(category2__icontains=keyword) |
+        Q(si__icontains=keyword) |
+        Q(gu__icontains=keyword) |
+        Q(dong__icontains=keyword)
+    )
 
     # 검색 결과가 없는 경우 에러를 반환합니다.
     if not attractions:
         return Response({"error": "검색 결과가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
+    nearby_attractions = []
+    for attraction in attractions:
+        distance = calculate_distance(user_latitude, user_longitude, attraction.latitude, attraction.longitude)
+        nearby_attractions.append({
+            "attraction_name": attraction.attraction_name,
+            "operation_hours": attraction.operation_hours,
+            "closed_days": attraction.closed_days,
+            "is_entrance_fee": attraction.is_entrance_fee,
+            "si": attraction.si,
+            "gu": attraction.gu,
+            "dong": attraction.dong,
+            "image_url": get_image_url(attraction.attraction_name),
+            "distance": distance,
+        })
+    nearby_attractions = sorted(nearby_attractions, key=lambda x: x["distance"])
+    # 페이지별로 결과를 나누기 위해 Paginator를 사용합니다.
+    paginator = Paginator(nearby_attractions, 10)
+
+    try:
+        nearby_attractions_page = paginator.page(page)
+        nearby_attractions_serialized = nearby_attractions_page.object_list
+    except PageNotAnInteger:
+        nearby_attractions_page = paginator.page(1)
+        nearby_attractions_serialized = nearby_attractions_page.object_list
+    except EmptyPage:
+        # 페이지가 비어있는 경우 해당 페이지에 데이터가 없음을 반환합니다.
+        return Response({"message": "해당 페이지에 데이터가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+    attraction_count = len(attractions)
+
     # 검색 결과를 직렬화하여 반환합니다.
-    serializer = AttractionSerializer(attractions, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+
+    data = {
+        "counts": attraction_count,
+        "attractions": nearby_attractions_serialized,
+    }
+
+    return Response(data, status=status.HTTP_200_OK)
     
 
 @api_view(["GET"])
