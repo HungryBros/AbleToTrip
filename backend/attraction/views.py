@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Attraction
+from .serializers import AttractionSerializer
 from heapq import heappop, heappush
 from .utils import category1_map, category2_map, calculate_distance, get_image_url
 
@@ -155,7 +156,22 @@ def attraction_more(request):
 
 @api_view(["GET"])
 def attraction_search(request):
-    return Response({"response": "attraction_search"})
+    keyword = request.GET.get("keyword")
+    # 적절한 검색 쿼리가 제공되지 않은 경우 에러를 반환합니다.
+    if not keyword:
+        return Response({"error": "검색어를 제공해야 합니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 검색어를 포함하는 관광지를 필터링하여 가져옵니다.
+    attractions = Attraction.objects.filter(attraction_name__icontains=keyword)
+
+    # 검색 결과가 없는 경우 에러를 반환합니다.
+    if not attractions:
+        return Response({"error": "검색 결과가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+    # 검색 결과를 직렬화하여 반환합니다.
+    serializer = AttractionSerializer(attractions, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
 @api_view(["GET"])
 def attraction_detail(request, id):
