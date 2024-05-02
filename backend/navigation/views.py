@@ -111,14 +111,18 @@ def navigation(request):
             subway_stops.append(departure_station_fullname)
             # 지하철 환승이 존재하는 경우
             # idx가 1일 때 앞 역만 저장하고, 나머지는 앞뒤역 다 저장
+
+            subway_polyline_list.append(
+                {
+                    "line": line_name,
+                    "polyline": step_list[subway_idx].get("polyline").get("points"),
+                }
+            )
+
             if step_length > 3 and subway_idx == 1:
                 continue
             arrival_station_fullname = f"{arrival_station_name} {line_number}"
             subway_stops.append(arrival_station_fullname)
-
-            subway_polyline_list.append(
-                (line_name, step_list[subway_idx].get("polyline").get("points"))
-            )
 
         ####################################################
         ####################################################
@@ -179,14 +183,44 @@ def navigation(request):
         )
 
         # 전체 polyline, coordinate 데이터 완성
-        polyline_info.append(departure_pedestrian_coordinate_list)
-        polyline_info.append(subway_polyline_list)
-        polyline_info.append(arrival_pedestrian_coordinate_list)
+        polyline_info.append(
+            {
+                "type": "walk",
+                "info": departure_pedestrian_coordinate_list,
+            }
+        )
+        polyline_info.append(
+            {
+                "type": "subway",
+                "info": subway_polyline_list,
+            }
+        )
+        polyline_info.append(
+            {
+                "type": "walk",
+                "info": arrival_pedestrian_coordinate_list,
+            }
+        )
 
         # 전체 detail_route_info 완성
-        detail_route_info.append(departure_pedestrian_description_list)
-        detail_route_info.append(subway_description_list)
-        detail_route_info.append(arrival_pedestrian_description_list)
+        detail_route_info.append(
+            {
+                "type": "walk",
+                "info": departure_pedestrian_description_list,
+            }
+        )
+        detail_route_info.append(
+            {
+                "type": "subway",
+                "info": subway_description_list,
+            }
+        )
+        detail_route_info.append(
+            {
+                "type": "walk",
+                "info": arrival_pedestrian_description_list,
+            }
+        )
 
         response_value = navigation_response_func(
             is_bus_exist,

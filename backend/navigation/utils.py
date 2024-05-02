@@ -152,7 +152,12 @@ def get_tmap_info_func(data):
             for coordinate in coordinates:
                 lon = round(float(coordinate[0]), 6)
                 lat = round(float(coordinate[1]), 6)
-                coordinate_list.append((lon, lat))
+                coordinate_list.append(
+                    {
+                        "lon": lon,
+                        "lat": lat,
+                    }
+                )
 
         else:
             if i == (features_length - 1):
