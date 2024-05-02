@@ -28,7 +28,9 @@ def navigation(request):
     response_json = direction_request_func(origin, destination, mode, transit_mode)
 
     # Routes & Steps 데이터
-    steps = get_steps_func(response_json)
+    steps, duration = get_steps_func(response_json)
+
+    print(f"{log_time_func()} - Navigation: DURATION - {duration}")
 
     # Step, travel_mode 리스트 Init
     step_list = list()
@@ -66,6 +68,13 @@ def navigation(request):
         step_list.append(step)  # step을 각각의 원소로 저장
         step_travel_mode_list.append(travel_mode)  # 각 스텝의 travel_mode를 저장
 
+    google_route_pedestrian_departure_duration = int(
+        steps[0].get("duration").get("text").rstrip("분")
+    )
+    google_route_pedestrian_arrival_duration = int(
+        steps[-1].get("duration").get("text").rstrip("분")
+    )
+
     # Response_value Init
     polyline_info = list()
     detail_route_info = list()
@@ -95,9 +104,11 @@ def navigation(request):
                 arrival_lat,
             )
 
-            pedestrian_coordinate_list, pedestrian_description_list = (
-                get_tmap_info_func(pedestrian_route)
-            )
+            (
+                pedestrian_coordinate_list,
+                pedestrian_description_list,
+                duration,
+            ) = get_tmap_info_func(pedestrian_route)
 
             print(f"{log_time_func()} - Navigation: T Map ONLY 도보 경로 요청 SUCCESS")
 
@@ -116,6 +127,7 @@ def navigation(request):
             )
 
             response_value = navigation_response_func(
+                duration,
                 is_bus_exist,
                 is_subway_exist,
                 is_pedestrian_route,
@@ -133,6 +145,7 @@ def navigation(request):
             print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
 
             response_value = navigation_response_func(
+                0,
                 is_bus_exist,
                 is_subway_exist,
                 is_pedestrian_route,
@@ -177,6 +190,7 @@ def navigation(request):
 
                 departure_station_fullname = f"{departure_station_name} {line_number}"
                 subway_stops.append(departure_station_fullname)
+
                 # 지하철 환승이 존재하는 경우
                 # idx가 1일 때 앞 역만 저장하고, 나머지는 앞뒤역 다 저장
 
@@ -210,6 +224,7 @@ def navigation(request):
                     f"{log_time_func()} - Navigation: {subway_stops[-1]} 엘레베이터 출구 {arrival_station_elevator_exit}"
                 )
                 response_value = navigation_response_func(
+                    0,
                     is_bus_exist,
                     is_subway_exist,
                     is_pedestrian_route,
@@ -255,9 +270,21 @@ def navigation(request):
             (
                 departure_pedestrian_coordinate_list,
                 departure_pedestrian_description_list,
+                departure_pedestrian_duration,
             ) = get_tmap_info_func(start_pedestrian_route)
-            arrival_pedestrian_coordinate_list, arrival_pedestrian_description_list = (
-                get_tmap_info_func(end_pedestrian_route)
+            (
+                arrival_pedestrian_coordinate_list,
+                arrival_pedestrian_description_list,
+                arrival_pedestrian_duration,
+            ) = get_tmap_info_func(end_pedestrian_route)
+
+            # 총 시간 계산
+            duration = (
+                duration
+                + departure_pedestrian_duration
+                + arrival_pedestrian_duration
+                - google_route_pedestrian_departure_duration
+                - google_route_pedestrian_arrival_duration
             )
 
             # 전체 polyline, coordinate 데이터 완성
@@ -307,8 +334,10 @@ def navigation(request):
             print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
             polyline_info = list()
             detail_route_info = list()
+            duration = 0
 
         response_value = navigation_response_func(
+            duration,
             is_bus_exist,
             is_subway_exist,
             is_pedestrian_route,

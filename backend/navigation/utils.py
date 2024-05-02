@@ -56,8 +56,9 @@ def get_steps_func(data):
     routes = data.get("routes")
     legs = routes[0].get("legs")
     steps = legs[0].get("steps")
+    duration = int(legs[0].get("duration").get("text").rstrip("분"))
 
-    return steps
+    return steps, duration
 
 
 # Google Maps 경로 API response의 steps 출발, 도착지 좌표 반환 함수
@@ -142,6 +143,7 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
 def get_tmap_info_func(data):
     coordinate_list = list()
     description_list = list()
+    duration_seconds = 0
 
     features = data.get("features")
     features_length = len(features)
@@ -151,6 +153,7 @@ def get_tmap_info_func(data):
         # type: Point/LineString
         if geometry.get("type") == "LineString":
             coordinates = geometry.get("coordinates")  # 1/2차원 좌표 리스트
+            duration_seconds += feature.get("properties").get("time")
 
             if i == 1:
                 coordinates = coordinates[:-1]
@@ -173,11 +176,14 @@ def get_tmap_info_func(data):
             description = description.replace(" 을 ", "을(를) ")
             description_list.append(description)
 
-    return coordinate_list, description_list
+    duration = (duration_seconds // 60) + 1
+
+    return coordinate_list, description_list, duration
 
 
 # Response Value 만들어주는 함수
 def navigation_response_func(
+    duration,
     is_bus_exist,
     is_subway_exist,
     is_pedestrian_route,
@@ -186,6 +192,7 @@ def navigation_response_func(
 ):
 
     response_value = {
+        "duration": duration,
         "is_bus_exist": is_bus_exist,
         "is_subway_exist": is_subway_exist,
         "is_pedestrian_route": is_pedestrian_route,
