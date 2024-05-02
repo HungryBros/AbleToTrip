@@ -154,8 +154,8 @@ def get_tmap_info_func(data):
                 lat = round(float(coordinate[1]), 6)
                 coordinate_list.append(
                     {
-                        "lon": lon,
-                        "lat": lat,
+                        "longitude": lon,
+                        "latitude": lat,
                     }
                 )
 
