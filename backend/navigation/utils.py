@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from decouple import config
 from PyKakao import Local
 import requests
+import time
 import re
 
 # Import Models and Serializers
@@ -12,6 +13,13 @@ from .serializers import ConvenientSerializer
 GOOGLE_MAPS_API_KEY = config("GOOGLE_MAPS_API_KEY")
 KAKAO_MAPS_API_KEY = config("KAKAO_MAPS_API_KEY")
 TMAP_API_KEY = config("TMAP_API_KEY")
+
+
+# 현재시간 반환하는 함수
+def log_time_func():
+    now = time.strftime("[%Y-%m-%d %H:%M:%S]", time.gmtime(time.time() + (9 * 3600)))
+
+    return now
 
 
 # Google Maps 경로 API 요청 함수
@@ -48,8 +56,9 @@ def get_steps_func(data):
     routes = data.get("routes")
     legs = routes[0].get("legs")
     steps = legs[0].get("steps")
+    duration = int(legs[0].get("duration").get("text").rstrip("분"))
 
-    return steps
+    return steps, duration
 
 
 # Google Maps 경로 API response의 steps 출발, 도착지 좌표 반환 함수
@@ -125,10 +134,8 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
 
     if route_response.status_code == 200:
         route_data = route_response.json()
-        print("TMAP ROUTE RESPONSE SUCCESS")
         return route_data
     else:
-        print(f"TMAP Route Search Error: {route_response.status_code}")
         return None
 
 
@@ -136,6 +143,7 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
 def get_tmap_info_func(data):
     coordinate_list = list()
     description_list = list()
+    duration_seconds = 0
 
     features = data.get("features")
     features_length = len(features)
@@ -145,6 +153,7 @@ def get_tmap_info_func(data):
         # type: Point/LineString
         if geometry.get("type") == "LineString":
             coordinates = geometry.get("coordinates")  # 1/2차원 좌표 리스트
+            duration_seconds += feature.get("properties").get("time")
 
             if i == 1:
                 coordinates = coordinates[:-1]
@@ -167,20 +176,26 @@ def get_tmap_info_func(data):
             description = description.replace(" 을 ", "을(를) ")
             description_list.append(description)
 
-    return coordinate_list, description_list
+    duration = (duration_seconds // 60) + 1
+
+    return coordinate_list, description_list, duration
 
 
 # Response Value 만들어주는 함수
 def navigation_response_func(
+    duration,
     is_bus_exist,
     is_subway_exist,
+    is_pedestrian_route,
     polyline_info=list(),
     detail_route_info=list(),
 ):
 
     response_value = {
+        "duration": duration,
         "is_bus_exist": is_bus_exist,
         "is_subway_exist": is_subway_exist,
+        "is_pedestrian_route": is_pedestrian_route,
         "polyline_info": polyline_info,
         "detail_route_info": detail_route_info,
     }

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 
 # Import Util Functions
 from .utils import (
+    log_time_func,
     direction_request_func,
     get_steps_func,
     get_point_coordinate_func,
@@ -16,6 +17,7 @@ from .utils import (
 
 @api_view(["POST"])
 def navigation(request):
+    print(f"{log_time_func()} - Navigation: Navigation 함수 START")
     origin = request.data.get("departure")
     destination = request.data.get("arrival")
 
@@ -26,7 +28,9 @@ def navigation(request):
     response_json = direction_request_func(origin, destination, mode, transit_mode)
 
     # Routes & Steps 데이터
-    steps = get_steps_func(response_json)
+    steps, duration = get_steps_func(response_json)
+
+    print(f"{log_time_func()} - Navigation: DURATION - {duration}")
 
     # Step, travel_mode 리스트 Init
     step_list = list()
@@ -35,196 +39,308 @@ def navigation(request):
     # Transit Flags
     is_bus_exist = False  # "BUS" 유무
     is_subway_exist = False  # "SUBWAY" 유무
+    is_pedestrian_route = False  # 도보 경로 안내 유무
 
     # 각 Step 확인
     for step in steps:
         travel_mode = step.get("travel_mode")
+        print(f"{log_time_func()} - Navigation: TRAVEL MODE - {travel_mode}")
+
         # Transit의 Type 확인
         if travel_mode == "TRANSIT":
             transit_type = (
                 step.get("transit_details").get("line").get("vehicle").get("type")
             )
+            print(f"{log_time_func()} - Navigation:     TRANSIT TYPE - {transit_type}")
 
             # 경로 상에 지하철이 포함된 경우, 표시
             if transit_type == "SUBWAY":
                 is_subway_exist = True
 
-            # 경로 상에 버스가 포함된 경우, 종료
+            # # 경로 상에 버스가 포함된 경우, 종료
             elif transit_type == "BUS":
-                is_bus_exist = True
-                response_value = navigation_response_func(is_bus_exist, is_subway_exist)
+                print(f"{log_time_func()} - Navigation: 경로에 버스 포함")
 
-                return Response(response_value)
+                is_bus_exist = True
+                break
 
         # "travel_mode"가 버스가 아닌 경우
         step_list.append(step)  # step을 각각의 원소로 저장
         step_travel_mode_list.append(travel_mode)  # 각 스텝의 travel_mode를 저장
 
+    google_route_pedestrian_departure_duration = int(
+        steps[0].get("duration").get("text").rstrip("분")
+    )
+    google_route_pedestrian_arrival_duration = int(
+        steps[-1].get("duration").get("text").rstrip("분")
+    )
+
     # Response_value Init
     polyline_info = list()
     detail_route_info = list()
 
-    # "도보"
+    # 1) "지하철 x" -> 도보 경로 안내
     if not is_subway_exist:
+        is_pedestrian_route = True
 
-        """
-        도보 경로 안내하는 코드
-        작성 예정
-        """
+        try:
+            print(f"{log_time_func()} - Navigation: 경로 상에 지하철 없음")
+            print(f"{log_time_func()} - Navigation: 도보 경로 탐색 START")
 
-        response_value = navigation_response_func(
-            is_bus_exist,
-            is_subway_exist,
-            polyline_info,
-            detail_route_info,
-        )
+            print(f"{log_time_func()} - Navigation: T Map 출발지 좌표 요청 START")
 
-        return Response(response_value)
+            departure_lon, departure_lat = coordinate_request_func(origin)
+            arrival_lon, arrival_lat = coordinate_request_func(destination)
 
-    # "지하철 + 도보"
-    else:
-        step_length = len(step_travel_mode_list)
+            print(f"{log_time_func()} - Navigation: T Map 출발지 좌표 요청 SUCCESS")
 
-        # 1) step_length > 3 == True -> 환승 구간 o
-        # 2) step_list의 [0], [-1]번째 인덱스는 도보,
-        #    나머지 홀수 인덱스는 지하철, 짝수 인덱스는 환승 구간
+            # T Map: "출발지 - 승차역 엘레베이터 출구" 도보 경로 요청
+            print(f"{log_time_func()} - Navigation: T Map ONLY 도보 경로 요청 START")
 
-        # 지하철 구간 각 polyline 및 경로 상세 정보 추출
-        subway_stops = list()
-        subway_polyline_list = list()
-        subway_description_list = list()
-
-        for subway_idx in range(1, step_length, 2):
-            transit_details = step_list[subway_idx].get("transit_details")
-
-            departure_station_name = transit_details.get("departure_stop").get("name")
-            arrival_station_name = transit_details.get("arrival_stop").get("name")
-            line_name = transit_details.get("line").get("short_name")
-
-            subway_description_list.append(
-                f"{line_name}: {departure_station_name} - {arrival_station_name}"
+            pedestrian_route = pedestrian_request_func(
+                departure_lon,
+                departure_lat,
+                arrival_lon,
+                arrival_lat,
             )
 
-            line_number = line_name.rstrip("호선")
+            (
+                pedestrian_coordinate_list,
+                pedestrian_description_list,
+                duration,
+            ) = get_tmap_info_func(pedestrian_route)
 
-            departure_station_fullname = f"{departure_station_name} {line_number}"
-            subway_stops.append(departure_station_fullname)
-            # 지하철 환승이 존재하는 경우
-            # idx가 1일 때 앞 역만 저장하고, 나머지는 앞뒤역 다 저장
+            print(f"{log_time_func()} - Navigation: T Map ONLY 도보 경로 요청 SUCCESS")
 
-            subway_polyline_list.append(
+            polyline_info.append(
                 {
-                    "line": line_name,
-                    "polyline": step_list[subway_idx].get("polyline").get("points"),
+                    "type": "walk",
+                    "info": pedestrian_coordinate_list,
                 }
             )
 
-            if step_length > 3 and subway_idx == 1:
-                continue
-            arrival_station_fullname = f"{arrival_station_name} {line_number}"
-            subway_stops.append(arrival_station_fullname)
+            detail_route_info.append(
+                {
+                    "type": "walk",
+                    "info": pedestrian_description_list,
+                }
+            )
 
-        ####################################################
-        ####################################################
-        ## 위의 코드 부분에서 환승 API로 받아온 정보를
-        ## 사이사이에 넣어줘야 하는데...
-        ## "역삼(2)-교대(2,3)-경복궁(3)"의 경우
-        ## 환승역이 있는지 판단해서, 있다면
-        ## "교대역"을 찾고 -> "가능"
-        ## "2호선", "3호선"을 찾고 -> "가능"
-        ## "교대역 2"를 DB에서 조회해서 역 코드 알아내고 -> "가능"
-        ## "교대역 3"의 앞 뒤 역들의 번호를 알아내야 함 -> 어케함?!
-        ####################################################
-        ####################################################
+            response_value = navigation_response_func(
+                duration,
+                is_bus_exist,
+                is_subway_exist,
+                is_pedestrian_route,
+                polyline_info,
+                detail_route_info,
+            )
 
-        # 엘레베이터 출구 찾기
-        departure_station_elevator_exit = find_exit_func(subway_stops[0])
-        arrival_station_elevator_exit = find_exit_func(subway_stops[-1])
-
-        # 두 출구 하나라도 엘레베이터가 없는 경우 => 컷
-        if not (departure_station_elevator_exit and arrival_station_elevator_exit):
-            response_value = navigation_response_func(is_bus_exist, is_subway_exist)
+            print(f"{log_time_func()} - Navigation: 도보 경로 탐색 SUCCESS")
 
             return Response(response_value)
 
-        # 두 엘레베이터 출구의 좌표값, tuple: (lon, lat)
-        departure_exit_lon, departure_exit_lat = coordinate_request_func(
-            departure_station_elevator_exit
-        )
-        arrival_exit_lon, arrival_exit_lat = coordinate_request_func(
-            arrival_station_elevator_exit
-        )
+        except Exception as err:
 
-        # Google Maps 경로 API에서 출발, 도착지 좌표 반환
-        start_lon, start_lat = get_point_coordinate_func(steps, 1)
-        end_lon, end_lat = get_point_coordinate_func(steps, 0)
+            print(f"{log_time_func()} - Navigation: 도보 경로 탐색 FAIL")
+            print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
 
-        # T Map: "출발지 - 승차역 엘레베이터 출구" 도보 경로 요청
-        start_pedestrian_route = pedestrian_request_func(
-            start_lon,
-            start_lat,
-            departure_exit_lon,
-            departure_exit_lat,
-        )
+            response_value = navigation_response_func(
+                0,
+                is_bus_exist,
+                is_subway_exist,
+                is_pedestrian_route,
+                polyline_info,
+                detail_route_info,
+            )
 
-        # T Map: "하차역 엘레베이터 출구 - 도착지" 도보 경로 요청
-        end_pedestrian_route = pedestrian_request_func(
-            arrival_exit_lon,
-            arrival_exit_lat,
-            end_lon,
-            end_lat,
-        )
+            return Response(response_value)
 
-        departure_pedestrian_coordinate_list, departure_pedestrian_description_list = (
-            get_tmap_info_func(start_pedestrian_route)
-        )
-        arrival_pedestrian_coordinate_list, arrival_pedestrian_description_list = (
-            get_tmap_info_func(end_pedestrian_route)
-        )
+    # 2) "지하철 o" -> 지하철 경로 안내
+    else:
+        try:
+            print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 START")
+            print(f"{log_time_func()} - Navigation: BUS - {is_bus_exist}")
+            print(f"{log_time_func()} - Navigation: SUBWAY - {is_subway_exist}")
 
-        # 전체 polyline, coordinate 데이터 완성
-        polyline_info.append(
-            {
-                "type": "walk",
-                "info": departure_pedestrian_coordinate_list,
-            }
-        )
-        polyline_info.append(
-            {
-                "type": "subway",
-                "info": subway_polyline_list,
-            }
-        )
-        polyline_info.append(
-            {
-                "type": "walk",
-                "info": arrival_pedestrian_coordinate_list,
-            }
-        )
+            step_length = len(step_travel_mode_list)
 
-        # 전체 detail_route_info 완성
-        detail_route_info.append(
-            {
-                "type": "walk",
-                "info": departure_pedestrian_description_list,
-            }
-        )
-        detail_route_info.append(
-            {
-                "type": "subway",
-                "info": subway_description_list,
-            }
-        )
-        detail_route_info.append(
-            {
-                "type": "walk",
-                "info": arrival_pedestrian_description_list,
-            }
-        )
+            print(f"{log_time_func()} - Navigation: STEP LENGTH {step_length}")
+
+            # 지하철 구간 각 polyline 및 경로 상세 정보 추출
+            subway_stops = list()
+            subway_polyline_list = list()
+            subway_description_list = list()
+
+            print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 START")
+
+            for subway_idx in range(1, step_length, 2):
+                transit_details = step_list[subway_idx].get("transit_details")
+
+                departure_station_name = transit_details.get("departure_stop").get(
+                    "name"
+                )
+                arrival_station_name = transit_details.get("arrival_stop").get("name")
+                line_name = transit_details.get("line").get("short_name")
+
+                subway_description_list.append(
+                    f"{line_name}: {departure_station_name} - {arrival_station_name}"
+                )
+
+                line_number = line_name.rstrip("호선")
+
+                departure_station_fullname = f"{departure_station_name} {line_number}"
+                subway_stops.append(departure_station_fullname)
+
+                # 지하철 환승이 존재하는 경우
+                # idx가 1일 때 앞 역만 저장하고, 나머지는 앞뒤역 다 저장
+
+                subway_polyline_list.append(
+                    {
+                        "line": line_name,
+                        "polyline": step_list[subway_idx].get("polyline").get("points"),
+                    }
+                )
+
+                if step_length > 3 and subway_idx == 1:
+                    continue
+                arrival_station_fullname = f"{arrival_station_name} {line_number}"
+                subway_stops.append(arrival_station_fullname)
+
+            print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 SUCCESS")
+
+            print(f"{log_time_func()} - Navigation: 엘레베이터 출구 탐색 START")
+
+            # 엘레베이터 출구 찾기
+            departure_station_elevator_exit = find_exit_func(subway_stops[0])
+            arrival_station_elevator_exit = find_exit_func(subway_stops[-1])
+
+            # 두 출구 하나라도 엘레베이터가 없는 경우 => 탐색 종료
+            if not (departure_station_elevator_exit and arrival_station_elevator_exit):
+                print(f"{log_time_func()} - Navigation: 엘레베이터 출구 탐색 FAIL")
+                print(
+                    f"{log_time_func()} - Navigation: {subway_stops[0]} 엘레베이터 출구 {departure_station_elevator_exit}"
+                )
+                print(
+                    f"{log_time_func()} - Navigation: {subway_stops[-1]} 엘레베이터 출구 {arrival_station_elevator_exit}"
+                )
+                response_value = navigation_response_func(
+                    0,
+                    is_bus_exist,
+                    is_subway_exist,
+                    is_pedestrian_route,
+                )
+
+                return Response(response_value)
+
+            print(f"{log_time_func()} - Navigation: 엘레베이터 출구 탐색 SUCCESS")
+
+            # 두 엘레베이터 출구의 좌표값, tuple: (lon, lat)
+            departure_exit_lon, departure_exit_lat = coordinate_request_func(
+                departure_station_elevator_exit
+            )
+            arrival_exit_lon, arrival_exit_lat = coordinate_request_func(
+                arrival_station_elevator_exit
+            )
+
+            # Google Maps 경로 API에서 출발, 도착지 좌표 반환
+            start_lon, start_lat = get_point_coordinate_func(steps, 1)
+            end_lon, end_lat = get_point_coordinate_func(steps, 0)
+
+            print(f"{log_time_func()} - Navigation: 양 출구 T Map 도보 경로 요청 START")
+            # T Map: "출발지 - 승차역 엘레베이터 출구" 도보 경로 요청
+            start_pedestrian_route = pedestrian_request_func(
+                start_lon,
+                start_lat,
+                departure_exit_lon,
+                departure_exit_lat,
+            )
+
+            # T Map: "하차역 엘레베이터 출구 - 도착지" 도보 경로 요청
+            end_pedestrian_route = pedestrian_request_func(
+                arrival_exit_lon,
+                arrival_exit_lat,
+                end_lon,
+                end_lat,
+            )
+
+            print(
+                f"{log_time_func()} - Navigation: 양 출구 T Map 도보 경로 요청 SUCCESS"
+            )
+
+            (
+                departure_pedestrian_coordinate_list,
+                departure_pedestrian_description_list,
+                departure_pedestrian_duration,
+            ) = get_tmap_info_func(start_pedestrian_route)
+            (
+                arrival_pedestrian_coordinate_list,
+                arrival_pedestrian_description_list,
+                arrival_pedestrian_duration,
+            ) = get_tmap_info_func(end_pedestrian_route)
+
+            # 총 시간 계산
+            duration = (
+                duration
+                + departure_pedestrian_duration
+                + arrival_pedestrian_duration
+                - google_route_pedestrian_departure_duration
+                - google_route_pedestrian_arrival_duration
+            )
+
+            # 전체 polyline, coordinate 데이터 완성
+            polyline_info.append(
+                {
+                    "type": "walk",
+                    "info": departure_pedestrian_coordinate_list,
+                }
+            )
+            polyline_info.append(
+                {
+                    "type": "subway",
+                    "info": subway_polyline_list,
+                }
+            )
+            polyline_info.append(
+                {
+                    "type": "walk",
+                    "info": arrival_pedestrian_coordinate_list,
+                }
+            )
+
+            # 전체 detail_route_info 완성
+            detail_route_info.append(
+                {
+                    "type": "walk",
+                    "info": departure_pedestrian_description_list,
+                }
+            )
+            detail_route_info.append(
+                {
+                    "type": "subway",
+                    "info": subway_description_list,
+                }
+            )
+            detail_route_info.append(
+                {
+                    "type": "walk",
+                    "info": arrival_pedestrian_description_list,
+                }
+            )
+
+            print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 SUCCESS")
+
+        except Exception as err:
+            print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 FAIL")
+            print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
+            polyline_info = list()
+            detail_route_info = list()
+            duration = 0
 
         response_value = navigation_response_func(
+            duration,
             is_bus_exist,
             is_subway_exist,
+            is_pedestrian_route,
             polyline_info,
             detail_route_info,
         )
