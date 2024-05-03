@@ -23,6 +23,7 @@ import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.CategorySecond
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.SearchBar
+import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -65,7 +66,9 @@ fun HomeScreen(navController: NavController) {
                 keyboardController?.hide() // 키보드를 숨깁니다.
             },
             onSearch = {
-                navController.navigate("SearchScreen")
+                if (text.isNotEmpty()) {
+                    navController.navigate(NavRoute.SEARCH.routeName)
+                }
             },
             onValueChange = { newText ->
                 text = newText
