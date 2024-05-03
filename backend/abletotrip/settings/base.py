@@ -141,3 +141,15 @@ MEDIA_ROOT = "/app/media/"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Redis Settings
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": [
+            # "k10a607.p.ssafy.io:10607",
+            "redis://localhost:6379",
+        ],
+    }
+}

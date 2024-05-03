@@ -1,5 +1,10 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.core.cache import cache
+
+# Import Models and Serializers
+from .models import Restroom
 
 # Import Util Functions
 from .utils import (
@@ -15,6 +20,7 @@ from .utils import (
 )
 
 
+# Find Route
 @api_view(["POST"])
 def navigation(request):
     print(f"{log_time_func()} - Navigation: Navigation 함수 START")
@@ -168,6 +174,7 @@ def navigation(request):
 
             # 지하철 구간 각 polyline 및 경로 상세 정보 추출
             subway_stops = list()
+            cached_subway_stops = list()
             subway_polyline_list = list()
             subway_description_list = list()
 
@@ -188,6 +195,9 @@ def navigation(request):
 
                 line_number = line_name.rstrip("호선")
 
+                cached_subway_stops.append(f"{departure_station_name} {line_number}")
+                cached_subway_stops.append(f"{arrival_station_name} {line_number}")
+
                 departure_station_fullname = f"{departure_station_name} {line_number}"
                 subway_stops.append(departure_station_fullname)
 
@@ -205,6 +215,8 @@ def navigation(request):
                     continue
                 arrival_station_fullname = f"{arrival_station_name} {line_number}"
                 subway_stops.append(arrival_station_fullname)
+
+            cache.set("cached_subway_stops", cached_subway_stops, 3600 * 2)
 
             print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 SUCCESS")
 
@@ -346,3 +358,44 @@ def navigation(request):
         )
 
         return Response(response_value)
+
+
+# Find Restrooms on Current Route
+@api_view(["GET"])
+def restroom(request):
+    try:
+        cached_subway_stops = cache.get("cached_subway_stops")
+
+        filtered_restrooms = Restroom.objects.filter(
+            station_fullname__in=cached_subway_stops
+        )
+
+        # 특정 필드만 출력
+        restrooms = filtered_restrooms.values(
+            "station_fullname",
+            "is_outside",
+            "floor",
+            "restroom_location",
+        )
+
+    except:
+        restrooms = []
+
+    if restrooms:
+        for restroom in restrooms:
+            restroom["station_fullname"] = (
+                str(restroom.get("station_fullname")) + "호선"
+            )
+            longitude, latitude = coordinate_request_func(
+                restroom.get("station_fullname")
+            )
+
+            restroom["coordinate"] = {
+                "longitude": longitude,
+                "latitude": latitude,
+            }
+
+        return Response({"restrooms": restrooms})
+
+    else:
+        return Response({"restrooms": ""})
