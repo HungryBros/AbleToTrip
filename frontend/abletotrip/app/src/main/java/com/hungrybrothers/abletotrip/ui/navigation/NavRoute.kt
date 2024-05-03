@@ -57,9 +57,14 @@ fun NavGraphBuilder.auth(navController: NavController) {
 fun NavGraphBuilder.home(navController: NavController) {
     navigation(startDestination = NavRoute.HOME.routeName, route = "HOMEGRAPH") {
         composable(NavRoute.HOME.routeName) { HomeScreen(navController) }
-        composable(NavRoute.SEARCH.routeName) { SearchScreen(navController) }
+        composable(NavRoute.SEARCH.routeName) {
+            SearchScreen(navController)
+        }
         composable(NavRoute.DETAIL.routeName) { DetailScreen(navController) }
-        composable(NavRoute.DEPARTURE.routeName) { DepartureScreen(navController) }
+        composable(NavRoute.DEPARTURE.routeName) {
+            val autocompleteViewModel = viewModel<PlaceCompleteViewModel>()
+            DepartureScreen(navController, autocompleteViewModel)
+        }
         composable(NavRoute.TOTAL_ROUTE.routeName) { TotalRouteScreen(navController) }
         composable(NavRoute.GUIDE.routeName) { GuideScreen(navController) }
         composable(NavRoute.TESTNAV.routeName) { TestNavFile(navController) }

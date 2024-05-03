@@ -25,7 +25,7 @@ fun PlacesList(
     onPlaceClicked: (Place) -> Unit,
 ) {
     Log.d("Places : PlaceList", "플레이스리스트: $places")
-    LazyColumn(modifier = Modifier.padding(start = 8.dp, end = 8.dp)) {
+    LazyColumn(modifier = Modifier) {
         items(places) { place ->
             Column(
                 modifier =
