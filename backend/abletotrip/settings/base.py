@@ -141,3 +141,18 @@ MEDIA_ROOT = "/app/media/"
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Redis Settings
+REDIS_LOCATION = config("REDIS_LOCATION")
+REDIS_PASSWORD = config("REDIS_PASSWORD")
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_LOCATION,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": REDIS_PASSWORD,  # 레디스 비밀번호
+        },
+    }
+}
