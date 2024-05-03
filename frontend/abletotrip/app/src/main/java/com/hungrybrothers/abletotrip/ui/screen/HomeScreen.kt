@@ -7,13 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,6 +22,8 @@ import androidx.navigation.compose.rememberNavController
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.CategorySecond
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
+import com.hungrybrothers.abletotrip.ui.components.SearchBar
+import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -32,6 +34,11 @@ fun HomeScreen(navController: NavController) {
     var data by remember { mutableStateOf<Any?>(null) }
     // TODO: 로딩 애니메이션 넣을 때 사용할 코드(아직 사용 안 함)
     var isLoading by remember { mutableStateOf(true) }
+
+    // 관광지 검색 키워드
+    var text by remember { mutableStateOf("") }
+    // 키보드
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     // TODO: 데이터 연결 시 주석 해제
 //    LaunchedEffect(key1 = true) {
@@ -51,7 +58,22 @@ fun HomeScreen(navController: NavController) {
 //          (여기에 아래 코드를 넣어주세요, 검색창, CategorySecond는 그대로 두고)
 //        }
 
-        Text(text = "검색 창 들어갈 곳")
+        SearchBar(
+            text = text,
+            placeholder = "관광지를 검색해보세요",
+            onClear = {
+                text = ""
+                keyboardController?.hide() // 키보드를 숨깁니다.
+            },
+            onSearch = {
+                if (text.isNotEmpty()) {
+                    navController.navigate(NavRoute.SEARCH.routeName)
+                }
+            },
+            onValueChange = { newText ->
+                text = newText
+            },
+        )
 
         Box(
             modifier = Modifier.size(608.dp, 96.dp),
