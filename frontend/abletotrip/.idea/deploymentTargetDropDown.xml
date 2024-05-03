@@ -5,10 +5,7 @@
       <entry key="PreviewHomeScreen">
         <State />
       </entry>
-      <entry key="PreviewSearchScreen">
-        <State />
-      </entry>
-      <entry key="SearchBarPreview">
+      <entry key="PreviewLoginScreen">
         <State />
       </entry>
       <entry key="app">
