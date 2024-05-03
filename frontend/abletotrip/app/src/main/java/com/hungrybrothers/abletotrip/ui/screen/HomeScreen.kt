@@ -1,103 +1,74 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
 import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.hungrybrothers.abletotrip.R
-import com.hungrybrothers.abletotrip.ui.components.CategorySecond
-import com.hungrybrothers.abletotrip.ui.components.HeaderBar
+import com.hungrybrothers.abletotrip.ui.datatype.Attractions
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-@Composable
-fun HomeScreen(navController: NavController) {
-    var data by remember { mutableStateOf<Any?>(null) }
-    // TODO: 로딩 애니메이션 넣을 때 사용할 코드(아직 사용 안 함)
-    var isLoading by remember { mutableStateOf(true) }
-
-    // TODO: 데이터 연결 시 주석 해제
-//    LaunchedEffect(key1 = true) {
-//        data = fetchData()
-//        isLoading = false
-//    }
-
-    Column(
-        modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        HeaderBar(navController = navController, showBackButton = false)
-// TODO: 데이터 연결하면 isLoading 테스트
-//        if (isLoading) {
-//            Text("로딩 중입니다.")
-//        } else {
-//          (여기에 아래 코드를 넣어주세요, 검색창, CategorySecond는 그대로 두고)
-//        }
-
-        Text(text = "검색 창 들어갈 곳")
-
-        Box(
-            modifier = Modifier.size(608.dp, 96.dp),
-        ) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-//                item {
-//                    CategorySecond(
-//                        icon = painterResource(id = R.drawable.ticket),
-//                        label = "영화/공연",
-//                    )
-//                }
-                val categories =
-                    listOf(
-                        Pair(R.drawable.ticket, "영화/공연"),
-                        Pair(R.drawable.palette, "전시/기념관"),
-                        Pair(R.drawable.leisure, "레저"),
-                        Pair(R.drawable.stadium, "스포츠"),
-                        Pair(R.drawable.park, "공원"),
-                        Pair(R.drawable.framed_picture, "관광지"),
-                        Pair(R.drawable.sunrise, "명승지"),
-                    )
-                // TODO: 이렇게 불러오면 PNG 파일을 가끔 불러오지 못하는 오류 발생
-                categories.forEach { item ->
-                    item {
-                        CategorySecond(
-                            icon = painterResource(id = item.first),
-                            label = item.second,
-                        )
-                    }
+suspend fun fetchPlaceData(
+    latitude: String,
+    longitude: String,
+): Attractions? {
+    return withContext(Dispatchers.IO) {
+        try {
+            Log.d("PlaceData", "요청 보내는 중...")
+            val response =
+                KtorClient.client.get("attraction/") {
+                    header("latitude", latitude)
+                    header("longitude", longitude)
                 }
+            Log.d("PlaceData", "응답 성공: ${response.status}")
+            if (response.status.isSuccess()) {
+                // 성공적인 응답을 받았을 때, JSON을 AttractionsResponse 객체로 변환
+                val responseData: Attractions = response.body()
+                Log.d("PlaceData", "디코딩 성공: $responseData")
+                responseData
+            } else {
+                Log.e("PlaceData", "통신 실패: ${response.status}")
+                null
             }
+        } catch (e: Exception) {
+            Log.e("PlaceData", "에러 발생", e)
+            null
         }
     }
 }
 
-suspend fun fetchData(): Any? {
-    val response = KtorClient.client.get("attraction/")
-    return if (response.status.isSuccess()) {
-        val tempData = response.body<Any>()
-        Log.d("income", "아 들어왔다$tempData")
-        tempData
-    } else {
-        Log.e("pathdata", "아 안들어 오자나")
-        null
+@Composable
+fun HomeScreen(navController: NavController) {
+    val (placeData, setPlaceData) = remember { mutableStateOf<Attractions?>(null) }
+//    위도(Latitude) : 37.497952 / 경도(Longitude) : 127.027619
+    LaunchedEffect(Unit) {
+        val fetchedData = fetchPlaceData("37.497952", "127.027619")
+        setPlaceData(fetchedData) // 이렇게 상태를 업데이트합니다.
+    }
+    Log.d("PlaceData확인", "placeData: $placeData")
+
+    Surface(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            placeData?.let { data ->
+                Log.d("PlaceData1", "${data.attractions["nearby"]}")
+                Log.d("PlaceData2", "${data.attractions["exhibition_performance"]}")
+                Log.d("PlaceData3", "${data.attractions["leisure_park"]}")
+                Log.d("PlaceData4", "${data.attractions["culture_famous"]}")
+            }
+        }
     }
 }
 
