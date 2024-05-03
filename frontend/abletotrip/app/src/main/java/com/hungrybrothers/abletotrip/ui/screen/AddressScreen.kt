@@ -113,7 +113,7 @@ fun AddressScreen(
                 if (showPlacesList) {
                     PlacesList(places = places) { Place ->
                         selectedAddress = Place.address
-                        textFieldValue = Place.name // 네임으로 바꿔야함
+                        textFieldValue = Place.name
                         showPlacesList = false
                         keyboardController?.hide() // 주소 선택시 키보드 숨기기
                     }
@@ -145,7 +145,7 @@ fun CompleteButton(
                 CoroutineScope(Dispatchers.Main).launch {
                     val isSuccess = postAddress(addressInput)
                     if (isSuccess) {
-                        navController.navigate(NavRoute.HOME.routeName)
+                        navController.navigate(NavRoute.DEPARTURE.routeName)
                     }
                 }
             }
