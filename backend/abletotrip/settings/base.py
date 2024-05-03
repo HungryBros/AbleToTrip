@@ -144,12 +144,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Redis Settings
+REDIS_LOCATION = config("REDIS_LOCATION")
+REDIS_PASSWORD = config("REDIS_PASSWORD")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": [
-            # "k10a607.p.ssafy.io:10607",
-            "redis://localhost:6379",
-        ],
+        "LOCATION": REDIS_LOCATION,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": REDIS_PASSWORD,  # 레디스 비밀번호
+        },
     }
 }
