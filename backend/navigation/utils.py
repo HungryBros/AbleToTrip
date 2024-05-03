@@ -6,7 +6,7 @@ import time
 import re
 
 # Import Models and Serializers
-from .models import Station, Convenient, Ramp, Lift, Restroom
+from .models import Convenient
 from .serializers import ConvenientSerializer
 
 # API Keys
@@ -82,6 +82,7 @@ def get_point_coordinate_func(steps, is_start):
 def find_exit_func(station_name):
     try:
         station_info = get_object_or_404(Convenient, station_fullname=station_name)
+
         info_serializer = ConvenientSerializer(station_info)
         info = info_serializer.data.get("elevator_location")
 

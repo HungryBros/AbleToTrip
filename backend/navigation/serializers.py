@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Station, Convenient, Ramp, Restroom, Lift
+from .models import Convenient
 
 
 class ConvenientSerializer(serializers.ModelSerializer):
