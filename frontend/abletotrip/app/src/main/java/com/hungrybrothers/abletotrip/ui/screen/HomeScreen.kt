@@ -188,6 +188,7 @@ fun InSearchBar(
     )
 }
 
+// 카탈로그 선택부분 (상단)
 @Composable
 fun CategorySelector(
     categories: List<IconData>,
@@ -218,6 +219,7 @@ fun CategorySelector(
     }
 }
 
+// 카탈로그 선택시 화면 구성 - newattraction 포함
 @Composable
 fun DisplayCustomAttractionsScreen(
     viewModel: Catalog2ViewModel,
@@ -235,10 +237,7 @@ fun DisplayCustomAttractionsScreen(
         ) {
             items(attractionsData!!.attractions) { attraction ->
                 Log.d("Catalog", "로드 완료$attraction")
-                NewAttractionItem(attraction, navController) {
-                    // TODO: 네비게이션 로직 추가, 예: navController.navigate("detailScreen/${attraction.id}
-                    navController.navigate(NavRoute.DETAIL.routeName + "${attraction.id}")
-                }
+                NewAttractionItem(attraction, navController)
             }
         }
     } else {
@@ -250,18 +249,18 @@ fun DisplayCustomAttractionsScreen(
     }
 }
 
+// 카탈로그 선택시 화면의 카드
 @Composable
 fun NewAttractionItem(
     attraction: Catalog2Attraction,
     navController: NavController,
-    onClick: () -> Unit,
 ) {
     Card(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 16.dp)
-                .clickable(onClick = { }), // Todo: 네비게이션 클릭 가능 추가 + id
+                .clickable(onClick = { navController.navigate("${NavRoute.DETAIL.routeName}/${attraction.id}") }),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Row(
@@ -302,6 +301,7 @@ fun NewAttractionItem(
     }
 }
 
+// 기본화면 구성
 @Composable
 fun DisplayAttractionsScreen(
     viewModel: HomeViewModel,
@@ -354,9 +354,7 @@ fun DisplayAttractionsScreen(
                     if (attractions.isNotEmpty()) {
                         LazyRow(modifier = Modifier.padding(horizontal = 8.dp)) {
                             items(attractions) { attraction ->
-                                AttractionItem(attraction, navController) {
-                                    navController.navigate(NavRoute.DETAIL.routeName + "${attraction.id}")
-                                }
+                                AttractionItem(attraction, navController)
                                 Spacer(modifier = Modifier.width(8.dp))
                             }
                         }
@@ -396,19 +394,18 @@ fun DisplayAttractionsScreen(
     }
 }
 
-// 카드
+// 기본화면 구성의 카드형식
 @Composable
 fun AttractionItem(
     attraction: Attraction,
     navController: NavController,
-    onClick: () -> Unit,
 ) {
     Card(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(4.dp)
-                .clickable(onClick = { }),
+                .clickable(onClick = { navController.navigate("${NavRoute.DETAIL.routeName}/${attraction.id}") }),
         elevation =
             CardDefaults.elevatedCardElevation(
                 defaultElevation = 2.dp,

@@ -60,7 +60,9 @@ fun NavGraphBuilder.home(navController: NavController) {
         composable(NavRoute.SEARCH.routeName) {
             SearchScreen(navController)
         }
-        composable(NavRoute.DETAIL.routeName) { DetailScreen(navController) }
+        composable("${NavRoute.DETAIL.routeName}/{id}") { backStackEntry ->
+            DetailScreen(navController, backStackEntry.arguments?.getString("id")?.toInt())
+        }
         composable(NavRoute.DEPARTURE.routeName) {
             val autocompleteViewModel = viewModel<PlaceCompleteViewModel>()
             DepartureScreen(navController, autocompleteViewModel)
