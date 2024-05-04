@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.core.cache import cache
 
@@ -22,6 +23,7 @@ from .utils import (
 
 # Find Route
 @api_view(["POST"])
+# @permission_classes([IsAuthenticated])
 def navigation(request):
     print(f"{log_time_func()} - Navigation: Navigation 함수 START")
     origin = request.data.get("departure")
@@ -216,7 +218,7 @@ def navigation(request):
                 arrival_station_fullname = f"{arrival_station_name} {line_number}"
                 subway_stops.append(arrival_station_fullname)
 
-            cache.set("cached_subway_stops", cached_subway_stops, 3600 * 2)
+            cache.set(request.user, cached_subway_stops, 3600 * 2)
 
             print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 SUCCESS")
 
@@ -362,9 +364,10 @@ def navigation(request):
 
 # Find Restrooms on Current Route
 @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
 def restroom(request):
     try:
-        cached_subway_stops = cache.get("cached_subway_stops")
+        cached_subway_stops = cache.get(request.user)
 
         filtered_restrooms = Restroom.objects.filter(
             station_fullname__in=cached_subway_stops
