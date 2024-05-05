@@ -237,7 +237,7 @@ suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
         client.post("https://apihut.in/api/polyline") {
             setBody(requestBody)
             headers {
-                append("X-Avatar-Key", "bd92b6bd-fbcc-4dfd-a68d-d225d2c7f8c3")
+                append("X-Avatar-Key", "your_api_key")
                 append(HttpHeaders.ContentType, "application/json")
                 append(HttpHeaders.Accept, "application/json")
             }
