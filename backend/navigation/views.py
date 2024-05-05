@@ -23,7 +23,7 @@ from .utils import (
 
 # Find Route
 @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def navigation(request):
     print(f"{log_time_func()} - Navigation: Navigation 함수 START")
     origin = request.data.get("departure")
@@ -364,7 +364,7 @@ def navigation(request):
 
 # Find Restrooms on Current Route
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def restroom(request):
     try:
         cached_subway_stops = cache.get(request.user)
