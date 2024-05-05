@@ -26,6 +26,7 @@ from .utils import (
 @permission_classes([IsAuthenticated])
 def navigation(request):
     print(f"{log_time_func()} - Navigation: Navigation 함수 START")
+    print(f"{log_time_func()} - Navigation: REQUEST USER - {request.user}")
     origin = request.data.get("departure")
     destination = request.data.get("arrival")
 
