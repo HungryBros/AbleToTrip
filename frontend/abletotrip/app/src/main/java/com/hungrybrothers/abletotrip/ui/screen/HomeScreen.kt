@@ -67,8 +67,10 @@ import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attraction
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.AttractionsRepository
 import com.hungrybrothers.abletotrip.ui.network.Catalog2Repository
+import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
 import com.hungrybrothers.abletotrip.ui.viewmodel.Catalog2ViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.HomeViewModel
+import com.hungrybrothers.abletotrip.ui.viewmodel.ShowMoreViewModel
 import java.util.Locale
 
 data class IconData(
@@ -90,6 +92,11 @@ fun HomeScreen(
             val repository = Catalog2Repository()
             Catalog2ViewModel(repository)
         }
+    val showMoreViewModel: ShowMoreViewModel =
+        remember {
+            val repository = ShowMoreInfoRepository()
+            ShowMoreViewModel(repository)
+        }
     val context = LocalContext.current
     val searchText = remember { mutableStateOf("") }
     val categories =
@@ -110,10 +117,12 @@ fun HomeScreen(
             onResult = { isGranted: Boolean ->
                 if (isGranted) {
                     // 권한이 허가되면 위치 업데이트 시작
-                    startLocationUpdates(context, homeViewModel)
+                    startLocationUpdates(context, homeViewModel, catalog2ViewModel, showMoreViewModel)
                 } else {
                     // 권한이 거부되면 기본 위치로 데이터 요청
                     homeViewModel.loadPlaceData("37.5665", "126.9780")
+                    catalog2ViewModel.fetchCatalog2Data("37.5665", "126.9780", "category", 1)
+                    showMoreViewModel.ShowMoreData("37.5665", "126.9780", "category", 1)
                 }
             },
         )
@@ -127,7 +136,7 @@ fun HomeScreen(
         ) {
             PackageManager.PERMISSION_GRANTED -> {
                 // 위치 권한이 이미 허가되었다면 위치 업데이트 즉시 시작
-                startLocationUpdates(context, homeViewModel)
+                startLocationUpdates(context, homeViewModel, catalog2ViewModel, showMoreViewModel)
             }
             else -> {
                 // 권한이 허가되지 않았다면 권한 요청
@@ -343,7 +352,7 @@ fun DisplayAttractionsScreen(
                         )
                         // 더보기 버튼
                         TextButton(
-                            onClick = { /* TODO: 네비게이션 로직 추가 */ },
+                            onClick = { navController.navigate("${NavRoute.SHOWMORE.routeName}/$category") },
                         ) {
                             Text(text = "더보기 >", style = MaterialTheme.typography.bodyMedium)
                         }
@@ -435,7 +444,9 @@ fun AttractionItem(
 // 시작위치 업데이트
 fun startLocationUpdates(
     context: Context,
-    viewModel: HomeViewModel,
+    homeViewModel: HomeViewModel,
+    catalog2ViewModel: Catalog2ViewModel,
+    showMoreViewModel: ShowMoreViewModel,
 ) {
     if (ContextCompat.checkSelfPermission(
             context,
@@ -465,7 +476,12 @@ fun startLocationUpdates(
 
                 // 마지막 위치 정보를 사용
                 locationResult.locations.lastOrNull()?.let { location ->
-                    viewModel.loadPlaceData(location.latitude.toString(), location.longitude.toString())
+                    val latitude = location.latitude.toString()
+                    val longitude = location.longitude.toString()
+
+                    homeViewModel.loadPlaceData(latitude, longitude)
+                    catalog2ViewModel.fetchCatalog2Data(latitude, longitude, "category", 1)
+                    showMoreViewModel.ShowMoreData(latitude, longitude, "category", 1)
                 }
             }
         }
