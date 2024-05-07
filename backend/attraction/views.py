@@ -251,6 +251,7 @@ def attraction_search(request):
         nearby_attractions.append(
             {
                 "id": attraction.pk,
+                "category2": attraction.category2,
                 "attraction_name": attraction.attraction_name,
                 "longitude": attraction.longitude,
                 "latitude": attraction.latitude,
