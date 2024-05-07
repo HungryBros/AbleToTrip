@@ -56,7 +56,15 @@ def get_steps_func(data):
     routes = data.get("routes")
     legs = routes[0].get("legs")
     steps = legs[0].get("steps")
-    duration = int(legs[0].get("duration").get("text").rstrip("분"))
+
+    # x시간 y분으로 나올 때도 생각해야 함
+    duration_text = legs[0].get("duration").get("text")
+    if " " in duration_text:
+        hour_text, minute_text = duration_text.split()
+        duration = int(hour_text.rstrip("시간")) * 60 + int(minute_text.rstrip("분"))
+
+    else:
+        duration = int(duration_text.rstrip("분"))
 
     return steps, duration
 
