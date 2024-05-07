@@ -1,6 +1,5 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
-import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,11 +30,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -55,10 +52,14 @@ import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 fun DepartureScreen(
     navController: NavController,
     autocompleteViewModel: PlaceCompleteViewModel,
+    latitude: Double,
+    longitude: Double,
+    address: String,
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = CustomBackground) {
         Column(modifier = Modifier.fillMaxSize().background(CustomPrimary)) {
             HeaderBar(navController = navController, true)
+            Text(text = "잘나오나$latitude,$longitude,$address")
             DepartureTopBox(autocompleteViewModel)
             PinGoogleMap()
         }
@@ -180,18 +181,4 @@ fun PinGoogleMap() {
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewDepartureScreen() {
-    // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    DepartureScreen(
-        navController = rememberNavController(),
-        autocompleteViewModel =
-            PlaceCompleteViewModel(
-                application = @Suppress("ktlint:standard:max-line-length")
-                (Application()),
-            ),
-    )
 }
