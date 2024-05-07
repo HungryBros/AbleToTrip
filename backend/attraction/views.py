@@ -297,4 +297,5 @@ def attraction_search(request):
 def attraction_detail(request, id):
     attraction = get_object_or_404(Attraction, pk=id)
     serializer = AttractionSerializer(attraction)
+   
     return Response(serializer.data)
