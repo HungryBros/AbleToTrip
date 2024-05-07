@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AttractionDetail(
     val id: Int,
+    val image_url: String?,
     val attraction_name: String,
     val attraction_sub_name: String?,
     val category1: String,

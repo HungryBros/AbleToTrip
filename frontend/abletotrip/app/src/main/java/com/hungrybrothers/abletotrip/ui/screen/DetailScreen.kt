@@ -3,6 +3,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.hungrybrothers.abletotrip.ui.datatype.AttractionDetail
+import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.AttractionDetailRepository
 import com.hungrybrothers.abletotrip.ui.viewmodel.AttractionDetailViewModel
 
@@ -65,7 +68,7 @@ fun DetailScreen(
                     .padding(16.dp),
         ) {
             Image(
-                painter = rememberAsyncImagePainter(model = null), // 이미지 없음
+                painter = rememberAsyncImagePainter(model = detail.image_url), // 이미지 없음
                 contentDescription = "Attraction Image",
                 modifier =
                     Modifier
@@ -89,6 +92,7 @@ fun DetailScreen(
 
             Spacer(Modifier.height(24.dp))
             FacilitiesGrid(detail)
+            RouteButton(navController, detail.latitude, detail.longitude, detail.lot_number_address)
         }
     } ?: Text("Loading details...", style = MaterialTheme.typography.bodyLarge)
 }
@@ -129,3 +133,19 @@ fun FacilityIcon(
         Text(text = label, style = MaterialTheme.typography.bodySmall)
     }
 }
+
+@Composable
+fun RouteButton(navController: NavController, latitude: Double, longitude: Double, lotNumberAddress: String) {
+    Button(
+        onClick = {
+            navController.navigate("DEPARTURE/${latitude.toFloat()}/${longitude.toFloat()}/$lotNumberAddress")
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .height(48.dp)
+    ) {
+        Text("Get Directions")
+    }
+}
+
