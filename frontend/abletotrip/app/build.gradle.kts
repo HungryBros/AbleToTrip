@@ -127,6 +127,8 @@ dependencies {
     implementation("com.google.android.libraries.places:places:3.3.0")
     // 레이아웃, 그리기, 입력등 기기와 상호작용할때 필요한 compose UI의 기본적인 구성요소
     implementation("androidx.compose.ui:ui:1.6.6")
+    // 이미지 로드를 위해 라이브러리
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 secrets {

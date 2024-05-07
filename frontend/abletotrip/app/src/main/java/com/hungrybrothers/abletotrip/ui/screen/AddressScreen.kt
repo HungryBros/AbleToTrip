@@ -145,7 +145,7 @@ fun CompleteButton(
                 CoroutineScope(Dispatchers.Main).launch {
                     val isSuccess = postAddress(addressInput)
                     if (isSuccess) {
-                        navController.navigate(NavRoute.DEPARTURE.routeName)
+                        navController.navigate(NavRoute.HOME.routeName)
                     }
                 }
             }
