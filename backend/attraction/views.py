@@ -251,6 +251,7 @@ def attraction_search(request):
         nearby_attractions.append(
             {
                 "id": attraction.pk,
+                "category2": attraction.category2,
                 "attraction_name": attraction.attraction_name,
                 "longitude": attraction.longitude,
                 "latitude": attraction.latitude,
@@ -278,7 +279,7 @@ def attraction_search(request):
         # 페이지가 비어있는 경우 해당 페이지에 데이터가 없음을 반환합니다.
         return Response(
             {"message": "해당 페이지에 데이터가 없습니다."},
-            status=status.HTTP_404_NOT_FOUND,
+            status=status.HTTP_204_NO_CONTENT,
         )
 
     attraction_count = len(attractions)
@@ -297,5 +298,5 @@ def attraction_search(request):
 def attraction_detail(request, id):
     attraction = get_object_or_404(Attraction, pk=id)
     serializer = AttractionSerializer(attraction)
-   
+
     return Response(serializer.data)
