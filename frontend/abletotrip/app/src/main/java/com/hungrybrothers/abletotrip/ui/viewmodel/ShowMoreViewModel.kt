@@ -19,7 +19,7 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
         category: String,
         page: Int,
     ) {
-        Log.d("ShowMoreScreen", "latitude = $latitude,longitude = $longitude,category = $category,page = $page")
+        Log.d("ShowMoreViewModel", "latitude = $latitude,longitude = $longitude,category = $category,page = $page")
         viewModelScope.launch {
             val result = repository.fetchShowMoreInfoData(latitude, longitude, category, page)
             _showmoreData.value = result

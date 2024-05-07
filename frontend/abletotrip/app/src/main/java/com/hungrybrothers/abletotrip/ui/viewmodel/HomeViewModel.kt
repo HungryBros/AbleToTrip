@@ -17,7 +17,7 @@ class HomeViewModel(private val repository: AttractionsRepository) : ViewModel()
         latitude: String,
         longitude: String,
     ) {
-        Log.d("HomeScreen", "latitude = $latitude,longitude = $longitude")
+        Log.d("HomeViewModel", "latitude = $latitude,longitude = $longitude")
         viewModelScope.launch {
             val data = repository.fetchPlaceData(latitude, longitude)
             _placeData.postValue(data)
