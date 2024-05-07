@@ -9,15 +9,19 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,7 +33,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,7 +56,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
-import kotlinx.coroutines.launch
+import com.hungrybrothers.abletotrip.ui.viewmodel.RestroomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +80,16 @@ fun GuideScreen(navController: NavController) {
 fun GoogleMapGuide(
     modifier: Modifier,
     navigationViewModel: NavigationViewModel,
+    viewModel: RestroomViewModel = viewModel(),
 ) {
+    var isRestroom by remember { mutableStateOf(false) }
+    val restrooms by viewModel.restrooms.observeAsState(emptyList())
+    val error by viewModel.error.observeAsState(null)
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchRestrooms()
+    }
+
     var gpsPoint by remember { mutableStateOf(LatLng(37.501286, 127.0396029)) }
     val context = LocalContext.current
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -130,39 +145,67 @@ fun GoogleMapGuide(
         }
     LaunchedEffect(gpsPoint) {
         cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(gpsPoint, 20f))
+        println("restroom check : $restrooms")
     }
 
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
 
-    GoogleMap(
-        modifier = modifier,
-        cameraPositionState = cameraPositionState,
-    ) {
-        polylineDataList.forEach { polylineData ->
-            println("walk data : $polylineData")
-            Polyline(
-                points = polylineData.points,
-                color = polylineData.color,
-                width = 25f,
+    Box(modifier = Modifier.fillMaxSize()) {
+        GoogleMap(
+            modifier = modifier,
+            cameraPositionState = cameraPositionState,
+        ) {
+            polylineDataList.forEach { polylineData ->
+                println("walk data : $polylineData")
+                Polyline(
+                    points = polylineData.points,
+                    color = polylineData.color,
+                    width = 25f,
+                )
+            }
+
+            Marker(
+                state = rememberMarkerState(position = mystartpoint),
+                title = "출발지",
+                snippet = "Here is the start point",
             )
+            Marker(
+                state = rememberMarkerState(position = myendpoint),
+                title = "도착지",
+                snippet = "Here is the end point",
+            )
+            Marker(
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
+                state = gpsMarkerState,
+                title = "현재위치",
+                snippet = "Here is the GPS point",
+            )
+            if (isRestroom) {
+                restrooms.forEach { restroom ->
+                    val position = LatLng(restroom.coordinate.latitude, restroom.coordinate.longitude)
+                    Marker(
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW),
+                        state = com.google.maps.android.compose.rememberMarkerState(position = position),
+                        title = restroom.station_fullname,
+                        snippet = "Floor: ${restroom.floor}, Location: ${restroom.restroom_location}",
+                    )
+                }
+            }
         }
 
-        Marker(
-            state = rememberMarkerState(position = mystartpoint),
-            title = "출발지",
-            snippet = "Here is the start point",
-        )
-        Marker(
-            state = rememberMarkerState(position = myendpoint),
-            title = "도착지",
-            snippet = "Here is the end point",
-        )
-        Marker(
-            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
-            state = gpsMarkerState,
-            title = "현재위치",
-            snippet = "Here is the GPS point",
-        )
+        // 오른쪽 상단에 고정된 빨간색 원형 버튼
+        FloatingActionButton(
+            onClick = { isRestroom = !isRestroom },
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd) // 우측 상단에 위치
+                    .padding(top = 16.dp, end = 16.dp),
+            shape = CircleShape,
+            containerColor = Color.Red,
+            contentColor = Color.White,
+        ) {
+            Text("+")
+        }
     }
 }
 
@@ -173,33 +216,39 @@ fun GuideBottomSheet(
     scaffoldState: BottomSheetScaffoldState,
     navigationViewModel: NavigationViewModel,
 ) {
-    val detailRouteInfo by navigationViewModel.detailRouteInfo.observeAsState()
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetContent = {
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                detailRouteInfo?.forEach { routeInfo ->
-                    routeInfo.info.forEach { detail ->
+    val detailRouteInfo by navigationViewModel.detailRouteInfo.observeAsState(emptyList())
+
+    Box(modifier = modifier.fillMaxSize()) {
+        // BottomSheetScaffold로 바텀시트 구현
+        BottomSheetScaffold(
+            scaffoldState = scaffoldState,
+            sheetContent = {
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    detailRouteInfo.forEach { routeInfo ->
                         item {
-                            Text(
-                                text = "${routeInfo.type}  $detail",
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
+                            routeInfo.info.forEach { detail ->
+                                Box {
+                                    Text(
+                                        text = "${routeInfo.type}  $detail",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
-        },
-        sheetPeekHeight = 60.dp, // Sheet가 보일 때의 최소 높이
-    ) {
-        GoogleMapGuide(modifier = Modifier, navigationViewModel = NavigationViewModel())
+            },
+            sheetPeekHeight = 60.dp, // 시트가 보일 때의 최소 높이
+        ) {
+            GoogleMapGuide(modifier = Modifier, navigationViewModel = navigationViewModel)
+        }
     }
 }
 
