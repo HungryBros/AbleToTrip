@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.core.cache import cache
+from pprint import pprint
 
 # Import Models and Serializers
 from .models import Restroom
@@ -32,6 +33,10 @@ def navigation(request):
     transit_mode = "subway"
 
     response_json = direction_request_func(origin, destination, mode, transit_mode)
+
+    print()
+    pprint(response_json)
+    print()
 
     # Routes & Steps 데이터
     steps, duration = get_steps_func(response_json)
@@ -170,6 +175,12 @@ def navigation(request):
 
             step_length = len(step_travel_mode_list)
 
+            # 지하철역에서 시작하는 경우 steps[0]이 지하철 경로임
+            if step_travel_mode_list[0] == "TRANSIT":
+                step_start_idx = 0
+            else:
+                step_start_idx = 1
+
             print(f"{log_time_func()} - Navigation: STEP LENGTH {step_length}")
 
             # 지하철 구간 각 polyline 및 경로 상세 정보 추출
@@ -180,8 +191,11 @@ def navigation(request):
 
             print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 START")
 
-            for subway_idx in range(1, step_length, 2):
-                transit_details = step_list[subway_idx].get("transit_details")
+            for step_idx in range(0, step_length):
+                if step_travel_mode_list[step_idx] != "TRANSIT":
+                    continue
+
+                transit_details = step_list[step_idx].get("transit_details")
 
                 departure_station_name = transit_details.get("departure_stop").get(
                     "name"
@@ -195,28 +209,31 @@ def navigation(request):
 
                 line_number = line_name.rstrip("호선")
 
-                cached_subway_stops.append(f"{departure_station_name} {line_number}")
-                cached_subway_stops.append(f"{arrival_station_name} {line_number}")
-
                 departure_station_fullname = f"{departure_station_name} {line_number}"
+                cached_subway_stops.append(f"{departure_station_name} {line_number}")
                 subway_stops.append(departure_station_fullname)
 
                 # 지하철 환승이 존재하는 경우
-                # idx가 1일 때 앞 역만 저장하고, 나머지는 앞뒤역 다 저장
+                # idx가 처음일 때 앞 역만 저장하고, 나머지는 앞뒤역 다 저장
 
                 subway_polyline_list.append(
                     {
                         "line": line_name,
-                        "polyline": step_list[subway_idx].get("polyline").get("points"),
+                        "polyline": step_list[step_idx].get("polyline").get("points"),
                     }
                 )
 
-                if step_length > 3 and subway_idx == 1:
+                if step_length >= 3 and step_idx == step_start_idx:
                     continue
+
                 arrival_station_fullname = f"{arrival_station_name} {line_number}"
+                cached_subway_stops.append(f"{arrival_station_name} {line_number}")
                 subway_stops.append(arrival_station_fullname)
 
             cache.set("cached_subway_stops", cached_subway_stops, 3600 * 2)
+            print(
+                f"{log_time_func()} - Navigation: cached_subway_stops {cached_subway_stops}"
+            )
 
             print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 SUCCESS")
 
@@ -235,6 +252,7 @@ def navigation(request):
                 print(
                     f"{log_time_func()} - Navigation: {subway_stops[-1]} 엘레베이터 출구 {arrival_station_elevator_exit}"
                 )
+
                 response_value = navigation_response_func(
                     0,
                     is_bus_exist,
