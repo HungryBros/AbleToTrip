@@ -61,8 +61,8 @@ fun NavGraphBuilder.auth(navController: NavController) {
 fun NavGraphBuilder.home(navController: NavController) {
     navigation(startDestination = NavRoute.HOME.routeName, route = "HOMEGRAPH") {
         composable(NavRoute.HOME.routeName) { HomeScreen(navController) }
-        composable(NavRoute.SEARCH.routeName) {
-            SearchScreen(navController)
+        composable("${NavRoute.SEARCH.routeName}/{keyword}") { backStackEntry ->
+            SearchScreen(navController, backStackEntry.arguments?.getString("keyword").toString())
         }
         composable("${NavRoute.DETAIL.routeName}/{id}") { backStackEntry ->
             DetailScreen(navController, backStackEntry.arguments?.getString("id")?.toInt())

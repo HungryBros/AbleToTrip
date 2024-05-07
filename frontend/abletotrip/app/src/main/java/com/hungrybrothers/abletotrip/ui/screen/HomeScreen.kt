@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,31 +24,28 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -62,6 +60,7 @@ import com.google.android.gms.location.Priority
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.CategorySecond
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
+import com.hungrybrothers.abletotrip.ui.components.SearchBar
 import com.hungrybrothers.abletotrip.ui.datatype.Attraction
 import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attraction
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
@@ -98,7 +97,8 @@ fun HomeScreen(
             ShowMoreViewModel(repository)
         }
     val context = LocalContext.current
-    val searchText = remember { mutableStateOf("") }
+    var searchText by remember { mutableStateOf("") }
+    val keyboardController = LocalSoftwareKeyboardController.current
     val categories =
         listOf(
             IconData("park", painterResource(id = R.drawable.park)),
@@ -148,16 +148,26 @@ fun HomeScreen(
     val selectedCategories = remember { mutableStateOf(mutableListOf<String>()) }
     println("Catalog2DataselectedCategories : $selectedCategories")
 
-    Column {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         HeaderBar(navController = navController, false)
-        InSearchBar(
+        SearchBar(
             text = searchText,
-            onSearch = {
-                // 검색 로직 구현, 예를 들어 데이터베이스 쿼리나 API 호출
-                Log.d("Search", "Searching for: ${searchText.value}")
-                // 검색 결과 화면으로 이동하거나 검색 결과를 표시
+            onValueChange = { newSearchText ->
+                searchText = newSearchText
             },
-            placeholder = "검색창",
+            onSearch = {
+                if (searchText.isNotEmpty()) {
+                    navController.navigate("${NavRoute.SEARCH.routeName}/$searchText")
+                }
+            },
+            placeholder = "검색어를 입력해주세요.",
+            onClear = {
+                searchText = ""
+                keyboardController?.hide() // 키보드를 숨깁니다.
+            },
         )
         CategorySelector(categories, selectedCategories.value) { updatedSelectedCategories ->
             val selectedString = updatedSelectedCategories.joinToString("-")
@@ -176,25 +186,6 @@ fun HomeScreen(
             }
         }
     }
-}
-
-@Composable
-fun InSearchBar(
-    text: MutableState<String>,
-    onSearch: () -> Unit,
-    placeholder: String,
-) {
-    OutlinedTextField(
-        value = text.value,
-        onValueChange = { newValue -> text.value = newValue },
-        placeholder = { Text(text = placeholder) },
-        modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions =
-            KeyboardActions(onSearch = {
-                onSearch()
-            }),
-    )
 }
 
 // 카탈로그 선택부분 (상단)
