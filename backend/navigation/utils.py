@@ -4,10 +4,20 @@ from PyKakao import Local
 import requests
 import time
 import re
+import joblib
+import xgboost
+import pandas as pd
+import numpy as np
+import os
 
 # Import Models and Serializers
 from .models import Convenient
 from .serializers import ConvenientSerializer
+
+# Load Trained Model
+# model_path = "trained_ETA_model.pkl/"
+model_path = "navigation/trained_models/trained_ETA_model.pkl"
+trained_ETA_model = joblib.load(model_path)
 
 # API Keys
 GOOGLE_MAPS_API_KEY = config("GOOGLE_MAPS_API_KEY")
@@ -153,6 +163,7 @@ def get_tmap_info_func(data):
     coordinate_list = list()
     description_list = list()
     duration_seconds = 0
+    distance_meters = 0
 
     features = data.get("features")
     features_length = len(features)
@@ -162,7 +173,9 @@ def get_tmap_info_func(data):
         # type: Point/LineString
         if geometry.get("type") == "LineString":
             coordinates = geometry.get("coordinates")  # 1/2차원 좌표 리스트
-            duration_seconds += feature.get("properties").get("time")
+            properties = feature.get("properties")
+            distance_meters += properties.get("distance")
+            duration_seconds += properties.get("time")
 
             if i == 1:
                 coordinates = coordinates[:-1]
@@ -187,7 +200,7 @@ def get_tmap_info_func(data):
 
     duration = (duration_seconds // 60) + 1
 
-    return coordinate_list, description_list, duration
+    return coordinate_list, description_list, duration, distance_meters
 
 
 # Response Value 만들어주는 함수
@@ -210,3 +223,26 @@ def navigation_response_func(
     }
 
     return response_value
+
+
+def get_additional_ETA_func(
+    departure_pedestrian_distance,
+    departure_pedestrian_duration,
+    arrival_pedestrian_distance,
+    arrival_pedestrian_duration,
+    subway_stops,
+):
+    global trained_ETA_model
+
+    eta_model_input_data = {
+        "distance_to_station": [departure_pedestrian_distance],
+        "distance_from_station": [departure_pedestrian_duration // 7 * 4],
+        "duration_to_station": [arrival_pedestrian_distance],  # 하차역 - 도착지 거리(m)
+        "duration_from_station": [arrival_pedestrian_duration // 7 * 4],
+        "transfer_count": [len(subway_stops) - 1],
+    }
+
+    X_ETA_test = pd.DataFrame(eta_model_input_data)
+    additional_ETA = int(trained_ETA_model.predict(X_ETA_test))
+
+    return additional_ETA
