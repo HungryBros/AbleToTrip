@@ -1,5 +1,6 @@
 package com.hungrybrothers.abletotrip.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attractions
@@ -18,6 +19,7 @@ class Catalog2ViewModel(private val repository: Catalog2Repository) : ViewModel(
         category: String,
         page: Int,
     ) {
+        Log.d("Catalog2ViewModel", "latitude = $latitude,longitude = $longitude")
         viewModelScope.launch {
             val result = repository.fetchCatalog2Data(latitude, longitude, category, page)
             _catalog2Data.value = result

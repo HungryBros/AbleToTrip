@@ -17,13 +17,13 @@ import com.hungrybrothers.abletotrip.ui.screen.GuideScreen
 import com.hungrybrothers.abletotrip.ui.screen.HomeScreen
 import com.hungrybrothers.abletotrip.ui.screen.LoginScreen
 import com.hungrybrothers.abletotrip.ui.screen.SearchScreen
+import com.hungrybrothers.abletotrip.ui.screen.ShowMoreScreen
 import com.hungrybrothers.abletotrip.ui.screen.SplashScreen
 import com.hungrybrothers.abletotrip.ui.screen.TestNavFile
 import com.hungrybrothers.abletotrip.ui.screen.TotalRouteScreen
+import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 
-// 네비게이션 라우트 이넘(값을 가지는 이넘) -> 라우트액션에서 사용하기위해서
-// 라우트 네임이 키임
 enum class NavRoute(val routeName: String, val description: String) {
     SPLASH("SPLASH", "스플래시화면"),
     HOME("HOME", "홈화면"),
@@ -35,14 +35,18 @@ enum class NavRoute(val routeName: String, val description: String) {
     TOTAL_ROUTE("TOTAL_ROUTE", "전체경로화면"),
     GUIDE("GUIDE", "길안내화면"),
     TESTNAV("TESTNAV", "네브테스트"),
+    SHOWMORE("SHOWMORE", "더보기"),
 }
 
 @Composable
 fun Navigation(navController: NavHostController) {
+    // 전역적으로 사용하지 않고 각 네비게이션 그래프에 전달
+    val currentLocationViewModel = viewModel<CurrentLocationViewModel>()
+
     NavHost(navController, startDestination = NavRoute.SPLASH.routeName) {
         composable(NavRoute.SPLASH.routeName) { SplashScreen(navController) }
         auth(navController)
-        home(navController)
+        home(navController, currentLocationViewModel)
     }
 }
 
@@ -56,19 +60,18 @@ fun NavGraphBuilder.auth(navController: NavController) {
     }
 }
 
-fun NavGraphBuilder.home(navController: NavController) {
+fun NavGraphBuilder.home(
+    navController: NavController,
+    currentLocationViewModel: CurrentLocationViewModel,
+) {
     navigation(startDestination = NavRoute.HOME.routeName, route = "HOMEGRAPH") {
-        composable(NavRoute.HOME.routeName) { HomeScreen(navController) }
-        composable(NavRoute.SEARCH.routeName) {
-            SearchScreen(navController)
+        composable(NavRoute.HOME.routeName) { HomeScreen(navController, currentLocationViewModel) }
+        composable("${NavRoute.SEARCH.routeName}/{keyword}") { backStackEntry ->
+            SearchScreen(navController, backStackEntry.arguments?.getString("keyword").toString())
         }
         composable("${NavRoute.DETAIL.routeName}/{id}") { backStackEntry ->
             DetailScreen(navController, backStackEntry.arguments?.getString("id")?.toInt())
         }
-//        composable(NavRoute.DEPARTURE.routeName) {
-//            val autocompleteViewModel = viewModel<PlaceCompleteViewModel>()
-//            DepartureScreen(navController, autocompleteViewModel)
-//        }
         composable(
             route = "DEPARTURE/{latitude}/{longitude}/{address}",
             arguments =
@@ -98,17 +101,17 @@ fun NavGraphBuilder.home(navController: NavController) {
 
             TotalRouteScreen(navController, departure, arrival)
         }
+        composable(
+            route = "${NavRoute.SHOWMORE.routeName}/{category}",
+            arguments =
+                listOf(
+                    navArgument("category") { type = NavType.StringType },
+                ),
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category") ?: ""
+            ShowMoreScreen(navController, category, currentLocationViewModel)
+        }
         composable(NavRoute.GUIDE.routeName) { GuideScreen(navController) }
         composable(NavRoute.TESTNAV.routeName) { TestNavFile(navController) }
     }
 }
-
-// fun NavController.navigateToSingleTop(route: String) {
-//    navigate(route) {
-//        popUpTo(graph.findStartDestination().id) {
-//            saveState = true
-//        }
-//        launchSingleTop = true
-//        restoreState = true
-//    }
-// }

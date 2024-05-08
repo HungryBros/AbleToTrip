@@ -8,6 +8,7 @@ import android.location.LocationManager
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,9 +27,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -36,9 +40,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -54,6 +62,8 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.hungrybrothers.abletotrip.R
+import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.RestroomViewModel
@@ -63,6 +73,45 @@ import com.hungrybrothers.abletotrip.ui.viewmodel.RestroomViewModel
 fun GuideScreen(navController: NavController) {
     val scaffoldState = rememberBottomSheetScaffoldState()
     val navigationViewModel: NavigationViewModel = viewModel()
+
+    val openDialog = remember { mutableStateOf(false) }
+
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            title = {
+                Text(
+                    text = "탐색 종료",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Text(text = "경로 탐색을 종료하시겠어요?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        openDialog.value = false
+                        navController.navigate(NavRoute.HOME.routeName)
+                    },
+                ) {
+                    Text("종료하기")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        openDialog.value = false
+                    },
+                ) {
+                    Text("머무르기")
+                }
+            },
+        )
+    }
     Surface(modifier = Modifier, color = CustomBackground) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -71,6 +120,7 @@ fun GuideScreen(navController: NavController) {
                 modifier = Modifier,
                 scaffoldState = scaffoldState,
                 navigationViewModel = navigationViewModel,
+                openDialogState = openDialog,
             )
         }
     }
@@ -81,13 +131,18 @@ fun GoogleMapGuide(
     modifier: Modifier,
     navigationViewModel: NavigationViewModel,
     viewModel: RestroomViewModel = viewModel(),
+    openDialogState: MutableState<Boolean>,
 ) {
     var isRestroom by remember { mutableStateOf(false) }
     val restrooms by viewModel.restrooms.observeAsState(emptyList())
     val error by viewModel.error.observeAsState(null)
 
+    // 지도 상태 관리를 위한 remember
+    var uiSettings by remember { mutableStateOf(com.google.maps.android.compose.MapUiSettings()) }
+
     LaunchedEffect(Unit) {
         viewModel.fetchRestrooms()
+        uiSettings = uiSettings.copy(zoomControlsEnabled = false)
     }
 
     var gpsPoint by remember { mutableStateOf(LatLng(37.501286, 127.0396029)) }
@@ -154,6 +209,7 @@ fun GoogleMapGuide(
         GoogleMap(
             modifier = modifier,
             cameraPositionState = cameraPositionState,
+            uiSettings = uiSettings,
         ) {
             polylineDataList.forEach { polylineData ->
                 println("walk data : $polylineData")
@@ -192,19 +248,44 @@ fun GoogleMapGuide(
                 }
             }
         }
-
-        // 오른쪽 상단에 고정된 빨간색 원형 버튼
+        val containerColor = if (isRestroom) Color.Gray else Color.Red
+        // 오른쪽 상단에 고정된 빨간색 화장실 원형 버튼
         FloatingActionButton(
             onClick = { isRestroom = !isRestroom },
             modifier =
                 Modifier
                     .align(Alignment.TopEnd) // 우측 상단에 위치
-                    .padding(top = 16.dp, end = 16.dp),
+                    .padding(top = 88.dp, end = 16.dp),
             shape = CircleShape,
-            containerColor = Color.Red,
+            containerColor = containerColor,
             contentColor = Color.White,
         ) {
-            Text("+")
+            val restroomIcon: Painter = painterResource(id = R.drawable.family_restroom)
+
+            Image(
+                painter = restroomIcon,
+                contentDescription = "disabled restroom Icon",
+            )
+        }
+
+        // 오른쪽 상단에 고정된 종료 원형 버튼
+        FloatingActionButton(
+            onClick = { openDialogState.value = !openDialogState.value },
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd) // 우측 상단에 위치
+                    .padding(top = 16.dp, end = 16.dp),
+            shape = CircleShape,
+            containerColor = Color.White,
+            contentColor = Color.Black,
+        ) {
+            val closeIcon: Painter = painterResource(id = R.drawable.close)
+
+            Image(
+                painter = closeIcon,
+                contentDescription = "Close Icon",
+                modifier = Modifier.padding(8.dp),
+            )
         }
     }
 }
@@ -215,6 +296,7 @@ fun GuideBottomSheet(
     modifier: Modifier,
     scaffoldState: BottomSheetScaffoldState,
     navigationViewModel: NavigationViewModel,
+    openDialogState: MutableState<Boolean>,
 ) {
     val detailRouteInfo by navigationViewModel.detailRouteInfo.observeAsState(emptyList())
 
@@ -247,7 +329,11 @@ fun GuideBottomSheet(
             },
             sheetPeekHeight = 60.dp, // 시트가 보일 때의 최소 높이
         ) {
-            GoogleMapGuide(modifier = Modifier, navigationViewModel = navigationViewModel)
+            GoogleMapGuide(
+                modifier = Modifier,
+                navigationViewModel = navigationViewModel,
+                openDialogState = openDialogState,
+            )
         }
     }
 }
