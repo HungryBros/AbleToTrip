@@ -89,6 +89,19 @@ fun NavGraphBuilder.home(
             DepartureScreen(navController, autocompleteViewModel, latitude, longitude, address)
         }
         composable(
+            route = "TOTAL_ROUTE/{departure}/{arrival}",
+            arguments =
+                listOf(
+                    navArgument("departure") { type = NavType.StringType },
+                    navArgument("arrival") { type = NavType.StringType },
+                ),
+        ) { backStackEntry ->
+            val departure = backStackEntry.arguments?.getString("departure")
+            val arrival = backStackEntry.arguments?.getString("arrival")
+
+            TotalRouteScreen(navController, departure, arrival)
+        }
+        composable(
             route = "${NavRoute.SHOWMORE.routeName}/{category}",
             arguments =
                 listOf(
@@ -98,7 +111,6 @@ fun NavGraphBuilder.home(
             val category = backStackEntry.arguments?.getString("category") ?: ""
             ShowMoreScreen(navController, category, currentLocationViewModel)
         }
-        composable(NavRoute.TOTAL_ROUTE.routeName) { TotalRouteScreen(navController) }
         composable(NavRoute.GUIDE.routeName) { GuideScreen(navController) }
         composable(NavRoute.TESTNAV.routeName) { TestNavFile(navController) }
     }

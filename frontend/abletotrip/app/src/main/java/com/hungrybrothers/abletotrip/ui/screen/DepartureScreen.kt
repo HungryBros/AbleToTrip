@@ -42,6 +42,7 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.hungrybrothers.abletotrip.ui.components.AutocompleteTextField2
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.PlacesList
+import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomDisable
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
@@ -59,16 +60,19 @@ fun DepartureScreen(
     Surface(modifier = Modifier.fillMaxSize(), color = CustomBackground) {
         Column(modifier = Modifier.fillMaxSize().background(CustomPrimary)) {
             HeaderBar(navController = navController, true)
-            Text(text = "잘나오나$latitude,$longitude,$address")
-            DepartureTopBox(autocompleteViewModel)
-            PinGoogleMap()
+            DepartureTopBox(navController, autocompleteViewModel, address)
+            PinGoogleMap(latitude, longitude, address)
         }
     }
 }
 
 @Composable
-fun DepartureTopBox(autocompleteViewModel: PlaceCompleteViewModel) {
-    val myendpoint: String = "경복궁" // 밑에 텍스트칸
+fun DepartureTopBox(
+    navController: NavController,
+    autocompleteViewModel: PlaceCompleteViewModel,
+    address: String,
+) {
+    val myendpoint: String = address // 밑에 텍스트칸
     val keyboardController = LocalSoftwareKeyboardController.current // 키보드 컨트롤
     val places by autocompleteViewModel.places.observeAsState(initial = emptyList()) // 받아온 전체 플레이스
     var selectedAddress by remember { mutableStateOf<String?>(null) } // 선택한 주소의 상세주소
@@ -127,12 +131,16 @@ fun DepartureTopBox(autocompleteViewModel: PlaceCompleteViewModel) {
                     .padding()
                     .clip(RoundedCornerShape(8.dp)),
         )
-        ActionsRow()
+        ActionsRow(navController, selectedAddress, myendpoint)
     }
 }
 
 @Composable
-fun ActionsRow() {
+fun ActionsRow(
+    navController: NavController,
+    selectedAddress: String?,
+    myendpoint: String,
+) {
     Row(
         modifier =
             Modifier
@@ -149,7 +157,9 @@ fun ActionsRow() {
         }
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = CustomDisable),
-            onClick = { /* Handle Right Button Click */ },
+            onClick = {
+                navController.navigate("${NavRoute.DEPARTURE.routeName}}")
+            },
             shape = RoundedCornerShape(8.dp),
         ) {
             Text("길찾기", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, color = CustomBackground))
@@ -158,8 +168,12 @@ fun ActionsRow() {
 }
 
 @Composable
-fun PinGoogleMap() {
-    val myendpoint = LatLng(37.579617, 126.977041) // 예시 위경도, 실제 위경도로 변경 필요
+fun PinGoogleMap(
+    latitude: Double,
+    longitude: Double,
+    address: String,
+) {
+    val myendpoint = LatLng(latitude, longitude) // 예시 위경도, 실제 위경도로 변경 필요
     val cameraPositionState =
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(myendpoint, 15f)
@@ -177,7 +191,7 @@ fun PinGoogleMap() {
             Marker(
                 state = rememberMarkerState(position = myendpoint),
                 title = "도착지",
-                snippet = "경복궁",
+                snippet = address,
             )
         }
     }
