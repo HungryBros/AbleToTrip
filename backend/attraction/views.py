@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -8,11 +9,21 @@ from .models import Attraction
 from .serializers import AttractionSerializer
 from heapq import heappop, heappush
 from .utils import category1_map, category2_map, calculate_distance, get_image_url
+from member.utils import is_logged_in
+
+User = get_user_model()
 
 
 # Create your views here.
 @api_view(["GET"])
 def attraction(request):
+    # 로그인 인증
+    if not is_logged_in(request):
+        return Response(
+            {"message": "인증된 사용자가 아닙니다."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
     user_latitude = float(
         request.META.get("HTTP_LATITUDE", 0)
     )  # "HTTP_LATITUDE" 헤더가 없으면 기본값으로 0 설정
@@ -94,6 +105,13 @@ def attraction(request):
 
 @api_view(["GET"])
 def attraction_by_category(request):
+    # 로그인 인증
+    if not is_logged_in(request):
+        return Response(
+            {"message": "인증된 사용자가 아닙니다."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
     page = int(request.GET.get("page", "1").rstrip("/"))  # 페이지 번호
 
     user_latitude = float(
@@ -155,6 +173,13 @@ def attraction_by_category(request):
 
 @api_view(["GET"])
 def attraction_more(request):
+    # 로그인 인증
+    if not is_logged_in(request):
+        return Response(
+            {"message": "인증된 사용자가 아닙니다."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
     page = int(request.GET.get("page", "1").rstrip("/"))  # 스크롤 횟수
 
     user_latitude = float(
@@ -211,6 +236,13 @@ def attraction_more(request):
 
 @api_view(["GET"])
 def attraction_search(request):
+    # 로그인 인증
+    if not is_logged_in(request):
+        return Response(
+            {"message": "인증된 사용자가 아닙니다."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
     keyword = request.GET.get("keyword", "").rstrip("/")
     page = int(request.GET.get("page", "1").rstrip("/"))  # 스크롤 횟수
 
@@ -296,6 +328,13 @@ def attraction_search(request):
 
 @api_view(["GET"])
 def attraction_detail(request, id):
+    # 로그인 인증
+    if not is_logged_in(request):
+        return Response(
+            {"message": "인증된 사용자가 아닙니다."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
     attraction = get_object_or_404(Attraction, pk=id)
     serializer = AttractionSerializer(attraction)
 
