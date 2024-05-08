@@ -1,4 +1,3 @@
-from django.contrib.auth import login, authenticate
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -22,21 +21,17 @@ def signin(request):
                 status=status.HTTP_201_CREATED,
             )
         else:
-            prefix, access_token = request.META.get("HTTP_AUTHORIZATION").split()
-            user_info = kakao_user_info(f"{prefix} {access_token}")
+            access_token = request.META.get("HTTP_AUTHORIZATION")
+            user_info = kakao_user_info(access_token)
             email = user_info.get("kakao_account").get("email")
             try:
                 user = User.objects.get(email=email)
                 address = user.address
                 if address:
-                    login(request, user)
-                    print("로그인 유저", user, request.user)
-                    print("기존 회원, 로그인 성공")
                     return Response(
                         {"message": "기존 회원, 로그인 성공"}, status=status.HTTP_200_OK
                     )
                 else:
-                    print("기존 회원이지만 주소 입력을 하지 않았습니다.")
                     return Response(
                         {
                             "message": "기존 회원이지만 주소 입력을 하지 않았습니다. 주소 입력을 해주세요."
@@ -45,7 +40,6 @@ def signin(request):
                     )
 
             except User.DoesNotExist:
-                print("정보가 유효하지 않습니다.")
                 return Response(
                     {"error": "정보가 유효하지 않습니다."},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -55,8 +49,8 @@ def signin(request):
 @api_view(["POST"])
 def info(request):
     if request.method == "POST":
-        prefix, access_token = request.META.get("HTTP_AUTHORIZATION").split()
-        user_info = kakao_user_info(f"{prefix} {access_token}")
+        access_token = request.META.get("HTTP_AUTHORIZATION")
+        user_info = kakao_user_info(access_token)
         if user_info:
             email = user_info.get("kakao_account").get("email")
             user = User.objects.get(email=email)  # 현재 로그인한 사용자
@@ -66,7 +60,6 @@ def info(request):
                 if user and address:
                     user.address = address
                     user.save()
-                    login(request, user)
                     return Response(
                         {"message": "주소가 성공적으로 저장되었습니다. 로그인 성공"},
                         status=status.HTTP_200_OK,
@@ -77,7 +70,6 @@ def info(request):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
             else:
-                login(request, user)
                 return Response(
                     {"message": "이미 주소가 저장된 회원입니다."},
                     status=status.HTTP_208_ALREADY_REPORTED,
