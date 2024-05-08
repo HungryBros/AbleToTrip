@@ -120,7 +120,7 @@ fun AddressScreen(
                 Log.d("Places : AddressScreen", "places = ${autocompleteViewModel.places.value}")
             }
             Spacer(Modifier.weight(1f))
-            CompleteButton(navController, addressInput = selectedAddress)
+            CompleteButton(navController, nameInput = textFieldValue, addressInput = selectedAddress)
         }
     }
 }
@@ -128,6 +128,7 @@ fun AddressScreen(
 @Composable
 fun CompleteButton(
     navController: NavController,
+    nameInput: String?,
     addressInput: String?,
 ) {
     val buttonColors =
@@ -142,7 +143,7 @@ fun CompleteButton(
         onClick = {
             if (addressInput != null) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    val isSuccess = postAddress(addressInput)
+                    val isSuccess = postAddress("$nameInput, $addressInput")
                     if (isSuccess) {
                         navController.navigate(NavRoute.HOME.routeName)
                     }
