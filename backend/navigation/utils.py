@@ -1,21 +1,17 @@
 from django.shortcuts import get_object_or_404
 from decouple import config
 from PyKakao import Local
+import pandas as pd
 import requests
+import joblib
 import time
 import re
-import joblib
-import xgboost
-import pandas as pd
-import numpy as np
-import os
 
 # Import Models and Serializers
 from .models import Convenient
 from .serializers import ConvenientSerializer
 
 # Load Trained Model
-# model_path = "trained_ETA_model.pkl/"
 model_path = "navigation/trained_models/trained_ETA_model.pkl"
 trained_ETA_model = joblib.load(model_path)
 
