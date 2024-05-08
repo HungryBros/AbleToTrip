@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.core.cache import cache
-from pprint import pprint
+
 
 # Import Models and Serializers
 from .models import Restroom
@@ -19,14 +19,19 @@ from .utils import (
     pedestrian_request_func,
     get_tmap_info_func,
     navigation_response_func,
+    get_additional_ETA_func,
 )
 
 
 # Find Route
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def navigation(request):
     print(f"{log_time_func()} - Navigation: Navigation 함수 START")
+
+    print(f"{log_time_func()} - Navigation: Load trained ETA model")
+    # global trained_ETA_model
+
     print(f"{log_time_func()} - Navigation: REQUEST USER - {request.user}")
     origin = request.data.get("departure")
     destination = request.data.get("arrival")
@@ -36,10 +41,6 @@ def navigation(request):
     transit_mode = "subway"
 
     response_json = direction_request_func(origin, destination, mode, transit_mode)
-
-    print()
-    pprint(response_json)
-    print()
 
     # Routes & Steps 데이터
     steps, duration = get_steps_func(response_json)
@@ -122,6 +123,7 @@ def navigation(request):
                 pedestrian_coordinate_list,
                 pedestrian_description_list,
                 duration,
+                distance,
             ) = get_tmap_info_func(pedestrian_route)
 
             print(f"{log_time_func()} - Navigation: T Map ONLY 도보 경로 요청 SUCCESS")
@@ -195,9 +197,15 @@ def navigation(request):
             print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 START")
 
             for step_idx in range(0, step_length):
+                print(
+                    f"{log_time_func()} - Navigation: POLYLINE 추출 for 문 step_idx: {step_idx}"
+                )
                 if step_travel_mode_list[step_idx] != "TRANSIT":
                     continue
 
+                print(
+                    f"{log_time_func()} - Navigation: POLYLINE 추출 if 통과 step_idx: {step_idx}"
+                )
                 transit_details = step_list[step_idx].get("transit_details")
 
                 departure_station_name = transit_details.get("departure_stop").get(
@@ -233,9 +241,18 @@ def navigation(request):
                 cached_subway_stops.append(f"{arrival_station_name} {line_number}")
                 subway_stops.append(arrival_station_fullname)
 
+            print(f"{log_time_func()} - Navigation: POLYLINE 추출 for문 완료")
+            print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 SUCCESS")
+
+            print(f"{log_time_func()} - Navigation: REDIS 저장 START")
+            print(f"{log_time_func()} - Navigation: REQUEST USER: {request.user}")
+            print(
+                f"{log_time_func()} - Navigation: CACHED STATIONS: {cached_subway_stops}"
+            )
+
             cache.set(request.user, cached_subway_stops, 3600 * 2)
 
-            print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 SUCCESS")
+            print(f"{log_time_func()} - Navigation: REDIS 저장 SUCCESS")
 
             print(f"{log_time_func()} - Navigation: 엘레베이터 출구 탐색 START")
 
@@ -301,21 +318,14 @@ def navigation(request):
                 departure_pedestrian_coordinate_list,
                 departure_pedestrian_description_list,
                 departure_pedestrian_duration,
+                departure_pedestrian_distance,
             ) = get_tmap_info_func(start_pedestrian_route)
             (
                 arrival_pedestrian_coordinate_list,
                 arrival_pedestrian_description_list,
                 arrival_pedestrian_duration,
+                arrival_pedestrian_distance,
             ) = get_tmap_info_func(end_pedestrian_route)
-
-            # 총 시간 계산
-            duration = (
-                duration
-                + departure_pedestrian_duration
-                + arrival_pedestrian_duration
-                - google_route_pedestrian_departure_duration
-                - google_route_pedestrian_arrival_duration
-            )
 
             # 전체 polyline, coordinate 데이터 완성
             polyline_info.append(
@@ -359,6 +369,35 @@ def navigation(request):
 
             print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 SUCCESS")
 
+            # Calculate ETA
+            print(f"{log_time_func()} - Navigation: ETA 계산 START")
+
+            additional_ETA = get_additional_ETA_func(
+                departure_pedestrian_distance,
+                departure_pedestrian_duration,
+                arrival_pedestrian_distance,
+                arrival_pedestrian_duration,
+                subway_stops,
+            )
+
+            print(
+                f"{log_time_func()} - Navigation: additional ETA - {additional_ETA} minutes"
+            )
+
+            # 총 시간 계산
+            duration = (
+                duration
+                + departure_pedestrian_duration
+                + arrival_pedestrian_duration
+                - google_route_pedestrian_departure_duration
+                - google_route_pedestrian_arrival_duration
+                + additional_ETA
+            )
+
+            print(f"{log_time_func()} - Navigation: Total ETA - {duration} minutes")
+
+            print(f"{log_time_func()} - Navigation: ETA 계산 SUCCESS")
+
         except Exception as err:
             print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 FAIL")
             print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
@@ -380,7 +419,7 @@ def navigation(request):
 
 # Find Restrooms on Current Route
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def restroom(request):
     try:
         cached_subway_stops = cache.get(request.user)
