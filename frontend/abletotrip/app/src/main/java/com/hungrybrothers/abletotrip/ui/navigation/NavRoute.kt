@@ -21,7 +21,6 @@ import com.hungrybrothers.abletotrip.ui.screen.SplashScreen
 import com.hungrybrothers.abletotrip.ui.screen.TestNavFile
 import com.hungrybrothers.abletotrip.ui.screen.TotalRouteScreen
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
-import com.kakao.sdk.common.KakaoSdk.type
 
 // 네비게이션 라우트 이넘(값을 가지는 이넘) -> 라우트액션에서 사용하기위해서
 // 라우트 네임이 키임
@@ -72,11 +71,12 @@ fun NavGraphBuilder.home(navController: NavController) {
 //        }
         composable(
             route = "DEPARTURE/{latitude}/{longitude}/{address}",
-            arguments = listOf(
-                navArgument("latitude") { type = NavType.FloatType },
-                navArgument("longitude") { type = NavType.FloatType },
-                navArgument("address") { type = NavType.StringType }
-            )
+            arguments =
+                listOf(
+                    navArgument("latitude") { type = NavType.FloatType },
+                    navArgument("longitude") { type = NavType.FloatType },
+                    navArgument("address") { type = NavType.StringType },
+                ),
         ) { backStackEntry ->
             val latitude = backStackEntry.arguments?.getFloat("latitude")?.toDouble() ?: 0.0
             val longitude = backStackEntry.arguments?.getFloat("longitude")?.toDouble() ?: 0.0
@@ -85,7 +85,19 @@ fun NavGraphBuilder.home(navController: NavController) {
             val autocompleteViewModel = viewModel<PlaceCompleteViewModel>()
             DepartureScreen(navController, autocompleteViewModel, latitude, longitude, address)
         }
-        composable(NavRoute.TOTAL_ROUTE.routeName) { TotalRouteScreen(navController) }
+        composable(
+            route = "TOTAL_ROUTE/{departure}/{arrival}",
+            arguments =
+                listOf(
+                    navArgument("departure") { type = NavType.StringType },
+                    navArgument("arrival") { type = NavType.StringType },
+                ),
+        ) { backStackEntry ->
+            val departure = backStackEntry.arguments?.getString("departure")
+            val arrival = backStackEntry.arguments?.getString("arrival")
+
+            TotalRouteScreen(navController, departure, arrival)
+        }
         composable(NavRoute.GUIDE.routeName) { GuideScreen(navController) }
         composable(NavRoute.TESTNAV.routeName) { TestNavFile(navController) }
     }

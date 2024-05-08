@@ -10,9 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -43,14 +47,23 @@ import com.hungrybrothers.abletotrip.ui.viewmodel.Resource
 import kotlinx.coroutines.launch
 
 @Composable
-fun TotalRouteScreen(navController: NavController) {
+fun TotalRouteScreen(
+    navController: NavController,
+    departure: String?,
+    arrival: String?,
+) {
     val navigationViewModel: NavigationViewModel = viewModel()
     Surface(modifier = Modifier, color = CustomBackground) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
             HeaderBar(navController = navController, true)
-            TotalRouteGoogleMap(modifier = Modifier.weight(7f), navigationViewModel = navigationViewModel)
+            TotalRouteGoogleMap(
+                modifier = Modifier.weight(7f),
+                navigationViewModel = navigationViewModel,
+                departure = departure,
+                arrival = arrival,
+            )
             TotalRouteBottomBox(
                 modifier = Modifier.weight(1f),
                 navigationViewModel = navigationViewModel,
@@ -128,29 +141,47 @@ fun parseCoordinates(jsonData: String): List<LatLng> {
 fun TotalRouteGoogleMap(
     modifier: Modifier,
     navigationViewModel: NavigationViewModel,
+    departure: String?,
+    arrival: String?,
 ) {
+    // 네비게이션 데이터를 가져오기 위한 첫 호출
+    LaunchedEffect(Unit) {
+        navigationViewModel.fetchNavigationData(departure = departure, arrival = arrival)
+    }
+
+    // LiveData를 Compose 상태로 변환
+    val navigationData by navigationViewModel.navigationData.observeAsState()
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
 
-    val navigationData by navigationViewModel.getNavigationData().observeAsState()
+    var mystartpoint by remember { mutableStateOf(LatLng(0.0, 0.0)) }
+    var myendpoint by remember { mutableStateOf(LatLng(0.0, 0.0)) }
 
+    // navigationData의 상태에 따른 UI 처리
     navigationData?.let { resource ->
         when (resource.status) {
             Resource.Status.SUCCESS -> {
                 val data = resource.data
                 // navigationData에서 필요한 작업을 수행하세요
                 Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
+
+                if (polylineDataList.isNotEmpty()) {
+                    mystartpoint = polylineDataList.first().points.firstOrNull() ?: LatLng(0.0, 0.0)
+                    myendpoint = polylineDataList.last().points.lastOrNull() ?: LatLng(0.0, 0.0)
+                }
+
+                Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
             }
             Resource.Status.ERROR -> {
                 val errorMessage = resource.message
                 // 오류 처리
+                Log.e("TotalRouteGoogleMap", "Error: $errorMessage")
             }
             Resource.Status.LOADING -> {
                 // 로딩 중 처리
+                Log.d("TotalRouteGoogleMap", "Loading navigation data...")
             }
         }
     }
-    val mystartpoint = LatLng(37.501286, 127.0396029)
-    val myendpoint = LatLng(37.579617, 126.977041)
 
     val multicameraState =
         LatLngBounds.Builder()
@@ -186,12 +217,12 @@ fun TotalRouteGoogleMap(
         Marker(
             state = rememberMarkerState(position = mystartpoint),
             title = "출발지",
-            snippet = "Here is the start point",
+            snippet = departure,
         )
         Marker(
             state = rememberMarkerState(position = myendpoint),
             title = "도착지",
-            snippet = "Here is the end point",
+            snippet = arrival,
         )
     }
 }
@@ -200,5 +231,5 @@ fun TotalRouteGoogleMap(
 @Composable
 fun PreviewTotalRouteScreen() {
     // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    TotalRouteScreen(navController = rememberNavController())
+    TotalRouteScreen(navController = rememberNavController(), departure = null, arrival = null)
 }

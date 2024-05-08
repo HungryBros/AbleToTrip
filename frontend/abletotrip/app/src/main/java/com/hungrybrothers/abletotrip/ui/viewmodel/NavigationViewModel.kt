@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import io.ktor.client.*
 import io.ktor.client.engine.cio.CIO
@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -46,6 +47,8 @@ class NavigationViewModel : ViewModel() {
                 level = LogLevel.BODY
             }
         }
+    private val _navigationData = MutableLiveData<Resource<NavigationData>>()
+    val navigationData: LiveData<Resource<NavigationData>> = _navigationData
 
     val polylineDataList = MutableLiveData<List<PolylineData>>()
 
@@ -55,14 +58,17 @@ class NavigationViewModel : ViewModel() {
     private val _detailRouteInfo = MutableLiveData<List<DetailRouteInfo>>()
     val detailRouteInfo: LiveData<List<DetailRouteInfo>> = _detailRouteInfo
 
-    private val _navigationData =
-        liveData(Dispatchers.IO) {
-            emit(Resource.loading(null))
+    fun fetchNavigationData(
+        departure: String?,
+        arrival: String?,
+    ) {
+        _navigationData.value = Resource.loading(null)
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val requestBody =
                     buildJsonObject {
-                        put("departure", "멀티캠퍼스 역삼")
-                        put("arrival", "경복궁")
+                        put("departure", departure ?: "")
+                        put("arrival", arrival ?: "")
                     }
                 val response: HttpResponse =
                     client.post("http://k10a607.p.ssafy.io:8087/navigation/search-direction/") {
@@ -72,7 +78,7 @@ class NavigationViewModel : ViewModel() {
                 if (response.status == HttpStatusCode.OK) {
                     val responseBody = response.bodyAsText()
                     val data = Json { ignoreUnknownKeys = true }.decodeFromString<NavigationData>(responseBody)
-                    emit(Resource.success(data))
+                    _navigationData.postValue(Resource.success(data))
 
                     _duration.postValue(data.duration) // duration 업데이트
                     _detailRouteInfo.postValue(data.detail_route_info) // detail_route_info 업데이트
@@ -117,10 +123,6 @@ class NavigationViewModel : ViewModel() {
                                     }
                                 }
                             }.awaitAll()
-//                        val points = walkoneData
-//                        val points2 = walktwoData
-//                        val walkPolylineData = PolylineData(points, Color.Blue)
-//                        val walkPolylineData2 = PolylineData(points2, Color.Blue)
                         val combinedPolylineData =
                             mutableListOf<PolylineData>().apply {
                                 add(PolylineData(walkoneData, Color.Blue))
@@ -130,15 +132,12 @@ class NavigationViewModel : ViewModel() {
                         polylineDataList.postValue(combinedPolylineData)
                     }
                 } else {
-                    emit(Resource.error("Failed to load data", null))
+                    _navigationData.postValue(Resource.error("Failed to load data", null))
                 }
             } catch (e: Exception) {
-                emit(Resource.error("Error occurred: ${e.message}", null))
+                _navigationData.postValue(Resource.error("Error occurred: ${e.message}", null))
             }
         }
-
-    fun getNavigationData(): LiveData<Resource<NavigationData>> {
-        return _navigationData
     }
 
     override fun onCleared() {
