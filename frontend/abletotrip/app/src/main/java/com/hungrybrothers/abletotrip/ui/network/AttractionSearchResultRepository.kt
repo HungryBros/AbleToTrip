@@ -4,10 +4,13 @@ import android.util.Log
 import com.hungrybrothers.abletotrip.ui.datatype.AttractionSearchResult
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.http.isSuccess
 
 class AttractionSearchResultRepository {
     suspend fun fetchAttractionSearchResultData(
+        latitude: String,
+        longitude: String,
         keyword: String?,
         page: Int,
     ): AttractionSearchResult? {
@@ -15,12 +18,16 @@ class AttractionSearchResultRepository {
             Log.e("SearchResultData", "Item ID is null")
             return null
         }
-
+        Log.d("AttractionSearchResultRepository", "longitude = $longitude latitude = $latitude")
         val url = "attraction/search/?keyword=$keyword&page=$page"
 
         return try {
             Log.d("SearchResultData", "Sending request...")
-            val response = KtorClient.client.get(url)
+            val response =
+                KtorClient.client.get(url) {
+                    header("latitude", latitude)
+                    header("longitude", longitude)
+                }
             Log.d("SearchResultData", "Response success: ${response.status}")
             if (response.status.isSuccess()) {
                 response.body<AttractionSearchResult>()

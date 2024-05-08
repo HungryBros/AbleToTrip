@@ -67,7 +67,8 @@ fun NavGraphBuilder.home(
     navigation(startDestination = NavRoute.HOME.routeName, route = "HOMEGRAPH") {
         composable(NavRoute.HOME.routeName) { HomeScreen(navController, currentLocationViewModel) }
         composable("${NavRoute.SEARCH.routeName}/{keyword}") { backStackEntry ->
-            SearchScreen(navController, backStackEntry.arguments?.getString("keyword").toString())
+            val keyword = backStackEntry.arguments?.getString("keyword").orEmpty()
+            SearchScreen(navController, keyword, currentLocationViewModel)
         }
         composable("${NavRoute.DETAIL.routeName}/{id}") { backStackEntry ->
             DetailScreen(navController, backStackEntry.arguments?.getString("id")?.toInt())
