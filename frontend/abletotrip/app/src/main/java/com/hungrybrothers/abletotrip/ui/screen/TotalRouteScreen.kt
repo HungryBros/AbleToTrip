@@ -23,7 +23,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -51,8 +50,8 @@ fun TotalRouteScreen(
     navController: NavController,
     departure: String?,
     arrival: String?,
+    navigationViewModel: NavigationViewModel,
 ) {
-    val navigationViewModel: NavigationViewModel = viewModel()
     Surface(modifier = Modifier, color = CustomBackground) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -264,5 +263,10 @@ fun TotalRouteGoogleMap(
 @Composable
 fun PreviewTotalRouteScreen() {
     // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    TotalRouteScreen(navController = rememberNavController(), departure = null, arrival = null)
+    TotalRouteScreen(
+        navController = rememberNavController(),
+        departure = null,
+        arrival = null,
+        navigationViewModel = NavigationViewModel(),
+    )
 }
