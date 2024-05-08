@@ -21,10 +21,9 @@ import com.hungrybrothers.abletotrip.ui.screen.ShowMoreScreen
 import com.hungrybrothers.abletotrip.ui.screen.SplashScreen
 import com.hungrybrothers.abletotrip.ui.screen.TestNavFile
 import com.hungrybrothers.abletotrip.ui.screen.TotalRouteScreen
+import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 
-// 네비게이션 라우트 이넘(값을 가지는 이넘) -> 라우트액션에서 사용하기위해서
-// 라우트 네임이 키임
 enum class NavRoute(val routeName: String, val description: String) {
     SPLASH("SPLASH", "스플래시화면"),
     HOME("HOME", "홈화면"),
@@ -41,10 +40,13 @@ enum class NavRoute(val routeName: String, val description: String) {
 
 @Composable
 fun Navigation(navController: NavHostController) {
+    // 전역적으로 사용하지 않고 각 네비게이션 그래프에 전달
+    val currentLocationViewModel = viewModel<CurrentLocationViewModel>()
+
     NavHost(navController, startDestination = NavRoute.SPLASH.routeName) {
         composable(NavRoute.SPLASH.routeName) { SplashScreen(navController) }
         auth(navController)
-        home(navController)
+        home(navController, currentLocationViewModel)
     }
 }
 
@@ -58,19 +60,18 @@ fun NavGraphBuilder.auth(navController: NavController) {
     }
 }
 
-fun NavGraphBuilder.home(navController: NavController) {
+fun NavGraphBuilder.home(
+    navController: NavController,
+    currentLocationViewModel: CurrentLocationViewModel,
+) {
     navigation(startDestination = NavRoute.HOME.routeName, route = "HOMEGRAPH") {
-        composable(NavRoute.HOME.routeName) { HomeScreen(navController) }
+        composable(NavRoute.HOME.routeName) { HomeScreen(navController, currentLocationViewModel) }
         composable("${NavRoute.SEARCH.routeName}/{keyword}") { backStackEntry ->
             SearchScreen(navController, backStackEntry.arguments?.getString("keyword").toString())
         }
         composable("${NavRoute.DETAIL.routeName}/{id}") { backStackEntry ->
             DetailScreen(navController, backStackEntry.arguments?.getString("id")?.toInt())
         }
-//        composable(NavRoute.DEPARTURE.routeName) {
-//            val autocompleteViewModel = viewModel<PlaceCompleteViewModel>()
-//            DepartureScreen(navController, autocompleteViewModel)
-//        }
         composable(
             route = "DEPARTURE/{latitude}/{longitude}/{address}",
             arguments =
@@ -95,7 +96,7 @@ fun NavGraphBuilder.home(navController: NavController) {
                 ),
         ) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""
-            ShowMoreScreen(navController, category)
+            ShowMoreScreen(navController, category, currentLocationViewModel)
         }
         composable(NavRoute.TOTAL_ROUTE.routeName) { TotalRouteScreen(navController) }
         composable(NavRoute.GUIDE.routeName) { GuideScreen(navController) }

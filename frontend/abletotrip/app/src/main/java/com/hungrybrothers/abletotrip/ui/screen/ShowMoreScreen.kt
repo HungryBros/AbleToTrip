@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,28 +36,45 @@ import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attraction
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
+import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.ShowMoreViewModel
 
-// 기본화면 구성
 @Composable
 fun ShowMoreScreen(
     navController: NavController,
-    category: String, // 사용되지 않는 매개변수
+    category: String,
+    currentLocationViewModel: CurrentLocationViewModel,
 ) {
     val showMoreViewModel: ShowMoreViewModel =
         remember {
             val repository = ShowMoreInfoRepository()
             ShowMoreViewModel(repository)
         }
-    Log.d("ShowMoreScreen", "받은 카테고리: $category")
-    // ShowMoreData에 category 전달
-    LaunchedEffect(Unit) {
-        showMoreViewModel.ShowMoreData("37.5665", "126.9780", category, 1)
+
+    val latitude by currentLocationViewModel.latitude.observeAsState(null)
+    val longitude by currentLocationViewModel.longitude.observeAsState(null)
+    Log.d("ShowMoreScreen", "latitude = $latitude, longitude = $longitude")
+
+    LaunchedEffect(latitude, longitude) {
+        if (latitude != null && longitude != null) {
+            showMoreViewModel.ShowMoreData(latitude!!, longitude!!, category, 1)
+        }
     }
 
     Column {
         HeaderBar(navController, true)
-        DisplayMoreAttractionsScreen(showMoreViewModel, navController)
+
+        if (latitude != null && longitude != null) {
+            DisplayMoreAttractionsScreen(showMoreViewModel, navController)
+        } else {
+            // 위치 데이터가 없을 때 로딩 메시지 표시
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
 }
 
@@ -69,12 +87,12 @@ fun DisplayMoreAttractionsScreen(
 
     if (attractionsData != null) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
         ) {
             items(attractionsData!!.attractions) { attraction ->
-                Log.d("Catalog", "로드 완료$attraction")
                 MoreAttractionItem(attraction, navController)
             }
         }
@@ -82,7 +100,7 @@ fun DisplayMoreAttractionsScreen(
         // 데이터가 없을 때 메시지 표시
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "해당 카테고리의 데이터가 없습니다.",
@@ -93,8 +111,6 @@ fun DisplayMoreAttractionsScreen(
     }
 }
 
-
-// 카탈로그 선택시 화면의 카드
 @Composable
 fun MoreAttractionItem(
     attraction: Catalog2Attraction,
