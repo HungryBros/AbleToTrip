@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.contrib.auth import login, authenticate
 from rest_framework import status
 from rest_framework.response import Response
@@ -17,40 +16,71 @@ def signin(request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            print("회원가입 완료, 주소 등록이 필요합니다")
+            return Response(
+                {"message": "회원가입 완료, 주소 등록이 필요합니다"},
+                status=status.HTTP_201_CREATED,
+            )
         else:
+            prefix, access_token = request.META.get("HTTP_AUTHORIZATION").split()
+            user_info = kakao_user_info(f"{prefix} {access_token}")
+            email = user_info.get("kakao_account").get("email")
             try:
-                email = request.data.get("email")
                 user = User.objects.get(email=email)
-                login(request, user)
-                return Response({"message": "로그인 성공"}, status=status.HTTP_200_OK)
+                address = user.address
+                if address:
+                    login(request, user)
+                    print("로그인 유저", user, request.user)
+                    print("기존 회원, 로그인 성공")
+                    return Response(
+                        {"message": "기존 회원, 로그인 성공"}, status=status.HTTP_200_OK
+                    )
+                else:
+                    print("기존 회원이지만 주소 입력을 하지 않았습니다.")
+                    return Response(
+                        {
+                            "message": "기존 회원이지만 주소 입력을 하지 않았습니다. 주소 입력을 해주세요."
+                        },
+                        status=status.HTTP_202_ACCEPTED,
+                    )
+
             except User.DoesNotExist:
+                print("정보가 유효하지 않습니다.")
                 return Response(
-                    {"error": "해당 이메일을 가진 사용자가 없습니다."},
-                    status=status.HTTP_404_NOT_FOUND,
+                    {"error": "정보가 유효하지 않습니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
 
 @api_view(["POST"])
 def info(request):
     if request.method == "POST":
-        access_token = request.META.get("HTTP_AUTHORIZATION")
-        user_info = kakao_user_info(access_token)
+        prefix, access_token = request.META.get("HTTP_AUTHORIZATION").split()
+        user_info = kakao_user_info(f"{prefix} {access_token}")
         if user_info:
-            email = user_info["kakao_account"]["email"]
+            email = user_info.get("kakao_account").get("email")
             user = User.objects.get(email=email)  # 현재 로그인한 사용자
+            user_address = user.address
             address = request.data.get("address")  # 전송된 주소 데이터
-            if user and address:
-                user.address = address
-                user.save()
-                return Response(
-                    {"message": "주소가 성공적으로 저장되었습니다."},
-                    status=status.HTTP_200_OK,
-                )
+            if not user_address:
+                if user and address:
+                    user.address = address
+                    user.save()
+                    login(request, user)
+                    return Response(
+                        {"message": "주소가 성공적으로 저장되었습니다. 로그인 성공"},
+                        status=status.HTTP_200_OK,
+                    )
+                else:
+                    return Response(
+                        {"error": "사용자 또는 주소 데이터가 올바르지 않습니다."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
             else:
+                login(request, user)
                 return Response(
-                    {"error": "사용자 또는 주소 데이터가 올바르지 않습니다."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    {"message": "이미 주소가 저장된 회원입니다."},
+                    status=status.HTTP_208_ALREADY_REPORTED,
                 )
         else:
             return Response(
