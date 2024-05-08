@@ -66,13 +66,16 @@ import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
+import com.hungrybrothers.abletotrip.ui.viewmodel.Resource
 import com.hungrybrothers.abletotrip.ui.viewmodel.RestroomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GuideScreen(navController: NavController) {
+fun GuideScreen(
+    navController: NavController,
+    navigationViewModel: NavigationViewModel,
+) {
     val scaffoldState = rememberBottomSheetScaffoldState()
-    val navigationViewModel: NavigationViewModel = viewModel()
 
     val openDialog = remember { mutableStateOf(false) }
 
@@ -112,6 +115,7 @@ fun GuideScreen(navController: NavController) {
             },
         )
     }
+
     Surface(modifier = Modifier, color = CustomBackground) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -139,6 +143,17 @@ fun GoogleMapGuide(
 
     // 지도 상태 관리를 위한 remember
     var uiSettings by remember { mutableStateOf(com.google.maps.android.compose.MapUiSettings()) }
+
+    // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
+    val departureResource by navigationViewModel.departureData.observeAsState(Resource.loading(null))
+    val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
+
+    // `LatLng` 값으로부터 마커 상태를 선언
+    val startLatLng = departureResource.data ?: LatLng(0.0, 0.0)
+    val endLatLng = arrivalResource.data ?: LatLng(0.0, 0.0)
+
+    val startMarkerState = rememberMarkerState(position = startLatLng)
+    val endMarkerState = rememberMarkerState(position = endLatLng)
 
     LaunchedEffect(Unit) {
         viewModel.fetchRestrooms()
@@ -175,20 +190,21 @@ fun GoogleMapGuide(
             }
         }
 
+    val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
+
+    // 디버깅을 위해 `polylineDataList` 출력
+    println("guide check : $polylineDataList")
+
     LaunchedEffect(key1 = true) {
         permissionLauncher.launch(
             arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
         )
     }
 
-//    val decodedpolyline = parseCoordinates(jsonData)
-    val mystartpoint = LatLng(37.501286, 127.0396029)
-    val myendpoint = LatLng(37.579617, 126.977041)
-
     val bounds =
         LatLngBounds.Builder()
-            .include(mystartpoint)
-            .include(myendpoint)
+            .include(startLatLng)
+            .include(endLatLng)
             .include(gpsPoint)
             .build()
 
@@ -203,8 +219,6 @@ fun GoogleMapGuide(
         println("restroom check : $restrooms")
     }
 
-    val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
-
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = modifier,
@@ -216,17 +230,17 @@ fun GoogleMapGuide(
                 Polyline(
                     points = polylineData.points,
                     color = polylineData.color,
-                    width = 25f,
+                    width = 40f,
                 )
             }
 
             Marker(
-                state = rememberMarkerState(position = mystartpoint),
+                state = startMarkerState,
                 title = "출발지",
                 snippet = "Here is the start point",
             )
             Marker(
-                state = rememberMarkerState(position = myendpoint),
+                state = endMarkerState,
                 title = "도착지",
                 snippet = "Here is the end point",
             )
@@ -342,5 +356,5 @@ fun GuideBottomSheet(
 @Composable
 fun PreviewGuideScreen() {
     // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    GuideScreen(navController = rememberNavController())
+    GuideScreen(navController = rememberNavController(), navigationViewModel = NavigationViewModel())
 }
