@@ -22,6 +22,7 @@ import com.hungrybrothers.abletotrip.ui.screen.SplashScreen
 import com.hungrybrothers.abletotrip.ui.screen.TestNavFile
 import com.hungrybrothers.abletotrip.ui.screen.TotalRouteScreen
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
+import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 
 enum class NavRoute(val routeName: String, val description: String) {
@@ -42,11 +43,12 @@ enum class NavRoute(val routeName: String, val description: String) {
 fun Navigation(navController: NavHostController) {
     // 전역적으로 사용하지 않고 각 네비게이션 그래프에 전달
     val currentLocationViewModel = viewModel<CurrentLocationViewModel>()
+    val navigationViewModel = viewModel<NavigationViewModel>()
 
     NavHost(navController, startDestination = NavRoute.SPLASH.routeName) {
         composable(NavRoute.SPLASH.routeName) { SplashScreen(navController) }
         auth(navController)
-        home(navController, currentLocationViewModel)
+        home(navController, currentLocationViewModel, navigationViewModel)
     }
 }
 
@@ -63,6 +65,7 @@ fun NavGraphBuilder.auth(navController: NavController) {
 fun NavGraphBuilder.home(
     navController: NavController,
     currentLocationViewModel: CurrentLocationViewModel,
+    navigationViewModel: NavigationViewModel,
 ) {
     navigation(startDestination = NavRoute.HOME.routeName, route = "HOMEGRAPH") {
         composable(NavRoute.HOME.routeName) { HomeScreen(navController, currentLocationViewModel) }
@@ -100,7 +103,7 @@ fun NavGraphBuilder.home(
             val departure = backStackEntry.arguments?.getString("departure")
             val arrival = backStackEntry.arguments?.getString("arrival")
 
-            TotalRouteScreen(navController, departure, arrival)
+            TotalRouteScreen(navController, departure, arrival, navigationViewModel)
         }
         composable(
             route = "${NavRoute.SHOWMORE.routeName}/{category}",
@@ -112,7 +115,7 @@ fun NavGraphBuilder.home(
             val category = backStackEntry.arguments?.getString("category") ?: ""
             ShowMoreScreen(navController, category, currentLocationViewModel)
         }
-        composable(NavRoute.GUIDE.routeName) { GuideScreen(navController) }
+        composable(NavRoute.GUIDE.routeName) { GuideScreen(navController, navigationViewModel) }
         composable(NavRoute.TESTNAV.routeName) { TestNavFile(navController) }
     }
 }

@@ -42,7 +42,6 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.hungrybrothers.abletotrip.ui.components.AutocompleteTextField2
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.PlacesList
-import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomDisable
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
@@ -131,15 +130,16 @@ fun DepartureTopBox(
                     .padding()
                     .clip(RoundedCornerShape(8.dp)),
         )
-        ActionsRow(navController, selectedAddress, myendpoint)
+        ActionsRow(navController, textFieldValue, selectedAddress, myendpoint)
     }
 }
 
 @Composable
 fun ActionsRow(
     navController: NavController,
+    textFieldValue: String?,
     selectedAddress: String?,
-    myendpoint: String,
+    arrival: String,
 ) {
     Row(
         modifier =
@@ -158,7 +158,7 @@ fun ActionsRow(
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = CustomDisable),
             onClick = {
-                navController.navigate("${NavRoute.DEPARTURE.routeName}}")
+                navController.navigate("TOTAL_ROUTE/$textFieldValue, $selectedAddress/$arrival")
             },
             shape = RoundedCornerShape(8.dp),
         ) {

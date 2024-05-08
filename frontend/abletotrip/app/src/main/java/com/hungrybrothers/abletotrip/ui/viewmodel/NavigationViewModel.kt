@@ -52,6 +52,12 @@ class NavigationViewModel : ViewModel() {
                 level = LogLevel.BODY
             }
         }
+    private val _departureData = MutableLiveData<Resource<LatLng>>()
+    val departureData: LiveData<Resource<LatLng>> = _departureData
+
+    private val _arrivalData = MutableLiveData<Resource<LatLng>>()
+    val arrivalData: LiveData<Resource<LatLng>> = _arrivalData
+
     private val _navigationData = MutableLiveData<Resource<NavigationData>>()
     val navigationData: LiveData<Resource<NavigationData>> = _navigationData
 
@@ -70,11 +76,14 @@ class NavigationViewModel : ViewModel() {
         _navigationData.value = Resource.loading(null)
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                println("viewmodel check : $departure")
+                println("viewmodel check : $arrival")
                 val requestBody =
                     buildJsonObject {
                         put("departure", departure ?: "")
                         put("arrival", arrival ?: "")
                     }
+                println("viewmodel check : $requestBody")
                 val response: HttpResponse =
                     client.post("http://k10a607.p.ssafy.io:8087/navigation/search-direction/") {
                         contentType(ContentType.Application.Json)
@@ -85,6 +94,28 @@ class NavigationViewModel : ViewModel() {
                     val data = Json { ignoreUnknownKeys = true }.decodeFromString<NavigationData>(responseBody)
                     _navigationData.postValue(Resource.success(data))
 
+                    println("viewmodel check : $responseBody")
+
+                    _departureData.postValue(
+                        Resource.success(
+                            data.polyline_info.firstOrNull()?.info?.firstOrNull()?.let { info ->
+                                LatLng(
+                                    info.latitude ?: error("Latitude is null"),
+                                    info.longitude ?: error("Longitude is null"),
+                                )
+                            } ?: error("No polyline info available"),
+                        ),
+                    )
+                    _arrivalData.postValue(
+                        Resource.success(
+                            data.polyline_info.lastOrNull()?.info?.lastOrNull()?.let { info ->
+                                LatLng(
+                                    info.latitude ?: error("Latitude is null"),
+                                    info.longitude ?: error("Longitude is null"),
+                                )
+                            } ?: error("No polyline info available"),
+                        ),
+                    )
                     _duration.postValue(data.duration) // duration 업데이트
                     _detailRouteInfo.postValue(data.detail_route_info) // detail_route_info 업데이트
 

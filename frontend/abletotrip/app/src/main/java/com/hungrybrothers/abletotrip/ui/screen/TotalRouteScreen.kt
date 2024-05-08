@@ -23,7 +23,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -51,8 +50,8 @@ fun TotalRouteScreen(
     navController: NavController,
     departure: String?,
     arrival: String?,
+    navigationViewModel: NavigationViewModel,
 ) {
-    val navigationViewModel: NavigationViewModel = viewModel()
     Surface(modifier = Modifier, color = CustomBackground) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -153,8 +152,38 @@ fun TotalRouteGoogleMap(
     val navigationData by navigationViewModel.navigationData.observeAsState()
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
 
+    // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
+    val departureResource by navigationViewModel.departureData.observeAsState(Resource.loading(null))
+    val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
+
+    // 초기값을 0.0으로 설정하고, `_departureData`와 `_arrivalData`에 맞게 업데이트
     var mystartpoint by remember { mutableStateOf(LatLng(0.0, 0.0)) }
     var myendpoint by remember { mutableStateOf(LatLng(0.0, 0.0)) }
+
+    // 마커 상태 선언
+    val startMarkerState = rememberMarkerState(position = mystartpoint)
+    val endMarkerState = rememberMarkerState(position = myendpoint)
+
+    // `departureResource`와 `arrivalResource`의 상태에 따라 업데이트
+    LaunchedEffect(departureResource) {
+        if (departureResource.status == Resource.Status.SUCCESS) {
+            departureResource.data?.let {
+                mystartpoint = it
+                startMarkerState.position = it
+                println("start end : $mystartpoint")
+            }
+        }
+    }
+
+    LaunchedEffect(arrivalResource) {
+        if (arrivalResource.status == Resource.Status.SUCCESS) {
+            arrivalResource.data?.let {
+                myendpoint = it
+                endMarkerState.position = it
+                println("start end : $myendpoint")
+            }
+        }
+    }
 
     // navigationData의 상태에 따른 UI 처리
     navigationData?.let { resource ->
@@ -163,11 +192,6 @@ fun TotalRouteGoogleMap(
                 val data = resource.data
                 // navigationData에서 필요한 작업을 수행하세요
                 Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
-
-                if (polylineDataList.isNotEmpty()) {
-                    mystartpoint = polylineDataList.first().points.firstOrNull() ?: LatLng(0.0, 0.0)
-                    myendpoint = polylineDataList.last().points.lastOrNull() ?: LatLng(0.0, 0.0)
-                }
 
                 Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
             }
@@ -194,7 +218,15 @@ fun TotalRouteGoogleMap(
             position = CameraPosition.fromLatLngZoom(multicameraState.center, 10f)
         }
     val coroutineScope = rememberCoroutineScope()
-//    println("receive data : $decodedpolyline")
+
+    // `mystartpoint`나 `myendpoint`가 변경될 때마다 카메라 위치를 업데이트
+    LaunchedEffect(mystartpoint, myendpoint) {
+        coroutineScope.launch {
+            cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
+            println("polylineOptionsList data : $polylineDataList")
+        }
+    }
+
     GoogleMap(
         modifier = modifier,
         cameraPositionState = cameraPositionState,
@@ -215,12 +247,12 @@ fun TotalRouteGoogleMap(
         }
 
         Marker(
-            state = rememberMarkerState(position = mystartpoint),
+            state = startMarkerState,
             title = "출발지",
             snippet = departure,
         )
         Marker(
-            state = rememberMarkerState(position = myendpoint),
+            state = endMarkerState,
             title = "도착지",
             snippet = arrival,
         )
@@ -231,5 +263,10 @@ fun TotalRouteGoogleMap(
 @Composable
 fun PreviewTotalRouteScreen() {
     // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    TotalRouteScreen(navController = rememberNavController(), departure = null, arrival = null)
+    TotalRouteScreen(
+        navController = rememberNavController(),
+        departure = null,
+        arrival = null,
+        navigationViewModel = NavigationViewModel(),
+    )
 }
