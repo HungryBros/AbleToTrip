@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,7 +36,6 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attraction
-import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.ShowMoreViewModel
@@ -57,7 +58,7 @@ fun ShowMoreScreen(
 
     LaunchedEffect(latitude, longitude) {
         if (latitude != null && longitude != null) {
-            showMoreViewModel.ShowMoreData(latitude!!, longitude!!, category, 1)
+            showMoreViewModel.loadInitialData(latitude!!, longitude!!, category)
         }
     }
 
@@ -65,9 +66,14 @@ fun ShowMoreScreen(
         HeaderBar(navController, true)
 
         if (latitude != null && longitude != null) {
-            DisplayMoreAttractionsScreen(showMoreViewModel, navController)
+            DisplayMoreAttractionsScreen(
+                viewModel = showMoreViewModel,
+                navController = navController,
+                latitude = latitude!!,
+                longitude = longitude!!,
+                category = category,
+            )
         } else {
-            // 위치 데이터가 없을 때 로딩 메시지 표시
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
@@ -82,32 +88,48 @@ fun ShowMoreScreen(
 fun DisplayMoreAttractionsScreen(
     viewModel: ShowMoreViewModel,
     navController: NavController,
+    latitude: String,
+    longitude: String,
+    category: String,
 ) {
     val attractionsData by viewModel.showmoreData.collectAsState(null)
+    val listState = rememberLazyListState()
 
-    if (attractionsData != null) {
-        LazyColumn(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 8.dp),
-        ) {
+    LazyColumn(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(vertical = 8.dp),
+        state = listState,
+    ) {
+        if (attractionsData != null) {
             items(attractionsData!!.attractions) { attraction ->
                 MoreAttractionItem(attraction, navController)
             }
         }
-    } else {
-        // 데이터가 없을 때 메시지 표시
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "해당 카테고리의 데이터가 없습니다.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
+
+        item {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
         }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+            .collect { visibleItems ->
+                val lastVisibleItem = visibleItems.lastOrNull()
+                val totalItems = listState.layoutInfo.totalItemsCount
+                if (lastVisibleItem != null && lastVisibleItem.index >= totalItems - 1) {
+                    viewModel.loadMoreData(latitude, longitude, category)
+                }
+            }
     }
 }
 
@@ -121,7 +143,7 @@ fun MoreAttractionItem(
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 16.dp)
-                .clickable(onClick = { navController.navigate("${NavRoute.DETAIL.routeName}/${attraction.id}") }),
+                .clickable(onClick = { navController.navigate("detail/${attraction.id}") }),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Row(
