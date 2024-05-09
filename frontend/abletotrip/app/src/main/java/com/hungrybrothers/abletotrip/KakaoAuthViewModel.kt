@@ -7,7 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import androidx.security.crypto.MasterKey
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.model.ClientError
@@ -39,11 +39,18 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
     private val _loginResult = MutableLiveData<HttpStatusCode?>()
     val loginResult: LiveData<HttpStatusCode?> = _loginResult
 
+    // MasterKey 생성
+    private val masterKey =
+        MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+    // EncryptedSharedPreferences 생성
     private val encryptedPrefs =
         EncryptedSharedPreferences.create(
-            PREFS_NAME,
-            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
             context,
+            PREFS_NAME,
+            masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
