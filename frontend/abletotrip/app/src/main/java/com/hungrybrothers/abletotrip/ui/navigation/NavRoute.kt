@@ -24,6 +24,7 @@ import com.hungrybrothers.abletotrip.ui.screen.TotalRouteScreen
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
+import com.kakao.sdk.common.KakaoSdk.type
 
 enum class NavRoute(val routeName: String, val description: String) {
     SPLASH("SPLASH", "스플래시화면"),

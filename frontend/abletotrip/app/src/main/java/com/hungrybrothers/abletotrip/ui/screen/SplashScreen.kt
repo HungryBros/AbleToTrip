@@ -32,17 +32,26 @@ private const val SPTIME: Long = 3000
 fun SplashScreen(navController: NavController) {
     val viewModel: KakaoAuthViewModel = viewModel()
     val loggedIn = viewModel.loggedIn.observeAsState().value
+    val loginResult = viewModel.loginResult.observeAsState().value
 
-    LaunchedEffect(loggedIn) {
+    LaunchedEffect(loggedIn, loginResult) {
         delay(SPTIME)
         withContext(Dispatchers.Main) {
-            if (loggedIn == true) {
-                navController.navigate(NavRoute.HOME.routeName) {
-                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
+            when {
+                loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.OK -> {
+                    navController.navigate(NavRoute.HOME.routeName) {
+                        popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
+                    }
                 }
-            } else {
-                navController.navigate(NavRoute.LOGIN.routeName) {
-                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
+                loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.Accepted -> {
+                    navController.navigate(NavRoute.ADDRESS.routeName) {
+                        popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
+                    }
+                }
+                else -> {
+                    navController.navigate(NavRoute.LOGIN.routeName) {
+                        popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
+                    }
                 }
             }
         }
@@ -55,7 +64,7 @@ fun SplashScreen(navController: NavController) {
 fun Splash() {
     val infiniteTransition = rememberInfiniteTransition()
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 1f, // 초기값을 1로 설정하여 완전히 불투명하게 시작
+        initialValue = 1f,
         targetValue = 0.3f,
         animationSpec =
             infiniteRepeatable(

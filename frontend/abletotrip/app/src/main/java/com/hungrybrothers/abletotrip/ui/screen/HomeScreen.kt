@@ -9,35 +9,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +27,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.location.LocationCallback
@@ -55,6 +35,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.hungrybrothers.abletotrip.KakaoAuthViewModel
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.CategorySecond
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
@@ -98,6 +79,7 @@ fun HomeScreen(
         }
 
     val context = LocalContext.current
+    val kakaoAuthViewModel: KakaoAuthViewModel = viewModel()
     var searchText by remember { mutableStateOf("") }
     val keyboardController = LocalSoftwareKeyboardController.current
     val categories =
@@ -135,50 +117,82 @@ fun HomeScreen(
     val latitude by currentLocationViewModel.latitude.observeAsState(null)
     val longitude by currentLocationViewModel.longitude.observeAsState(null)
 
-    // UI시작
+    // UI 시작
     val selectedCategories = remember { mutableStateOf(mutableListOf<String>()) }
-    println("Catalog2DataselectedCategories : $selectedCategories")
 
-    if (latitude != null && longitude != null) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            HeaderBar(navController = navController, false)
-            SearchBar(
-                text = searchText,
-                onValueChange = { newSearchText ->
-                    searchText = newSearchText
-                },
-                onSearch = {
-                    if (searchText.isNotEmpty()) {
-                        navController.navigate("${NavRoute.SEARCH.routeName}/$searchText")
-                    }
-                },
-                placeholder = "검색어를 입력해주세요.",
-                onClear = {
-                    searchText = ""
-                    keyboardController?.hide() // 키보드를 숨깁니다.
-                },
-            )
-            CategorySelector(categories, selectedCategories.value) { updatedSelectedCategories ->
-                val selectedString = updatedSelectedCategories.joinToString("-")
-                catalog2ViewModel.fetchCatalog2Data(latitude!!, longitude!!, selectedString, 1)
-                selectedCategories.value = updatedSelectedCategories.toMutableList()
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (latitude != null && longitude != null) {
+            Column(
+                modifier =
+                    Modifier
+                        .padding(16.dp)
+                        .fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                HeaderBar(navController = navController, false)
+                SearchBar(
+                    text = searchText,
+                    onValueChange = { newSearchText ->
+                        searchText = newSearchText
+                    },
+                    onSearch = {
+                        if (searchText.isNotEmpty()) {
+                            navController.navigate("${NavRoute.SEARCH.routeName}/$searchText")
+                        }
+                    },
+                    placeholder = "검색어를 입력해주세요.",
+                    onClear = {
+                        searchText = ""
+                        keyboardController?.hide() // 키보드를 숨깁니다.
+                    },
+                )
+
+                CategorySelector(categories, selectedCategories.value) { updatedSelectedCategories ->
+                    val selectedString = updatedSelectedCategories.joinToString("-")
+                    catalog2ViewModel.fetchCatalog2Data(latitude!!, longitude!!, selectedString, 1)
+                    selectedCategories.value = updatedSelectedCategories.toMutableList()
+                }
+                when {
+                    selectedCategories.value.isNotEmpty() ->
+                        DisplayCustomAttractionsScreen(
+                            catalog2ViewModel,
+                            navController,
+                        )
+                    else -> DisplayAttractionsScreen(homeViewModel, navController, latitude!!, longitude!!)
+                }
             }
-            when {
-                selectedCategories.value.isNotEmpty() ->
-                    DisplayCustomAttractionsScreen(
-                        catalog2ViewModel,
-                        navController,
-                    )
-                else -> DisplayAttractionsScreen(homeViewModel, navController, latitude!!, longitude!!)
+        } else {
+            // Show a loading screen or message if location data is not ready
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
         }
-    } else {
-        // Show a loading screen or message if location data is not ready
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+
+        LogoutButton(navController, kakaoAuthViewModel, Modifier.align(Alignment.BottomEnd))
+    }
+}
+
+@Composable
+fun LogoutButton(
+    navController: NavController,
+    kakaoAuthViewModel: KakaoAuthViewModel,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(
+            onClick = {
+                kakaoAuthViewModel.clearAuthData()
+                navController.navigate(NavRoute.LOGIN.routeName) {
+                    popUpTo(NavRoute.HOME.routeName) { inclusive = true }
+                }
+            },
+        ) {
+            Text("로그아웃", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -462,26 +476,3 @@ fun startLocationUpdates(
 
     fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
 }
-
-// @Preview(showBackground = true)
-// @Composable
-// fun PreviewHomeScreen() {
-//    HomeScreen(navController = rememberNavController())
-// }
-
-// SearchBar(
-// text = searchText,
-// onValueChange = { newSearchText ->
-//    searchText = newSearchText
-// },
-// onSearch = {
-//    if (searchText.isNotEmpty()) {
-//        navController.navigate("${NavRoute.SEARCH.routeName}/$searchText")
-//    }
-// },
-// placeholder = "검색어를 입력해주세요.",
-// onClear = {
-//    searchText = ""
-//    keyboardController?.hide() // 키보드를 숨깁니다.
-// },
-// )
