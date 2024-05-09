@@ -368,7 +368,7 @@ fun GuideBottomSheet(
                                         Icon(
                                             painter = painterResource(id = iconResource),
                                             contentDescription = "${routeInfo.type} Icon",
-                                            modifier = Modifier.size(24.dp).padding(end = 24.dp), // 아이콘 크기 조절
+                                            modifier = Modifier.size(24.dp).padding(end = 8.dp), // 아이콘 크기 조절
                                             tint = Color.Unspecified, // 원래 아이콘 색상 유지
                                         )
                                         Text(
