@@ -19,6 +19,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +43,7 @@ import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.theme.CustomTertiary
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
+import com.hungrybrothers.abletotrip.ui.viewmodel.PolylineData
 import com.hungrybrothers.abletotrip.ui.viewmodel.Resource
 import kotlinx.coroutines.launch
 
@@ -151,6 +153,8 @@ fun TotalRouteGoogleMap(
     // LiveData를 Compose 상태로 변환
     val navigationData by navigationViewModel.navigationData.observeAsState()
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
+    val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
+    val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
 
     // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
     val departureResource by navigationViewModel.departureData.observeAsState(Resource.loading(null))
@@ -226,36 +230,56 @@ fun TotalRouteGoogleMap(
             println("polylineOptionsList data : $polylineDataList")
         }
     }
-
-    GoogleMap(
-        modifier = modifier,
-        cameraPositionState = cameraPositionState,
-        onMapLoaded = {
-            coroutineScope.launch {
-                cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
-                println("polylineOptionsList data : $polylineDataList")
-            }
-        },
-    ) {
-        polylineDataList.forEach { polylineData ->
-            println("walk data : $polylineData")
+    if (polylineDataList.isNotEmpty() && walkDataList1.points.isNotEmpty() && walkDataList2.points.isNotEmpty()) {
+        GoogleMap(
+            modifier = modifier,
+            cameraPositionState = cameraPositionState,
+            onMapLoaded = {
+                coroutineScope.launch {
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
+                    println("polylineOptionsList data : $polylineDataList")
+                }
+            },
+        ) {
+//            println("data check check : in $walkDataList2")
+//            Polyline(
+//                points = walkDataList1.points,
+//                color = walkDataList1.color,
+//                width = 25f,
+//            )
+//            polylineDataList.forEach { polylineData ->
+//                println("walk data : $polylineData")
+//                Polyline(
+//                    points = polylineData.points,
+//                    color = polylineData.color,
+//                    width = 25f,
+//                )
+//            }
             Polyline(
-                points = polylineData.points,
-                color = polylineData.color,
+                points = walkDataList2.points,
+                color = walkDataList2.color,
                 width = 25f,
             )
-        }
 
-        Marker(
-            state = startMarkerState,
-            title = "출발지",
-            snippet = departure,
-        )
-        Marker(
-            state = endMarkerState,
-            title = "도착지",
-            snippet = arrival,
-        )
+            Marker(
+                state = startMarkerState,
+                title = "출발지",
+                snippet = departure,
+            )
+            Marker(
+                state = endMarkerState,
+                title = "도착지",
+                snippet = arrival,
+            )
+        }
+    } else {
+        // 로딩 중 처리
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("Loading...")
+        }
     }
 }
 
