@@ -166,4 +166,16 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
             }
         }
     }
+
+    // 로그아웃 시 토큰 및 상태 초기화
+    fun clearAuthData() {
+        encryptedPrefs.edit()
+            .remove(TOKEN_KEY)
+            .remove(ACCESS_TOKEN_EXPIRES_AT_KEY)
+            .remove(REFRESH_TOKEN_KEY)
+            .remove(REFRESH_TOKEN_EXPIRES_AT_KEY)
+            .apply()
+        _loggedIn.postValue(false)
+        _loginResult.postValue(null)
+    }
 }
