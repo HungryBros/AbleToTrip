@@ -1,14 +1,3 @@
-DEBUG = False
-# DATABASES = {
-# 	'default': {
-# 			'ENGINE': 'django.db.backends.postgresql',
-# 			'NAME': 'database_name',
-# 			'USER': 'user',
-# 			'PASSWORD': 'PASS',
-# 			'HOST': 'localhost',
-# 			'PORT': '5432'
-# 	}
-# }
+print("RUNNING ON PRODUCTION ENVIRONMENT")
 
-AWS_ACCESS_KEY = ''
-STATIC_URL = ''
+DEBUG = False

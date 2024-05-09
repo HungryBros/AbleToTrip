@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.cache import cache
-from member.utils import is_logged_in
+from member.utils import is_logged_in, get_user
 from pprint import pprint
 
 # Import Models and Serializers
@@ -246,7 +246,9 @@ def navigation(request):
                 f"{log_time_func()} - Navigation: CACHED STATIONS: {cached_subway_stops}"
             )
 
-            cache.set(request.user, cached_subway_stops, 3600 * 2)
+            # 유저 이메일 가져오기
+            user = get_user(request)
+            cache.set(user, cached_subway_stops, 3600 * 2)
 
             print(f"{log_time_func()} - Navigation: REDIS 저장 SUCCESS")
 
@@ -424,7 +426,8 @@ def restroom(request):
         )
 
     try:
-        cached_subway_stops = cache.get(request.user)
+        user = get_user(request)
+        cached_subway_stops = cache.get(user)
 
         filtered_restrooms = Restroom.objects.filter(
             station_fullname__in=cached_subway_stops
