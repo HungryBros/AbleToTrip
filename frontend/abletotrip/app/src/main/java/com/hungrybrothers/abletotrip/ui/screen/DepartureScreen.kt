@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -75,21 +76,21 @@ fun DepartureTopBox(
     val keyboardController = LocalSoftwareKeyboardController.current // 키보드 컨트롤
     val places by autocompleteViewModel.places.observeAsState(initial = emptyList()) // 받아온 전체 플레이스
     var selectedAddress by remember { mutableStateOf<String?>(null) } // 선택한 주소의 상세주소
-    var textFieldValue by remember { mutableStateOf("") } // 텍스트 필드 초기
+    val textFieldValue = remember { mutableStateOf("") } // 텍스트 필드 초기
     var showPlacesList by remember { mutableStateOf(true) } // 받아온데이터 보여줄지 말지
     val textState2 = remember { mutableStateOf(TextFieldValue()) } // 밑에 텍스트칸
 
     Column(modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp)) {
         AutocompleteTextField2(
-            text = textFieldValue,
+            text = textFieldValue.value,
             onValueChange = { newText ->
-                textFieldValue = newText
+                textFieldValue.value = newText
                 autocompleteViewModel.queryPlaces(newText)
                 showPlacesList = true
             },
-            placeholder = selectedAddress ?: "출발지를 입력해주세요.",
+            placeholder = "출발지를 입력해주세요.",
             onClear = {
-                textFieldValue = ""
+                textFieldValue.value = ""
                 selectedAddress = null
                 showPlacesList = false
                 keyboardController?.hide()
@@ -104,7 +105,7 @@ fun DepartureTopBox(
         if (showPlacesList) {
             PlacesList(places = places) { Place ->
                 selectedAddress = Place.address
-                textFieldValue = Place.name
+                textFieldValue.value = Place.name
                 showPlacesList = false
                 keyboardController?.hide()
             }
@@ -137,10 +138,11 @@ fun DepartureTopBox(
 @Composable
 fun ActionsRow(
     navController: NavController,
-    textFieldValue: String?,
+    textFieldValue: MutableState<String>,
     selectedAddress: String?,
     arrival: String,
 ) {
+    val isRouteButtonEnabled = textFieldValue.value.isNotEmpty()
     Row(
         modifier =
             Modifier
@@ -150,16 +152,20 @@ fun ActionsRow(
     ) {
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = CustomTertiary),
-            onClick = { /* Handle Left Button Click */ },
+            onClick = { textFieldValue.value = "" },
             shape = RoundedCornerShape(8.dp),
         ) {
             Text("재입력", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, color = CustomBackground))
         }
         Button(
-            colors = ButtonDefaults.buttonColors(containerColor = CustomDisable),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = if (isRouteButtonEnabled) CustomTertiary else CustomDisable,
+                ),
             onClick = {
                 navController.navigate("TOTAL_ROUTE/$textFieldValue, $selectedAddress/$arrival")
             },
+            enabled = isRouteButtonEnabled,
             shape = RoundedCornerShape(8.dp),
         ) {
             Text("길찾기", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, color = CustomBackground))
