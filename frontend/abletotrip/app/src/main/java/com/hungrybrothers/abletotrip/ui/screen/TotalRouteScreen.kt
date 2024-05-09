@@ -47,8 +47,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
@@ -176,15 +174,6 @@ fun TotalRouteBottomBox(
             },
         )
     }
-}
-
-fun parseCoordinates(jsonData: String): List<LatLng> {
-    val gson = Gson() // Gson 인스턴스를 사용하여 JSON을 파싱합니다.
-    val type = object : TypeToken<List<List<Double>>>() {}.type
-    val rawCoordinates: List<List<Double>> = gson.fromJson(jsonData, type)
-
-    // 좌표 목록을 LatLng 객체 목록으로 변환합니다.
-    return rawCoordinates.map { LatLng(it[0], it[1]) }
 }
 
 @Composable
