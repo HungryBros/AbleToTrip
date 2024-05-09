@@ -66,6 +66,7 @@ import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
+import com.hungrybrothers.abletotrip.ui.viewmodel.PolylineData
 import com.hungrybrothers.abletotrip.ui.viewmodel.Resource
 import com.hungrybrothers.abletotrip.ui.viewmodel.RestroomViewModel
 
@@ -141,6 +142,12 @@ fun GoogleMapGuide(
     val restrooms by viewModel.restrooms.observeAsState(emptyList())
     val error by viewModel.error.observeAsState(null)
 
+    // LiveData를 Compose 상태로 변환
+    val navigationData by navigationViewModel.navigationData.observeAsState()
+    val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
+    val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
+    val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
+
     // 지도 상태 관리를 위한 remember
     var uiSettings by remember { mutableStateOf(com.google.maps.android.compose.MapUiSettings()) }
 
@@ -190,8 +197,6 @@ fun GoogleMapGuide(
             }
         }
 
-    val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
-
     // 디버깅을 위해 `polylineDataList` 출력
     println("guide check : $polylineDataList")
 
@@ -225,6 +230,12 @@ fun GoogleMapGuide(
             cameraPositionState = cameraPositionState,
             uiSettings = uiSettings,
         ) {
+//            println("data check check : in $walkDataList2")
+            Polyline(
+                points = walkDataList1.points,
+                color = walkDataList1.color,
+                width = 40f,
+            )
             polylineDataList.forEach { polylineData ->
                 println("walk data : $polylineData")
                 Polyline(
@@ -233,6 +244,11 @@ fun GoogleMapGuide(
                     width = 40f,
                 )
             }
+            Polyline(
+                points = walkDataList2.points,
+                color = walkDataList2.color,
+                width = 40f,
+            )
 
             Marker(
                 state = startMarkerState,

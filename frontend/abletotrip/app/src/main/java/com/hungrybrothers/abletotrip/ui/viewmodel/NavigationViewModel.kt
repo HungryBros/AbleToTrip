@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
+import com.hungrybrothers.abletotrip.ui.network.KtorClient.client
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -20,6 +21,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -28,30 +30,14 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 class NavigationViewModel : ViewModel() {
-    val client =
-        HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(
-                    Json {
-                        // JSON 설정: 예를 들어, 직렬화 기능을 커스터마이즈할 수 있습니다.
-                        prettyPrint = true
-                        isLenient = true
-                    },
-                )
-            }
-            install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.BODY
-            }
-        }
     private val _departureData = MutableLiveData<Resource<LatLng>>()
     val departureData: LiveData<Resource<LatLng>> = _departureData
 
@@ -62,6 +48,10 @@ class NavigationViewModel : ViewModel() {
     val navigationData: LiveData<Resource<NavigationData>> = _navigationData
 
     val polylineDataList = MutableLiveData<List<PolylineData>>()
+
+    val walkDataList1 = MutableLiveData<PolylineData>()
+
+    val walkDataList2 = MutableLiveData<PolylineData>()
 
     private val _duration = MutableLiveData<Int>()
     val duration: LiveData<Int> = _duration
@@ -119,53 +109,56 @@ class NavigationViewModel : ViewModel() {
                     _duration.postValue(data.duration) // duration 업데이트
                     _detailRouteInfo.postValue(data.detail_route_info) // detail_route_info 업데이트
 
-                    coroutineScope {
-                        val walkoneData = mutableListOf<LatLng>()
-                        val walktwoData = mutableListOf<LatLng>()
-                        var flag = false
-                        val polylineData =
-                            data.polyline_info.flatMap { polylineInfo ->
-                                polylineInfo.info.map { info ->
-                                    async {
-                                        // 노선 타입에 따라 색상을 결정합니다.
-                                        val color =
-                                            when (polylineInfo.type) {
-                                                // 지하철 노선에 따른 색상 적용
-                                                "subway" -> {
-                                                    val line = info.line ?: ""
-                                                    subwayColor[line] ?: Color.Red
-                                                }
-                                                // 걷기 경로에 파란색 적용
-                                                "walk" -> Color.Blue
-                                                else -> Color.Green // 기타 경로는 초록색 적용
+                    var flag = false
+                    val polylineData =
+                        data.polyline_info.flatMap { polylineInfo ->
+                            polylineInfo.info.map { info ->
+                                async {
+                                    // 노선 타입에 따라 색상을 결정합니다.
+                                    val color =
+                                        when (polylineInfo.type) {
+                                            // 지하철 노선에 따른 색상 적용
+                                            "subway" -> {
+                                                val line = info.line ?: ""
+                                                subwayColor[line] ?: Color.Red
                                             }
+                                            else -> Color.Green // 기타 경로는 초록색 적용
+                                        }
 
-                                        val points =
-                                            if (info.polyline != null) {
-                                                flag = true
-                                                val decodedPoints = fetchPolylineData(info.polyline).data
-                                                decodedPoints.map { LatLng(it[0], it[1]) }
-                                            } else if (info.latitude != null && info.longitude != null) {
-                                                if (!flag) {
-                                                    walkoneData.add(LatLng(info.latitude, info.longitude))
-                                                } else {
-                                                    walktwoData.add(LatLng(info.latitude, info.longitude))
-                                                }
-                                                listOf(LatLng(info.latitude, info.longitude))
-                                            } else {
-                                                emptyList()
-                                            }
-                                        PolylineData(points, color)
-                                    }
+                                    val points =
+                                        if (info.polyline != null) {
+                                            flag = true
+                                            val decodedPoints = fetchPolylineData(info.polyline).data
+                                            decodedPoints.map { LatLng(it[0], it[1]) }
+                                        } else {
+                                            emptyList()
+                                        }
+                                    PolylineData(points, color)
                                 }
-                            }.awaitAll()
-                        val combinedPolylineData =
-                            mutableListOf<PolylineData>().apply {
-                                add(PolylineData(walkoneData, Color.Blue))
-                                addAll(polylineData)
-                                add(PolylineData(walktwoData, Color.Blue))
                             }
-                        polylineDataList.postValue(combinedPolylineData)
+                        }.awaitAll()
+                    val walkoneData =
+                        data.polyline_info
+                            .firstOrNull { it.type == "walk" } // 첫 번째 walk만 가져옴
+                            ?.info
+                            ?.map { info ->
+                                LatLng(info.latitude ?: 0.0, info.longitude ?: 0.0)
+                            }
+                            ?: emptyList()
+                    val walktwoData =
+                        data.polyline_info
+                            .lastOrNull { it.type == "walk" } // 마지막 번째 walk만 가져옴
+                            ?.info
+                            ?.map { info ->
+                                LatLng(info.latitude ?: 0.0, info.longitude ?: 0.0)
+                            }
+                            ?: emptyList()
+                    withContext(Dispatchers.Main) {
+                        walkDataList1.postValue(PolylineData(walkoneData, Color.Blue))
+                        walkDataList2.postValue(PolylineData(walktwoData, Color.Blue))
+                        polylineDataList.postValue(polylineData)
+                        println("data check check : one $walkoneData")
+                        println("data check check : one $walktwoData")
                     }
                 } else {
                     _navigationData.postValue(Resource.error("Failed to load data", null))
