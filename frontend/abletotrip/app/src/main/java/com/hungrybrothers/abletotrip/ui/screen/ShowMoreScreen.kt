@@ -175,7 +175,7 @@ fun MoreAttractionItem(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
                 Text(
-                    text = "거리: ${attraction.distance}m",
+                    text = "거리: ${attraction.distance}km",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )

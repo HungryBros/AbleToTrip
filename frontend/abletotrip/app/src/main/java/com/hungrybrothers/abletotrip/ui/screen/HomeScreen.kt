@@ -283,7 +283,7 @@ fun NewAttractionItem(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
                 Text(
-                    text = "거리: ${attraction.distance}m",
+                    text = "거리: ${attraction.distance}km",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )
@@ -420,7 +420,7 @@ fun AttractionItem(
             Spacer(Modifier.height(16.dp))
             Text(text = attraction.attraction_name, style = MaterialTheme.typography.titleMedium)
             Text(text = "${attraction.si}, ${attraction.gu}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "거리: ${attraction.distance}m", style = MaterialTheme.typography.bodySmall)
+            Text(text = "거리: ${attraction.distance}km", style = MaterialTheme.typography.bodySmall)
         }
     }
 }

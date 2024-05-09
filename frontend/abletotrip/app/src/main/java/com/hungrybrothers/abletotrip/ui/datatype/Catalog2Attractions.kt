@@ -13,7 +13,7 @@ data class Catalog2Attraction(
     val gu: String,
     val dong: String,
     val image_url: String,
-    val distance: Int,
+    val distance: Float,
 )
 
 @Serializable
