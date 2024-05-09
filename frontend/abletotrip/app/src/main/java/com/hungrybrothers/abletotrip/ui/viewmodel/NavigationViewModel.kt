@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
+import com.hungrybrothers.abletotrip.ui.network.KtorClient.client
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -20,6 +21,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -36,22 +38,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 class NavigationViewModel : ViewModel() {
-    val client =
-        HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(
-                    Json {
-                        // JSON 설정: 예를 들어, 직렬화 기능을 커스터마이즈할 수 있습니다.
-                        prettyPrint = true
-                        isLenient = true
-                    },
-                )
-            }
-            install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.BODY
-            }
-        }
     private val _departureData = MutableLiveData<Resource<LatLng>>()
     val departureData: LiveData<Resource<LatLng>> = _departureData
 
