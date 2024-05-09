@@ -38,7 +38,6 @@ def navigation(request):
 
     print(f"{log_time_func()} - Navigation: Load trained ETA model")
 
-    print(f"{log_time_func()} - Navigation: REQUEST USER - {request.user}")
     origin = request.data.get("departure")
     destination = request.data.get("arrival")
 
@@ -241,13 +240,13 @@ def navigation(request):
             print(f"{log_time_func()} - Navigation: POLYLINE, 상세 경로 추출 SUCCESS")
 
             print(f"{log_time_func()} - Navigation: REDIS 저장 START")
-            print(f"{log_time_func()} - Navigation: REQUEST USER: {request.user}")
             print(
                 f"{log_time_func()} - Navigation: CACHED STATIONS: {cached_subway_stops}"
             )
 
             # 유저 이메일 가져오기
             user = get_user(request)
+            print(f"{log_time_func()} - Navigation: REQUEST USER: {user}")
             cache.set(user, cached_subway_stops, 3600 * 2)
 
             print(f"{log_time_func()} - Navigation: REDIS 저장 SUCCESS")
@@ -418,16 +417,24 @@ def navigation(request):
 # Find Restrooms on Current Route
 @api_view(["GET"])
 def restroom(request):
+    print(f"{log_time_func()} - Restroom: 화장실 찾는 함수 START")
     # 로그인 인증
     if not is_logged_in(request):
+        print(f"{log_time_func()} - Restroom: 로그인 유효성 검증 실패")
         return Response(
             {"message": "인증된 사용자가 아닙니다."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
     try:
+        print(f"{log_time_func()} - Restroom: 로그인 검증 성공")
         user = get_user(request)
+        print(f"{log_time_func()} - Restroom: USER EMAIL - {user}")
         cached_subway_stops = cache.get(user)
+
+        print(
+            f"{log_time_func()} - Restroom: {user} 's SUBWAY STOPS - {cached_subway_stops}"
+        )
 
         filtered_restrooms = Restroom.objects.filter(
             station_fullname__in=cached_subway_stops
@@ -440,25 +447,40 @@ def restroom(request):
             "floor",
             "restroom_location",
         )
+        print(
+            f"{log_time_func()} - Restroom: 필드까지 거른 화장실 데이터 - {restrooms}"
+        )
 
     except:
+        print(f"{log_time_func()} - Restroom: 화장실 없음")
         restrooms = []
 
     if restrooms:
+        print(f"{log_time_func()} - Restroom: 화장실이 있는 경우")
         for restroom in restrooms:
-            restroom["station_fullname"] = (
-                str(restroom.get("station_fullname")) + "호선"
-            )
-            longitude, latitude = coordinate_request_func(
-                restroom.get("station_fullname")
-            )
+            station_fullname = restroom.get("station_fullname")
+            print(f"{log_time_func()} - Restroom: 역 명 - {station_fullname}")
+
+            name, line = station_fullname.split()
+            name = name if name[-1] == "역" else name + "역 "
+            line += "호선"
+            station_fullname = name + line
+
+            print(f"{log_time_func()} - Restroom: 수정된 역 명 = {station_fullname}")
+
+            restroom["station_fullname"] = station_fullname
+
+            longitude, latitude = coordinate_request_func(station_fullname)
 
             restroom["coordinate"] = {
                 "longitude": longitude,
                 "latitude": latitude,
             }
 
+        print(f"{log_time_func()} - Restroom: 화장실 탐색 SUCCESS")
+
         return Response({"restrooms": restrooms})
 
     else:
+        print(f"{log_time_func()} - Restroom: 화장실 반환 종료")
         return Response({"restrooms": ""})

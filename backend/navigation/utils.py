@@ -11,6 +11,7 @@ import re
 from .models import Convenient
 from .serializers import ConvenientSerializer
 
+
 # Load Trained Model
 model_path = "navigation/trained_models/trained_ETA_model.pkl"
 trained_ETA_model = joblib.load(model_path)
@@ -239,6 +240,7 @@ def get_additional_ETA_func(
     }
 
     X_ETA_test = pd.DataFrame(eta_model_input_data)
+    # dtest = xgb.DMatrix(X_ETA_test)
     additional_ETA = int(trained_ETA_model.predict(X_ETA_test))
 
     return additional_ETA
