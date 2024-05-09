@@ -8,7 +8,7 @@ data class Attraction(
     val attraction_name: String,
     val si: String,
     val gu: String,
-    val distance: Int,
+    val distance: Float,
     val image_url: String,
 )
 

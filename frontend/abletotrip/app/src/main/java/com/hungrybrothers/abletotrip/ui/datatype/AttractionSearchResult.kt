@@ -22,5 +22,5 @@ data class SearchResult(
     val gu: String?,
     val dong: String?,
     val image_url: String?,
-    val distance: Int?,
+    val distance: Float?,
 )
