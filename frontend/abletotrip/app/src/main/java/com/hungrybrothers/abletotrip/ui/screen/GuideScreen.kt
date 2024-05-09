@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
@@ -24,6 +26,7 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -39,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
@@ -66,6 +70,7 @@ import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
+import com.hungrybrothers.abletotrip.ui.viewmodel.PolylineData
 import com.hungrybrothers.abletotrip.ui.viewmodel.Resource
 import com.hungrybrothers.abletotrip.ui.viewmodel.RestroomViewModel
 
@@ -141,6 +146,12 @@ fun GoogleMapGuide(
     val restrooms by viewModel.restrooms.observeAsState(emptyList())
     val error by viewModel.error.observeAsState(null)
 
+    // LiveData를 Compose 상태로 변환
+    val navigationData by navigationViewModel.navigationData.observeAsState()
+    val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
+    val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
+    val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
+
     // 지도 상태 관리를 위한 remember
     var uiSettings by remember { mutableStateOf(com.google.maps.android.compose.MapUiSettings()) }
 
@@ -190,8 +201,6 @@ fun GoogleMapGuide(
             }
         }
 
-    val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
-
     // 디버깅을 위해 `polylineDataList` 출력
     println("guide check : $polylineDataList")
 
@@ -225,6 +234,12 @@ fun GoogleMapGuide(
             cameraPositionState = cameraPositionState,
             uiSettings = uiSettings,
         ) {
+//            println("data check check : in $walkDataList2")
+            Polyline(
+                points = walkDataList1.points,
+                color = walkDataList1.color,
+                width = 40f,
+            )
             polylineDataList.forEach { polylineData ->
                 println("walk data : $polylineData")
                 Polyline(
@@ -233,6 +248,11 @@ fun GoogleMapGuide(
                     width = 40f,
                 )
             }
+            Polyline(
+                points = walkDataList2.points,
+                color = walkDataList2.color,
+                width = 40f,
+            )
 
             Marker(
                 state = startMarkerState,
@@ -328,13 +348,34 @@ fun GuideBottomSheet(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     detailRouteInfo.forEach { routeInfo ->
+                        val iconResource =
+                            if (routeInfo.type == "subway") {
+                                R.drawable.subway
+                            } else {
+                                R.drawable.walk
+                            }
                         item {
                             routeInfo.info.forEach { detail ->
-                                Box {
-                                    Text(
-                                        text = "${routeInfo.type}  $detail",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(100.dp)
+                                            .padding(16.dp)
+                                            .drawBottomBorder(borderColor = Color.LightGray, borderWidth = 1f),
+                                ) {
+                                    Row {
+                                        Icon(
+                                            painter = painterResource(id = iconResource),
+                                            contentDescription = "${routeInfo.type} Icon",
+                                            modifier = Modifier.size(24.dp).padding(end = 24.dp), // 아이콘 크기 조절
+                                            tint = Color.Unspecified, // 원래 아이콘 색상 유지
+                                        )
+                                        Text(
+                                            text = detail,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -351,6 +392,23 @@ fun GuideBottomSheet(
         }
     }
 }
+
+fun Modifier.drawBottomBorder(
+    borderColor: Color,
+    borderWidth: Float,
+): Modifier =
+    this.then(
+        Modifier.drawBehind {
+            val strokeWidth = borderWidth
+            val y = size.height - strokeWidth / 2
+            drawLine(
+                color = borderColor,
+                start = androidx.compose.ui.geometry.Offset(0f, y),
+                end = androidx.compose.ui.geometry.Offset(size.width, y),
+                strokeWidth = strokeWidth,
+            )
+        },
+    )
 
 @Preview(showBackground = true)
 @Composable
