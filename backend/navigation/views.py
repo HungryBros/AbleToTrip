@@ -37,7 +37,6 @@ def navigation(request):
     print(f"{log_time_func()} - Navigation: Navigation 함수 START")
 
     print(f"{log_time_func()} - Navigation: Load trained ETA model")
-    # global trained_ETA_model
 
     print(f"{log_time_func()} - Navigation: REQUEST USER - {request.user}")
     origin = request.data.get("departure")
@@ -62,6 +61,8 @@ def navigation(request):
     is_bus_exist = False  # "BUS" 유무
     is_subway_exist = False  # "SUBWAY" 유무
     is_pedestrian_route = False  # 도보 경로 안내 유무
+
+    pprint(steps)
 
     # 각 Step 확인
     for step in steps:
@@ -187,12 +188,6 @@ def navigation(request):
 
             step_length = len(step_travel_mode_list)
 
-            # 지하철역에서 시작하는 경우 steps[0]이 지하철 경로임
-            if step_travel_mode_list[0] == "TRANSIT":
-                step_start_idx = 0
-            else:
-                step_start_idx = 1
-
             print(f"{log_time_func()} - Navigation: STEP LENGTH {step_length}")
 
             # 지하철 구간 각 polyline 및 경로 상세 정보 추출
@@ -228,11 +223,8 @@ def navigation(request):
                 line_number = line_name.rstrip("호선")
 
                 departure_station_fullname = f"{departure_station_name} {line_number}"
-                cached_subway_stops.append(f"{departure_station_name} {line_number}")
                 subway_stops.append(departure_station_fullname)
-
-                # 지하철 환승이 존재하는 경우
-                # idx가 처음일 때 앞 역만 저장하고, 나머지는 앞뒤역 다 저장
+                cached_subway_stops.append(f"{departure_station_name} {line_number}")
 
                 subway_polyline_list.append(
                     {
@@ -240,9 +232,6 @@ def navigation(request):
                         "polyline": step_list[step_idx].get("polyline").get("points"),
                     }
                 )
-
-                if step_length >= 3 and step_idx == step_start_idx:
-                    continue
 
                 arrival_station_fullname = f"{arrival_station_name} {line_number}"
                 cached_subway_stops.append(f"{arrival_station_name} {line_number}")
