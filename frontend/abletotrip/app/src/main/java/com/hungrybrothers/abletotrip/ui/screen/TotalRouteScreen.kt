@@ -1,16 +1,29 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
 import android.util.Log
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -19,10 +32,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -37,6 +54,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
@@ -54,6 +72,36 @@ fun TotalRouteScreen(
     arrival: String?,
     navigationViewModel: NavigationViewModel,
 ) {
+    val openDialog = remember { mutableStateOf(false) }
+
+    if (openDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            title = {
+                Text(
+                    text = "검색 종료",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Text(text = "경로가 탐색되지 않습니다.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        openDialog.value = false
+                        navController.navigate(NavRoute.HOME.routeName)
+                    },
+                ) {
+                    Text("종료하기")
+                }
+            },
+        )
+    }
+
     Surface(modifier = Modifier, color = CustomBackground) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -64,6 +112,7 @@ fun TotalRouteScreen(
                 navigationViewModel = navigationViewModel,
                 departure = departure,
                 arrival = arrival,
+                openDialogState = openDialog,
             )
             TotalRouteBottomBox(
                 modifier = Modifier.weight(1f),
@@ -144,6 +193,7 @@ fun TotalRouteGoogleMap(
     navigationViewModel: NavigationViewModel,
     departure: String?,
     arrival: String?,
+    openDialogState: MutableState<Boolean>,
 ) {
     // 네비게이션 데이터를 가져오기 위한 첫 호출
     LaunchedEffect(Unit) {
@@ -198,6 +248,11 @@ fun TotalRouteGoogleMap(
                 Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
 
                 Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
+                val isPolylineEmpty = walkDataList1.points.isEmpty()
+                if (isPolylineEmpty) {
+                    openDialogState.value = !openDialogState.value
+                } else {
+                }
             }
             Resource.Status.ERROR -> {
                 val errorMessage = resource.message
@@ -241,20 +296,20 @@ fun TotalRouteGoogleMap(
                 }
             },
         ) {
-//            println("data check check : in $walkDataList2")
-//            Polyline(
-//                points = walkDataList1.points,
-//                color = walkDataList1.color,
-//                width = 25f,
-//            )
-//            polylineDataList.forEach { polylineData ->
-//                println("walk data : $polylineData")
-//                Polyline(
-//                    points = polylineData.points,
-//                    color = polylineData.color,
-//                    width = 25f,
-//                )
-//            }
+            println("data check check : in $walkDataList2")
+            Polyline(
+                points = walkDataList1.points,
+                color = walkDataList1.color,
+                width = 25f,
+            )
+            polylineDataList.forEach { polylineData ->
+                println("walk data : $polylineData")
+                Polyline(
+                    points = polylineData.points,
+                    color = polylineData.color,
+                    width = 25f,
+                )
+            }
             Polyline(
                 points = walkDataList2.points,
                 color = walkDataList2.color,
@@ -274,11 +329,53 @@ fun TotalRouteGoogleMap(
         }
     } else {
         // 로딩 중 처리
+        val infiniteTransition = rememberInfiniteTransition()
+        val alpha by infiniteTransition.animateFloat(
+            initialValue = 1f, // 초기값을 1로 설정하여 완전히 불투명하게 시작
+            targetValue = 0.3f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(1000, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+            label = "",
+        )
+
         Box(
-            modifier = modifier,
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            Text("Loading...")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.facewithmonocle), // 아이콘 리소스 ID를 변경하세요.
+                    contentDescription = "Loading Icon",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(200.dp).alpha(alpha),
+                )
+                Text(
+                    "잠시만 기다려주세요!",
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold, // 볼드 스타일 추가
+                        ),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.alpha(alpha),
+                )
+                Text(
+                    "최적의 경로를 찾고있어요",
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold, // 볼드 스타일 추가
+                        ),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.alpha(alpha),
+                )
+            }
         }
     }
 }
