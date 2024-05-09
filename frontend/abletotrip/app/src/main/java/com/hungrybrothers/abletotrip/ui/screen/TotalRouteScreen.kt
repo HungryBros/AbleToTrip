@@ -47,8 +47,6 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polyline
@@ -129,7 +127,7 @@ fun TotalRouteBottomBox(
     navigationViewModel: NavigationViewModel,
     navController: NavController,
 ) {
-    val duration by navigationViewModel.duration.observeAsState(0)
+    val duration by navigationViewModel.duration.observeAsState(null)
     Row(
         modifier =
             modifier
@@ -178,15 +176,6 @@ fun TotalRouteBottomBox(
     }
 }
 
-fun parseCoordinates(jsonData: String): List<LatLng> {
-    val gson = Gson() // Gson 인스턴스를 사용하여 JSON을 파싱합니다.
-    val type = object : TypeToken<List<List<Double>>>() {}.type
-    val rawCoordinates: List<List<Double>> = gson.fromJson(jsonData, type)
-
-    // 좌표 목록을 LatLng 객체 목록으로 변환합니다.
-    return rawCoordinates.map { LatLng(it[0], it[1]) }
-}
-
 @Composable
 fun TotalRouteGoogleMap(
     modifier: Modifier,
@@ -205,7 +194,7 @@ fun TotalRouteGoogleMap(
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
     val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
     val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
-
+    val duration by navigationViewModel.duration.observeAsState(null)
     // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
     val departureResource by navigationViewModel.departureData.observeAsState(Resource.loading(null))
     val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
@@ -239,6 +228,13 @@ fun TotalRouteGoogleMap(
         }
     }
 
+    // `duration`이 업데이트될 때 다이얼로그 상태 변경
+    LaunchedEffect(duration) {
+        if (duration == 0) {
+            openDialogState.value = true
+        }
+    }
+
     // navigationData의 상태에 따른 UI 처리
     navigationData?.let { resource ->
         when (resource.status) {
@@ -248,10 +244,10 @@ fun TotalRouteGoogleMap(
                 Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
 
                 Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
-                val isPolylineEmpty = walkDataList1.points.isEmpty()
-                if (isPolylineEmpty) {
-                    openDialogState.value = !openDialogState.value
+                if (data != null && !data.is_subway_exist && !data.is_pedestrian_route) {
+                    openDialogState.value = true
                 } else {
+                    // 필요한 경우 else 블럭에 다른 처리를 추가할 수 있습니다.
                 }
             }
             Resource.Status.ERROR -> {
