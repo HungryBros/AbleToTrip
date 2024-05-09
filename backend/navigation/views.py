@@ -1,8 +1,10 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 from django.core.cache import cache
-
+from member.utils import is_logged_in
+from pprint import pprint
 
 # Import Models and Serializers
 from .models import Restroom
@@ -24,8 +26,14 @@ from .utils import (
 
 # Find Route
 @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
 def navigation(request):
+    # 로그인 인증
+    if not is_logged_in(request):
+        return Response(
+            {"message": "인증된 사용자가 아닙니다."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
     print(f"{log_time_func()} - Navigation: Navigation 함수 START")
 
     print(f"{log_time_func()} - Navigation: Load trained ETA model")
@@ -418,8 +426,14 @@ def navigation(request):
 
 # Find Restrooms on Current Route
 @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
 def restroom(request):
+    # 로그인 인증
+    if not is_logged_in(request):
+        return Response(
+            {"message": "인증된 사용자가 아닙니다."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
     try:
         cached_subway_stops = cache.get(request.user)
 
