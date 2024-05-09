@@ -27,13 +27,8 @@ def kakao_user_info(access_token):
     response = requests.get(url, headers=headers)
 
     # 응답 확인
-    if response.status_code == 200:
-        # 요청 성공
-        user_info = response.json()
-        return user_info
-    else:
-        # 요청 실패
-        return False
+    # response.status_code가 200 OK라면 response.json 리턴, 아니라면 False 리턴
+    return False if response.status_code != 200 else response.json()
 
 
 def is_logged_in(request):
@@ -41,8 +36,21 @@ def is_logged_in(request):
     access_token = request.META.get("HTTP_AUTHORIZATION")
     if access_token is None:
         return False
-    # 카카오에 인증 토큰의 유효성 검사
-    logged_in = verify_kakao_access_token(access_token)
-    if not logged_in:
+    # 카카오에 인증 토큰의 유효성 검사 True/False 리턴
+    return verify_kakao_access_token(access_token)
+
+
+def get_user(request):
+    # 요청 헤더의 인증 토큰
+    access_token = request.META.get("HTTP_AUTHORIZATION")
+    if access_token is None:
         return False
-    return True
+    # 카카오에 인증 토큰의 유효성 검사
+    if verify_kakao_access_token(access_token):
+        user_info = kakao_user_info(access_token)
+        # user_info가 False면 False 리턴/아니면 유저 이메일 리턴
+        return (
+            False if user_info == False else user_info.get("kakao_account").get("email")
+        )
+    else:
+        return False
