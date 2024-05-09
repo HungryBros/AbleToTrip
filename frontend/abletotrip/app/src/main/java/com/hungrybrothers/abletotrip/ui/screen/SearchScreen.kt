@@ -222,7 +222,7 @@ fun SearchResultItem(
                 ) {
                     Text(text = "거리", modifier = Modifier.padding(horizontal = 8.dp))
                     Text(
-                        text = "${attraction.distance}m",
+                        text = "${attraction.distance}km",
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
