@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer
-from .utils import kakao_user_info
+from .utils import kakao_user_info, get_user
 
 
 User = get_user_model()
@@ -21,39 +21,42 @@ def signin(request):
                 status=status.HTTP_201_CREATED,
             )
         else:
-            access_token = request.META.get("HTTP_AUTHORIZATION")
-            user_info = kakao_user_info(access_token)
-            email = user_info.get("kakao_account").get("email")
-            try:
-                user = User.objects.get(email=email)
-                address = user.address
-                if address:
-                    return Response(
-                        {"message": "기존 회원, 로그인 성공"}, status=status.HTTP_200_OK
-                    )
-                else:
-                    return Response(
-                        {
-                            "message": "기존 회원이지만 주소 입력을 하지 않았습니다. 주소 입력을 해주세요."
-                        },
-                        status=status.HTTP_202_ACCEPTED,
-                    )
+            user_email = get_user(request)
+            if user_email:
+                try:
+                    user = User.objects.get(email=user_email)
+                    address = user.address
+                    if address:
+                        return Response(
+                            {"message": "기존 회원, 로그인 성공"},
+                            status=status.HTTP_200_OK,
+                        )
+                    else:
+                        return Response(
+                            {
+                                "message": "기존 회원이지만 주소 입력을 하지 않았습니다. 주소 입력을 해주세요."
+                            },
+                            status=status.HTTP_202_ACCEPTED,
+                        )
 
-            except User.DoesNotExist:
+                except User.DoesNotExist:
+                    return Response(
+                        {"error": "정보가 유효하지 않습니다."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            else:
                 return Response(
-                    {"error": "정보가 유효하지 않습니다."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    {"error": "사용자가 존재하지 않습니다."},
+                    status=status.HTTP_404_NOT_FOUND,
                 )
 
 
 @api_view(["POST"])
 def info(request):
     if request.method == "POST":
-        access_token = request.META.get("HTTP_AUTHORIZATION")
-        user_info = kakao_user_info(access_token)
-        if user_info:
-            email = user_info.get("kakao_account").get("email")
-            user = User.objects.get(email=email)  # 현재 로그인한 사용자
+        user_email = get_user(request)
+        if user_email:
+            user = User.objects.get(email=user_email)  # 현재 로그인한 사용자
             user_address = user.address
             address = request.data.get("address")  # 전송된 주소 데이터
             if not user_address:
@@ -76,6 +79,6 @@ def info(request):
                 )
         else:
             return Response(
-                {"error": "사용자가 카카오 서버에 존재하지 않습니다."},
+                {"error": "사용자가 존재하지 않습니다."},
                 status=status.HTTP_404_NOT_FOUND,
             )
