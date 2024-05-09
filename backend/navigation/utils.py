@@ -173,8 +173,8 @@ def get_tmap_info_func(data):
             distance_meters += properties.get("distance")
             duration_seconds += properties.get("time")
 
-            if i == 1:
-                coordinates = coordinates[:-1]
+            if i != 1:
+                coordinates = coordinates[1:]
 
             for coordinate in coordinates:
                 lon = round(float(coordinate[0]), 6)
