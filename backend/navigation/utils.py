@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404
+from rest_framework import status
 from decouple import config
 from PyKakao import Local
+from pprint import pprint
 import pandas as pd
 import requests
 import joblib
@@ -119,9 +121,18 @@ def find_exit_func(station_name):
 def coordinate_request_func(keyword):
     api = Local(service_key=KAKAO_MAPS_API_KEY)
     result = api.search_keyword(keyword, dataframe=False)
-    first_result = result.get("documents")[0]
-    lon = round(float(first_result.get("x")), 6)
-    lat = round(float(first_result.get("y")), 6)
+    print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 반환 result")
+    pprint(result)
+    result_documents = result.get("documents")
+
+    if len(result_documents):
+        first_result = result_documents[0]
+        lon = round(float(first_result.get("x")), 6)
+        lat = round(float(first_result.get("y")), 6)
+
+    else:
+        print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 검색결과 없음")
+        lon = lat = 0
 
     return (lon, lat)
 
@@ -200,28 +211,7 @@ def get_tmap_info_func(data):
     return coordinate_list, description_list, duration, distance_meters
 
 
-# Response Value 만들어주는 함수
-def navigation_response_func(
-    duration,
-    is_bus_exist,
-    is_subway_exist,
-    is_pedestrian_route,
-    polyline_info=list(),
-    detail_route_info=list(),
-):
-
-    response_value = {
-        "duration": duration,
-        "is_bus_exist": is_bus_exist,
-        "is_subway_exist": is_subway_exist,
-        "is_pedestrian_route": is_pedestrian_route,
-        "polyline_info": polyline_info,
-        "detail_route_info": detail_route_info,
-    }
-
-    return response_value
-
-
+# ETA 계산 함수
 def get_additional_ETA_func(
     departure_pedestrian_distance,
     departure_pedestrian_duration,
@@ -244,3 +234,25 @@ def get_additional_ETA_func(
     additional_ETA = int(trained_ETA_model.predict(X_ETA_test))
 
     return additional_ETA
+
+
+# Response Value 만들어주는 함수
+def navigation_response_func(
+    duration,
+    is_bus_exist,
+    is_subway_exist,
+    is_pedestrian_route,
+    polyline_info=list(),
+    detail_route_info=list(),
+):
+
+    response_value = {
+        "duration": duration,
+        "is_bus_exist": is_bus_exist,
+        "is_subway_exist": is_subway_exist,
+        "is_pedestrian_route": is_pedestrian_route,
+        "polyline_info": polyline_info,
+        "detail_route_info": detail_route_info,
+    }
+
+    return response_value
