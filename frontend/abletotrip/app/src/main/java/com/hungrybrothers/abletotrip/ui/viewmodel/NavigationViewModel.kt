@@ -64,6 +64,12 @@ class NavigationViewModel : ViewModel() {
         arrival: String?,
     ) {
         _navigationData.value = Resource.loading(null)
+
+        // 초기화 로직 추가
+        polylineDataList.value = emptyList()
+        walkDataList1.value = PolylineData(emptyList(), Color.Blue)
+        walkDataList2.value = PolylineData(emptyList(), Color.Blue)
+
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 println("viewmodel check : $departure")
