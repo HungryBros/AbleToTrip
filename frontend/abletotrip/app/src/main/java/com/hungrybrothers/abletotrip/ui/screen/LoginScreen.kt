@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,8 +63,7 @@ fun LoginScreen(navController: NavController) {
         Column(
             modifier =
                 Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 16.dp),
+                    .fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -82,11 +80,10 @@ fun LoginScreen(navController: NavController) {
                             .fillMaxWidth()
                             .padding(horizontal = 40.dp),
                 )
-                Spacer(modifier = Modifier.height(16.dp))
                 Image(
+                    modifier = Modifier.padding(40.dp),
                     painter = painterResource(id = R.drawable.wheelchair),
                     contentDescription = "Accessibility Symbol",
-                    modifier = Modifier.fillMaxWidth(),
                 )
             }
 
