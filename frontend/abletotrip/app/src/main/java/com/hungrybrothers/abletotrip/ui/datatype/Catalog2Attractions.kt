@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class Catalog2Attraction(
     val id: Int,
     val attraction_name: String,
+    val category2: String?,
     val operation_hours: String,
     val closed_days: String,
     val is_entrance_fee: Boolean,
