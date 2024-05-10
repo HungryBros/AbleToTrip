@@ -160,8 +160,8 @@ fun GoogleMapGuide(
     val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
 
     // `LatLng` 값으로부터 마커 상태를 선언
-    val startLatLng = departureResource.data ?: LatLng(0.0, 0.0)
-    val endLatLng = arrivalResource.data ?: LatLng(0.0, 0.0)
+    val startLatLng = departureResource.data ?: LatLng(37.501286, 127.0396029)
+    val endLatLng = arrivalResource.data ?: LatLng(37.501286, 127.0396029)
 
     val startMarkerState = rememberMarkerState(position = startLatLng)
     val endMarkerState = rememberMarkerState(position = endLatLng)
@@ -188,14 +188,19 @@ fun GoogleMapGuide(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
         ) { permissions ->
             permissions.entries.forEach {
-                if (it.key == Manifest.permission.ACCESS_FINE_LOCATION && it.value == true) {
+                if (it.key == Manifest.permission.ACCESS_FINE_LOCATION && it.value) {
                     // 권한이 승인된 후 위치 업데이트 요청
                     if (ActivityCompat.checkSelfPermission(
                             context,
                             Manifest.permission.ACCESS_FINE_LOCATION,
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
-                        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 1f, locationListener)
+                        locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            500000,
+                            1f,
+                            locationListener,
+                        )
                     }
                 }
             }
@@ -226,6 +231,21 @@ fun GoogleMapGuide(
     LaunchedEffect(gpsPoint) {
         cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(gpsPoint, 20f))
         println("restroom check : $restrooms")
+    }
+
+    var bearing by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(gpsPoint, endLatLng) {
+        bearing = calculateBearing(gpsPoint, endLatLng)
+        cameraPositionState.position =
+            CameraPosition(
+                gpsPoint, // target
+                17f, // zoom
+                45f, // tilt
+                bearing, // bearing
+            )
+        cameraPositionState.animate(CameraUpdateFactory.newCameraPosition(cameraPositionState.position))
+//        Log.d("Camera", "Azimuth: $azimuth")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -283,6 +303,25 @@ fun GoogleMapGuide(
             }
         }
         val containerColor = if (isRestroom) Color.Gray else Color.Red
+        // 오른쪽 상단에 고정된 종료 원형 버튼
+        FloatingActionButton(
+            onClick = { openDialogState.value = !openDialogState.value },
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd) // 우측 상단에 위치
+                    .padding(top = 16.dp, end = 16.dp),
+            shape = CircleShape,
+            containerColor = Color.White,
+            contentColor = Color.Black,
+        ) {
+            val closeIcon: Painter = painterResource(id = R.drawable.close)
+
+            Image(
+                painter = closeIcon,
+                contentDescription = "Close Icon",
+                modifier = Modifier.padding(8.dp),
+            )
+        }
         // 오른쪽 상단에 고정된 빨간색 화장실 원형 버튼
         FloatingActionButton(
             onClick = { isRestroom = !isRestroom },
@@ -301,24 +340,23 @@ fun GoogleMapGuide(
                 contentDescription = "disabled restroom Icon",
             )
         }
-
-        // 오른쪽 상단에 고정된 종료 원형 버튼
+        // 오른쪽 상단에 고정된 GPS 원형 버튼
         FloatingActionButton(
-            onClick = { openDialogState.value = !openDialogState.value },
+            onClick = { },
             modifier =
                 Modifier
                     .align(Alignment.TopEnd) // 우측 상단에 위치
-                    .padding(top = 16.dp, end = 16.dp),
+                    .padding(top = 160.dp, end = 16.dp),
             shape = CircleShape,
             containerColor = Color.White,
-            contentColor = Color.Black,
+            contentColor = Color.White,
         ) {
-            val closeIcon: Painter = painterResource(id = R.drawable.close)
+            val restroomIcon: Painter = painterResource(id = R.drawable.target)
 
             Image(
-                painter = closeIcon,
-                contentDescription = "Close Icon",
-                modifier = Modifier.padding(8.dp),
+                painter = restroomIcon,
+                contentDescription = "disabled restroom Icon",
+                modifier = Modifier.padding(top = 12.dp),
             )
         }
     }
@@ -409,6 +447,24 @@ fun Modifier.drawBottomBorder(
             )
         },
     )
+
+// 도착지 방향을 가리키는 `bearing` 값 계산 함수
+fun calculateBearing(
+    start: LatLng,
+    end: LatLng,
+): Float {
+    val startLat = Math.toRadians(start.latitude)
+    val startLng = Math.toRadians(start.longitude)
+    val endLat = Math.toRadians(end.latitude)
+    val endLng = Math.toRadians(end.longitude)
+
+    val dLng = endLng - startLng
+
+    val y = Math.sin(dLng) * Math.cos(endLat)
+    val x = Math.cos(startLat) * Math.sin(endLat) - Math.sin(startLat) * Math.cos(endLat) * Math.cos(dLng)
+
+    return ((Math.toDegrees(Math.atan2(y, x)) + 360) % 360).toFloat()
+}
 
 @Preview(showBackground = true)
 @Composable
