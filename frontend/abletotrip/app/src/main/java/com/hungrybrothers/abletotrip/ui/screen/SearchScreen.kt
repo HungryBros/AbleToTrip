@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -32,8 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -168,27 +171,29 @@ fun SearchResultItem(
     navController: NavController,
 ) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        shape = RectangleShape,
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 16.dp)
-                .clickable(onClick = { navController.navigate("${NavRoute.DETAIL.routeName}/${attraction.id}") }),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                .clickable(onClick = { navController.navigate("detail/${attraction.id}") }),
     ) {
         Row(
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
                 painter = rememberAsyncImagePainter(model = attraction.image_url),
-                contentDescription = "Attraction Image",
+                contentDescription = attraction.attraction_name,
                 modifier =
                     Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .size(120.dp)
+                        .fillMaxSize(1f)
+                        .aspectRatio(5f / 4f),
+                contentScale = ContentScale.Crop,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(
@@ -201,9 +206,10 @@ fun SearchResultItem(
                 ) {
                     // 관광지 이름
                     Text(
-                        text = "${attraction.attraction_name}",
+                        text = "${ attraction.attraction_name }",
                         modifier = Modifier.padding(horizontal = 8.dp).weight(1f),
                         style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -211,7 +217,6 @@ fun SearchResultItem(
                     Text(
                         text = "${attraction.category2}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 8.dp), // 이름과 간격 유지
                     )
                 }
@@ -220,65 +225,68 @@ fun SearchResultItem(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(text = "거리", modifier = Modifier.padding(horizontal = 8.dp))
                     Text(
-                        text = "${attraction.distance}km",
+                        text = "위치",
+                        modifier = Modifier.padding(horizontal = 8.dp),
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
-                }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(text = "위치", modifier = Modifier.padding(horizontal = 8.dp))
                     Text(
                         text = "${attraction.si}, ${attraction.gu} ${attraction.dong}",
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(text = "운영시간", modifier = Modifier.padding(horizontal = 8.dp))
+                    Text(
+                        text = "운영시간",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
                     Text(
                         text = "${attraction.operation_hours}",
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(text = "휴무일", modifier = Modifier.padding(horizontal = 8.dp))
+                    Text(
+                        text = "휴무일",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
                     Text(
                         text = "${attraction.closed_days}",
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(text = "입장료", modifier = Modifier.padding(horizontal = 8.dp))
+                    Text(
+                        text = "입장료",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
                     Text(
                         text = if (attraction.is_entrance_fee == true) "유료" else "무료", // 입장료 상태에 따라 텍스트 변경
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     )
                 }
             }

@@ -9,22 +9,47 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,13 +110,13 @@ fun HomeScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val categories =
         listOf(
-            IconData("park", "공원", painterResource(id = R.drawable.park)),
-            IconData("tour", "여행", painterResource(id = R.drawable.sunrise)),
-            IconData("leisure", "레저", painterResource(id = R.drawable.leisure)),
-            IconData("sports", "스포츠", painterResource(id = R.drawable.framed_picture)),
-            IconData("beauty", "미술", painterResource(id = R.drawable.palette)),
-            IconData("perform", "공연", painterResource(id = R.drawable.ticket)),
-            IconData("exhibit", "전시", painterResource(id = R.drawable.stadium)),
+            IconData("park", "공원", painterResource(id = R.drawable.camping)),
+            IconData("tour", "관광지", painterResource(id = R.drawable.japanese_castle)),
+            IconData("leisure", "레저시설", painterResource(id = R.drawable.leisure)),
+            IconData("sports", "체육시설", painterResource(id = R.drawable.stadium)),
+            IconData("beauty", "명승지", painterResource(id = R.drawable.mountain)),
+            IconData("perform", "공연/연극", painterResource(id = R.drawable.circus_tent)),
+            IconData("exhibit", "전시/기념관", painterResource(id = R.drawable.classical_building)),
         )
 
     // 권한 요청을 처리할 런처 설정
@@ -207,7 +232,7 @@ fun CategorySelector(
 ) {
     val selectedState = remember { mutableStateOf(initialSelectedCategories.toList()) }
 
-    LazyRow {
+    LazyRow(modifier = Modifier.padding(4.dp)) {
         items(categories) { category ->
             val isSelected = category.label in selectedState.value
             CategorySecond(
@@ -262,46 +287,123 @@ fun NewAttractionItem(
     navController: NavController,
 ) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        shape = RectangleShape,
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp, horizontal = 16.dp)
-                .clickable(onClick = { navController.navigate("${NavRoute.DETAIL.routeName}/${attraction.id}") }),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                .clickable(onClick = { navController.navigate("detail/${attraction.id}") }),
     ) {
         Row(
             modifier =
                 Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                    .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
                 painter = rememberAsyncImagePainter(model = attraction.image_url),
-                contentDescription = "Attraction Image",
+                contentDescription = attraction.attraction_name,
                 modifier =
                     Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .size(120.dp)
+                        .fillMaxSize(1f)
+                        .aspectRatio(5f / 4f),
+                contentScale = ContentScale.Crop,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).padding(),
             ) {
-                Text(
-                    text = attraction.attraction_name,
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    text = "${attraction.si}, ${attraction.gu}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
-                Text(
-                    text = "거리: ${attraction.distance}km",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
+                // 텍스트를 나란히 표시하기 위해 Row 사용
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+                ) {
+                    // 관광지 이름
+                    Text(
+                        text = attraction.attraction_name,
+                        modifier = Modifier.padding(horizontal = 8.dp).weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    // 카테고리
+                    Text(
+                        text = "${attraction.category2}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 8.dp), // 이름과 간격 유지
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "위치",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                    Text(
+                        text = "${attraction.si}, ${attraction.gu} ${attraction.dong}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "운영시간",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                    Text(
+                        text = attraction.operation_hours,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "휴무일",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                    Text(
+                        text = attraction.closed_days,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "입장료",
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                    Text(
+                        text = if (attraction.is_entrance_fee) "유료" else "무료", // 입장료 상태에 따라 텍스트 변경
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
@@ -358,13 +460,20 @@ fun DisplayAttractionsScreen(
                     ) {
                         Text(
                             text = categoryTitle,
-                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.weight(1f),
                         )
                         TextButton(
                             onClick = { navController.navigate("${NavRoute.SHOWMORE.routeName}/$category") },
                         ) {
-                            Text(text = "더보기 >", style = MaterialTheme.typography.bodyMedium)
+                            if (category != "nearby") {
+                                Text(
+                                    text = "더보기 >",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -418,33 +527,42 @@ fun AttractionItem(
     navController: NavController,
 ) {
     Card(
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier =
             Modifier
                 .fillMaxWidth()
                 .padding(4.dp)
                 .clickable(onClick = { navController.navigate("${NavRoute.DETAIL.routeName}/${attraction.id}") }),
-        elevation =
-            CardDefaults.elevatedCardElevation(
-                defaultElevation = 2.dp,
-                pressedElevation = 4.dp,
-                focusedElevation = 3.dp,
-                hoveredElevation = 3.dp,
-            ),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
             Image(
                 painter = rememberAsyncImagePainter(model = attraction.image_url),
-                contentDescription = "Attraction Image",
+                contentDescription = attraction.attraction_name,
                 modifier =
                     Modifier
-                        .size(100.dp)
-                        .align(Alignment.CenterHorizontally),
+                        .size(150.dp)
+                        .fillMaxSize(1f),
                 contentScale = ContentScale.Crop,
             )
-            Spacer(Modifier.height(16.dp))
-            Text(text = attraction.attraction_name, style = MaterialTheme.typography.titleMedium)
-            Text(text = "${attraction.si}, ${attraction.gu}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "거리: ${attraction.distance}km", style = MaterialTheme.typography.bodySmall)
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(text = attraction.attraction_name, style = MaterialTheme.typography.titleMedium)
+                val distanceText =
+                    if (attraction.distance < 1) {
+                        "${(attraction.distance * 1000).toInt()}m"
+                    } else {
+                        "${attraction.distance}km"
+                    }
+                Text(
+                    text = distanceText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+                Text(
+                    text = "${attraction.si} ${attraction.gu}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+            }
         }
     }
 }

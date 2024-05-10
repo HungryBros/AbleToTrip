@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -49,6 +51,14 @@ import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.ShowMoreViewModel
+
+val categoryTranslations2 =
+    mapOf(
+        "nearby" to "내 주변 여행지",
+        "exhibition-performance" to "전시/공연",
+        "leisure-park" to "레저/공원",
+        "culture-famous" to "문화관광/명소",
+    )
 
 @Composable
 fun ShowMoreScreen(
@@ -101,8 +111,11 @@ fun ShowMoreScreen(
             },
         )
         Text(
-            text = "$category 더보기",
-            style = MaterialTheme.typography.titleMedium,
+            text = "${categoryTranslations2[category]} 관광지",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.CenterHorizontally),
+            textAlign = TextAlign.Center,
         )
         if (latitude != null && longitude != null) {
             DisplayMoreAttractionsScreen(
@@ -152,7 +165,7 @@ fun DisplayMoreAttractionsScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
