@@ -70,18 +70,18 @@ fun DetailScreen(
     val attractionDetail by attractionDetailViewModel.attractionDetailData.collectAsState()
     Box(
         modifier =
-        Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
     ) {
         HeaderBar(navController = navController, showBackButton = true)
         Spacer(modifier = Modifier.size(16.dp))
         Column(
             modifier =
-            Modifier
-                .padding(top = 72.dp, bottom = 72.dp) // Adjust the padding as needed
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                Modifier
+                    .padding(top = 72.dp, bottom = 72.dp) // Adjust the padding as needed
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Top,
         ) {
             attractionDetail?.let { detail ->
@@ -89,10 +89,10 @@ fun DetailScreen(
                     painter = rememberAsyncImagePainter(model = detail.image_url),
                     contentDescription = "Attraction Image",
                     modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        Modifier
+                            .fillMaxWidth()
+                            .height(240.dp)
+                            .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop,
                 )
                 Spacer(Modifier.height(16.dp))
@@ -120,7 +120,7 @@ fun DetailScreen(
                     if (detail.closed_days.isNotEmpty()) "휴무일 . ${detail.closed_days}" else "휴무일 . 정보 없음",
                 )
                 InfoLinkRow(R.drawable.call, detail.contact_number, "tel:")
-                InfoLinkRow(R.drawable.earth, detail.homepage_url, "")
+                InfoLinkRow(R.drawable.earth, detail.homepage_url, "http://")
                 InfoRow(R.drawable.ticket2, if (detail.is_entrance_fee) "입장료 . 무료" else "입장료 . 유료")
                 Spacer(Modifier.height(24.dp))
                 FacilitiesGrid(detail)
@@ -135,9 +135,9 @@ fun DetailScreen(
                 longitude = detail.longitude,
                 lotNumberAddress = detail.lot_number_address,
                 modifier =
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(vertical = 16.dp),
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(vertical = 16.dp),
             )
         }
     }
@@ -156,9 +156,9 @@ fun RouteButton(
             navController.navigate("DEPARTURE/${latitude.toFloat()}/${longitude.toFloat()}/$lotNumberAddress")
         },
         modifier =
-        modifier
-            .fillMaxWidth()
-            .height(48.dp),
+            modifier
+                .fillMaxWidth()
+                .height(48.dp),
     ) {
         Text("길찾기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     }
@@ -176,10 +176,10 @@ fun InfoRow(
             painter = painterResource(id = iconId),
             contentDescription = "icon",
             modifier =
-            Modifier
-                .padding(horizontal = 8.dp)
-                .size(16.dp)
-                .align(Alignment.CenterVertically),
+                Modifier
+                    .padding(horizontal = 8.dp)
+                    .size(16.dp)
+                    .align(Alignment.CenterVertically),
             tint = Color.Unspecified,
         )
         Text(text = text, style = MaterialTheme.typography.bodySmall)
@@ -196,7 +196,13 @@ fun InfoLinkRow(
     val annotatedLink =
         buildAnnotatedString {
             if (!text.isNullOrEmpty()) {
-                val link = "$schemePrefix$text"
+                var link = "$schemePrefix$text"
+
+                // Ensure link starts with http:// or https://
+                if (!link.startsWith("http://") && !link.startsWith("https://") && schemePrefix == "http://") {
+                    link = "http://$text"
+                }
+
                 append(text)
                 addStringAnnotation("URL", link, 0, text.length)
             } else {
@@ -211,10 +217,10 @@ fun InfoLinkRow(
             painter = painterResource(id = iconId),
             contentDescription = "icon",
             modifier =
-            Modifier
-                .padding(horizontal = 8.dp)
-                .size(16.dp)
-                .align(Alignment.CenterVertically),
+                Modifier
+                    .padding(horizontal = 8.dp)
+                    .size(16.dp)
+                    .align(Alignment.CenterVertically),
             tint = Color.Unspecified,
         )
         ClickableText(
@@ -234,7 +240,11 @@ fun openUrl(
     url: String,
 ) {
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-    context.startActivity(intent)
+    try {
+        context.startActivity(intent)
+    } catch (e: android.content.ActivityNotFoundException) {
+        Log.e("DetailScreen", "No activity found to handle this intent: $url")
+    }
 }
 
 @Composable
