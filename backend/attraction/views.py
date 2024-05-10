@@ -140,6 +140,7 @@ def attraction_by_category(request):
                 {
                     "id": attraction.pk,
                     "attraction_name": attraction.attraction_name,
+                    "category2": attraction.category2,
                     "operation_hours": attraction.operation_hours,
                     "closed_days": attraction.closed_days,
                     "is_entrance_fee": attraction.is_entrance_fee,
@@ -202,6 +203,7 @@ def attraction_more(request):
                 {
                     "id": attraction.pk,
                     "attraction_name": attraction.attraction_name,
+                    "category2": attraction.category2,
                     "operation_hours": attraction.operation_hours,
                     "closed_days": attraction.closed_days,
                     "is_entrance_fee": attraction.is_entrance_fee,
