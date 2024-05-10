@@ -54,6 +54,7 @@ import java.util.Locale
 
 data class IconData(
     val label: String,
+    val labelKo: String,
     val icon: Painter,
 )
 
@@ -84,13 +85,13 @@ fun HomeScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val categories =
         listOf(
-            IconData("park", painterResource(id = R.drawable.park)),
-            IconData("tour", painterResource(id = R.drawable.sunrise)),
-            IconData("leisure", painterResource(id = R.drawable.leisure)),
-            IconData("sports", painterResource(id = R.drawable.framed_picture)),
-            IconData("beauty", painterResource(id = R.drawable.palette)),
-            IconData("perform", painterResource(id = R.drawable.ticket)),
-            IconData("exhibit", painterResource(id = R.drawable.stadium)),
+            IconData("park", "공원", painterResource(id = R.drawable.park)),
+            IconData("tour", "여행", painterResource(id = R.drawable.sunrise)),
+            IconData("leisure", "레저", painterResource(id = R.drawable.leisure)),
+            IconData("sports", "스포츠", painterResource(id = R.drawable.framed_picture)),
+            IconData("beauty", "미술", painterResource(id = R.drawable.palette)),
+            IconData("perform", "공연", painterResource(id = R.drawable.ticket)),
+            IconData("exhibit", "전시", painterResource(id = R.drawable.stadium)),
         )
 
     // 권한 요청을 처리할 런처 설정
@@ -211,7 +212,7 @@ fun CategorySelector(
             val isSelected = category.label in selectedState.value
             CategorySecond(
                 icon = category.icon,
-                label = category.label,
+                label = "${category.labelKo}",
                 isSelected = isSelected,
                 onSelect = {
                     val newSelectedState = selectedState.value.toMutableList()
@@ -307,6 +308,15 @@ fun NewAttractionItem(
 }
 
 // 기본화면 구성
+// 카테고리 번역 맵
+val categoryTranslations =
+    mapOf(
+        "nearby" to "내 주변 여행지",
+        "exhibition-performance" to "전시/공연",
+        "leisure-park" to "레저/공원",
+        "culture-famous" to "문화관광/명소",
+    )
+
 @Composable
 fun DisplayAttractionsScreen(
     viewModel: HomeViewModel,
@@ -328,6 +338,16 @@ fun DisplayAttractionsScreen(
                     .padding(vertical = 8.dp),
         ) {
             attractionsData!!.attractions.forEach { (category, attractions) ->
+                val categoryTitle =
+                    categoryTranslations[category] ?: category.replace('-', ' ')
+                        .replaceFirstChar {
+                            if (it.isLowerCase()) {
+                                it.titlecase(Locale.getDefault())
+                            } else {
+                                it.toString()
+                            }
+                        }
+
                 item {
                     Row(
                         modifier =
@@ -337,17 +357,7 @@ fun DisplayAttractionsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text =
-                                category.replace('-', ' ')
-                                    .replaceFirstChar {
-                                        if (it.isLowerCase()) {
-                                            it.titlecase(
-                                                Locale.ROOT,
-                                            )
-                                        } else {
-                                            it.toString()
-                                        }
-                                    },
+                            text = categoryTitle,
                             style = MaterialTheme.typography.headlineMedium,
                             modifier = Modifier.weight(1f),
                         )
