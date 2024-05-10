@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -313,11 +314,13 @@ fun TotalRouteGoogleMap(
             )
 
             Marker(
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.departurepin),
                 state = startMarkerState,
                 title = "출발지",
                 snippet = departure,
             )
             Marker(
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.arrivalpin),
                 state = endMarkerState,
                 title = "도착지",
                 snippet = arrival,

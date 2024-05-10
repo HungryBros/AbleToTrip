@@ -58,7 +58,12 @@ fun DepartureScreen(
     address: String,
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = CustomBackground) {
-        Column(modifier = Modifier.fillMaxSize().background(CustomPrimary)) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(CustomPrimary),
+        ) {
             HeaderBar(navController = navController, true)
             DepartureTopBox(navController, autocompleteViewModel, address)
             PinGoogleMap(latitude, longitude, address)
@@ -163,7 +168,7 @@ fun ActionsRow(
                     containerColor = if (isRouteButtonEnabled) CustomTertiary else CustomDisable,
                 ),
             onClick = {
-                navController.navigate("TOTAL_ROUTE/$textFieldValue, $selectedAddress/$arrival")
+                navController.navigate("TOTAL_ROUTE/${textFieldValue.value} $selectedAddress/$arrival")
             },
             enabled = isRouteButtonEnabled,
             shape = RoundedCornerShape(8.dp),
