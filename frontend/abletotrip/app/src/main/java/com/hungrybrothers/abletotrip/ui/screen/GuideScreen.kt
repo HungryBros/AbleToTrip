@@ -197,7 +197,7 @@ fun GoogleMapGuide(
                     ) {
                         locationManager.requestLocationUpdates(
                             LocationManager.GPS_PROVIDER,
-                            500000,
+                            0,
                             1f,
                             locationListener,
                         )
