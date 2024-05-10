@@ -26,7 +26,7 @@ fun CategorySecond(
     isSelected: Boolean,
     onSelect: () -> Unit,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(4.dp)) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 5.dp)) {
         Box(
             modifier =
                 Modifier
@@ -37,7 +37,6 @@ fun CategorySecond(
                     )
                     .clip(RoundedCornerShape(8.dp))
                     .clickable(onClick = onSelect),
-//                    .padding(start = 32.dp, end = 32.dp),
             contentAlignment = Alignment.Center,
         ) {
             Image(
