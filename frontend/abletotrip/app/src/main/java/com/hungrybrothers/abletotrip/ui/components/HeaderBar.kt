@@ -1,8 +1,7 @@
 package com.hungrybrothers.abletotrip.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +24,7 @@ import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 @Composable
 fun HeaderBar(
     navController: NavController,
-    showBackButton: Boolean = false, // 뒤로 가기 버튼을 표시할지 여부
+    showBackButton: Boolean = false,
 ) {
     Surface(
         modifier =
@@ -34,50 +33,48 @@ fun HeaderBar(
                 .height(80.dp),
         color = Color.White,
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
         ) {
-            // 뒤로 가기 버튼, 필요한 경우에만 표시
             if (showBackButton) {
                 IconButton(
                     onClick = { navController.navigateUp() },
                     modifier =
                         Modifier
-                            .padding(start = 16.dp)
-                            .size(24.dp),
+                            .align(Alignment.CenterStart)
+                            .size(40.dp),
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.navigate_before),
                         contentDescription = "Back",
                     )
                 }
-            } else {
-                Spacer(modifier = Modifier.size(40.dp + 16.dp))
             }
 
-            // 로고 이미지
             IconButton(
                 onClick = { navController.navigate(NavRoute.HOME.routeName) },
-                modifier = Modifier.size(40.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth(),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.abletotrip_logo),
+                    tint = Color.Unspecified,
                     contentDescription = "Logo",
                 )
             }
-
-            Spacer(modifier = Modifier.size(16.dp))
         }
     }
 
-    // 아래에 1px 높이의 선
     Spacer(
         modifier =
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(Color.LightGray), // CustomWhiteSmoke 색상 사용하는 게 에러가 나서 일단 사용
+                .background(Color.LightGray),
     )
 }
