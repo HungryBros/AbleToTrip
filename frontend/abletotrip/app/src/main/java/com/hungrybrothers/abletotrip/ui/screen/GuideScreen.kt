@@ -228,8 +228,11 @@ fun GoogleMapGuide(
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(bounds.center, 13f)
         }
-    LaunchedEffect(gpsPoint) {
-        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(gpsPoint, 20f))
+
+    var gpsButtonClicked by remember { mutableStateOf(false) }
+    LaunchedEffect(gpsPoint, gpsButtonClicked) {
+        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(gpsPoint, 17f))
+        gpsButtonClicked = !gpsButtonClicked
         println("restroom check : $restrooms")
     }
 
@@ -342,7 +345,7 @@ fun GoogleMapGuide(
         }
         // 오른쪽 상단에 고정된 GPS 원형 버튼
         FloatingActionButton(
-            onClick = { },
+            onClick = { gpsButtonClicked = !gpsButtonClicked },
             modifier =
                 Modifier
                     .align(Alignment.TopEnd) // 우측 상단에 위치
