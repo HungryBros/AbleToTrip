@@ -3,7 +3,7 @@ from decouple import config
 
 category1_map = {
     "exhibition-performance": "전시/공연",
-    "leisure-park": "레저/공원",
+    "leisure-park": "레저/체육/공원",
     "culture-famous": "문화관광/명소",
 }
 
