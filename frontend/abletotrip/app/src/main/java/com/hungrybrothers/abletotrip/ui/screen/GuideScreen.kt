@@ -232,7 +232,6 @@ fun GoogleMapGuide(
     var gpsButtonClicked by remember { mutableStateOf(false) }
     LaunchedEffect(gpsPoint, gpsButtonClicked) {
         cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(gpsPoint, 17f))
-        gpsButtonClicked = !gpsButtonClicked
         println("restroom check : $restrooms")
     }
 
@@ -278,17 +277,19 @@ fun GoogleMapGuide(
             )
 
             Marker(
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.departurepin),
                 state = startMarkerState,
                 title = "출발지",
                 snippet = "Here is the start point",
             )
             Marker(
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.arrivalpin),
                 state = endMarkerState,
                 title = "도착지",
                 snippet = "Here is the end point",
             )
             Marker(
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
+                icon = BitmapDescriptorFactory.fromResource(R.drawable.linepoint),
                 state = gpsMarkerState,
                 title = "현재위치",
                 snippet = "Here is the GPS point",
@@ -297,7 +298,7 @@ fun GoogleMapGuide(
                 restrooms.forEach { restroom ->
                     val position = LatLng(restroom.coordinate.latitude, restroom.coordinate.longitude)
                     Marker(
-                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW),
+                        icon = BitmapDescriptorFactory.fromResource(R.drawable.toilet),
                         state = com.google.maps.android.compose.rememberMarkerState(position = position),
                         title = restroom.station_fullname,
                         snippet = "Floor: ${restroom.floor}, Location: ${restroom.restroom_location}",
