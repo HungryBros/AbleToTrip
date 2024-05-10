@@ -10,18 +10,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.hungrybrothers.abletotrip.KakaoAuthViewModel
+import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
+import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -56,47 +55,53 @@ fun SplashScreen(navController: NavController) {
             }
         }
     }
-
-    Splash()
+    Column(modifier = Modifier.fillMaxSize()) {
+        Splash()
+    }
 }
 
 @Composable
 fun Splash() {
-    val infiniteTransition = rememberInfiniteTransition()
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0.3f,
-        animationSpec =
-            infiniteRepeatable(
-                animation = tween(1000, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-        label = "",
-    )
     Box(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(
-                    brush =
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Blue, Color.Cyan),
-                        ),
-                ),
+                .background(color = CustomPrimary),
         contentAlignment = Alignment.Center,
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "Welcome to AbleToTrip",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.alpha(alpha),
+        Column(
+            modifier = Modifier.padding(start = 40.dp, end = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.easytriplogowhite),
+                tint = Color.Unspecified,
+                contentDescription = "Logo",
+                modifier = Modifier.padding(bottom = 32.dp),
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Icon(
+                modifier = Modifier.padding(32.dp),
+                painter = painterResource(id = R.drawable.wheelchairwhite),
+                tint = Color.Unspecified,
+                contentDescription = "wheelchair",
+            )
+            Spacer(modifier = Modifier.height(24.dp))
             CircularProgressIndicator(
                 color = Color.White,
                 strokeWidth = 3.dp,
+            )
+        }
+
+        Box(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 40.dp),
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.bottomlogo),
+                tint = Color.Unspecified,
+                contentDescription = "Logo",
             )
         }
     }
