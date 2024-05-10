@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -282,6 +283,9 @@ fun TotalRouteGoogleMap(
             println("polylineOptionsList data : $polylineDataList")
         }
     }
+
+    val context = LocalContext.current
+
     if (polylineDataList.isNotEmpty() && walkDataList1.points.isNotEmpty() && walkDataList2.points.isNotEmpty()) {
         GoogleMap(
             modifier = modifier,

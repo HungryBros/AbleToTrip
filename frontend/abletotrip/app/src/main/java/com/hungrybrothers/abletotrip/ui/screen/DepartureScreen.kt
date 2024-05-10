@@ -119,6 +119,7 @@ fun DepartureTopBox(
         TextField(
             value = textState2.value,
             onValueChange = { textState2.value = it },
+            enabled = false,
             colors =
                 TextFieldDefaults.colors(
                     unfocusedContainerColor = CustomBackground,

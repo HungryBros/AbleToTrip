@@ -3,6 +3,8 @@ package com.hungrybrothers.abletotrip.ui.screen
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.location.LocationListener
 import android.location.LocationManager
 import android.util.Log
@@ -56,6 +58,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -250,6 +253,20 @@ fun GoogleMapGuide(
 //        Log.d("Camera", "Azimuth: $azimuth")
     }
 
+    // 아이콘을 크기 조정하여 생성하는 함수
+    fun getResizedBitmapDescriptor(
+        context: Context,
+        resourceId: Int,
+        width: Int,
+        height: Int,
+    ): BitmapDescriptor {
+        val bitmap = BitmapFactory.decodeResource(context.resources, resourceId)
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, false)
+        return BitmapDescriptorFactory.fromBitmap(scaledBitmap)
+    }
+
+    val arrowIcon = getResizedBitmapDescriptor(context, R.drawable.arrow, 20, 20)
+
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = modifier,
@@ -262,6 +279,7 @@ fun GoogleMapGuide(
                 color = walkDataList1.color,
                 width = 40f,
             )
+            addArrowsToPolyline(walkDataList1.points, arrowIcon)
             polylineDataList.forEach { polylineData ->
                 println("walk data : $polylineData")
                 Polyline(
@@ -269,30 +287,28 @@ fun GoogleMapGuide(
                     color = polylineData.color,
                     width = 40f,
                 )
+                addArrowsToPolyline(polylineData.points, arrowIcon)
             }
             Polyline(
                 points = walkDataList2.points,
                 color = walkDataList2.color,
                 width = 40f,
             )
-
+            addArrowsToPolyline(walkDataList2.points, arrowIcon)
             Marker(
                 icon = BitmapDescriptorFactory.fromResource(R.drawable.departurepin),
                 state = startMarkerState,
                 title = "출발지",
-                snippet = "Here is the start point",
             )
             Marker(
                 icon = BitmapDescriptorFactory.fromResource(R.drawable.arrivalpin),
                 state = endMarkerState,
                 title = "도착지",
-                snippet = "Here is the end point",
             )
             Marker(
                 icon = BitmapDescriptorFactory.fromResource(R.drawable.linepoint),
                 state = gpsMarkerState,
-                title = "현재위치",
-                snippet = "Here is the GPS point",
+                title = "현재 위치",
             )
             if (isRestroom) {
                 restrooms.forEach { restroom ->
@@ -468,6 +484,58 @@ fun calculateBearing(
     val x = Math.cos(startLat) * Math.sin(endLat) - Math.sin(startLat) * Math.cos(endLat) * Math.cos(dLng)
 
     return ((Math.toDegrees(Math.atan2(y, x)) + 360) % 360).toFloat()
+}
+
+@Composable
+fun addArrowsToPolyline(
+    points: List<LatLng>,
+    arrowIcon: BitmapDescriptor,
+) {
+    val spacing = 8.0 // 화살표 간격을 나타내는 거리 단위 (미터)
+    var cumulativeDistance = 0.0
+
+    for (i in 0 until points.size - 1) {
+        val start = points[i]
+        val end = points[i + 1]
+
+        // 거리 계산
+        val distance = calculateDistance(start, end)
+        cumulativeDistance += distance
+
+        if (cumulativeDistance >= spacing) {
+            // Bearing 계산
+            val bearing = (calculateBearing(start, end) + 180) % 360
+
+            // 화살표 마커 추가
+            Marker(
+                state = rememberMarkerState(position = start),
+                icon = arrowIcon,
+                rotation = bearing,
+            )
+
+            cumulativeDistance = 0.0
+        }
+    }
+}
+
+// 두 점 사이의 거리를 계산하는 함수
+fun calculateDistance(
+    start: LatLng,
+    end: LatLng,
+): Double {
+    val earthRadius = 6371000.0 // 지구 반경 (미터)
+
+    val dLat = Math.toRadians(end.latitude - start.latitude)
+    val dLng = Math.toRadians(end.longitude - start.longitude)
+
+    val a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(Math.toRadians(start.latitude)) * Math.cos(Math.toRadians(end.latitude)) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2)
+
+    val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+    return earthRadius * c
 }
 
 @Preview(showBackground = true)
