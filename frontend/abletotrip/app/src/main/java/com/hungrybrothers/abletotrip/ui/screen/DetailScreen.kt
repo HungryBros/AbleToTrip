@@ -354,7 +354,7 @@ private fun drawXMark(scope: DrawScope) {
 
     scope.drawPath(
         path = path,
-        color = Color.Red,
+        color = Color.Gray,
         style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth),
     )
 }
