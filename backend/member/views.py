@@ -2,8 +2,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from .serializers import UserSerializer
-from .utils import kakao_user_info, get_user
+from .utils import get_user
 
 
 User = get_user_model()
@@ -51,10 +52,34 @@ def signin(request):
                 )
 
 
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 def info(request):
-    if request.method == "POST":
-        user_email = get_user(request)
+    user_email = get_user(request)
+    if request.method == "GET":
+        if user_email:
+            try:
+                user = get_object_or_404(User, emai=user_email)
+                address = user.address
+                if address:
+                    data = {"address": address}
+                    return Response(data, status=status.HTTP_200_OK)
+                else:
+                    return Response(
+                        {"message": "사용자의 주소가 존재하지 않습니다."},
+                        status=status.HTTP_204_NO_CONTENT,
+                    )
+            except User.DoesNotExist:
+                return Response(
+                    {"error": "사용자가 서버에 존재하지 않습니다."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            return Response(
+                {"error": "사용자가 카카오에 존재하지 않습니다."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+    elif request.method == "POST":
         if user_email:
             user = User.objects.get(email=user_email)  # 현재 로그인한 사용자
             user_address = user.address
