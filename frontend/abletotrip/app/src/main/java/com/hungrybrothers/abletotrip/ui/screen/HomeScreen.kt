@@ -80,6 +80,7 @@ import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.AttractionsRepository
 import com.hungrybrothers.abletotrip.ui.network.Catalog2Repository
 import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
+import com.hungrybrothers.abletotrip.ui.network.UserInfoRepository
 import com.hungrybrothers.abletotrip.ui.viewmodel.Catalog2ViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.HomeViewModel
@@ -265,18 +266,26 @@ fun LogoutButton(
 @Composable
 fun GohomeActionButton(navController: NavController) {
     val scope = rememberCoroutineScope()
+    val userInfoRepository = remember { UserInfoRepository() }
+
     FloatingActionButton(
         onClick = {
             scope.launch {
-                val arrivalLatitude = 37.5665 // 임의 값 집주소
-                val arrivallongtitude = 126.9780 // 임의 값 집주소
-                val arrivalAddress = "서울특별시 중구 태평로1가 31" // 임의 값 집주소
-                if (arrivalAddress.isNotEmpty()) {
-                    navController.navigate(
-                        "DEPARTURE/$arrivalLatitude/$arrivallongtitude/$arrivalAddress",
-                    )
+                val userData = userInfoRepository.fetchUserInfoData()
+                if (userData != null) {
+                    val arrivalLatitude = userData.latitude ?: 37.5665 // 사용자 데이터 혹은 기본값
+                    val arrivalLongitude = userData.longtitude ?: 126.9780 // 사용자 데이터 혹은 기본값
+                    val arrivalAddress = userData.address ?: "서울특별시 중구 태평로1가 31" // 사용자 데이터 혹은 기본값
+
+                    if (arrivalAddress.isNotEmpty() && userData.latitude != null && userData.longtitude != null) {
+                        navController.navigate(
+                            "DEPARTURE/$arrivalLatitude/$arrivalLongitude/$arrivalAddress",
+                        )
+                    } else {
+                        Log.e("GohomeActionButton", "Incomplete user data: Latitude, Longitude, or Address is missing")
+                    }
                 } else {
-                    Log.e("GohomeActionButton", "Failed to retrieve addresses")
+                    Log.e("GohomeActionButton", "Failed to retrieve user data")
                 }
             }
         },
