@@ -13,8 +13,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +23,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
+import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
+import com.hungrybrothers.abletotrip.ui.theme.CustomWhiteSmoke
 
 @Composable
 fun AutocompleteTextField2(
@@ -31,22 +34,21 @@ fun AutocompleteTextField2(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TextField(
+    OutlinedTextField(
         value = text,
         onValueChange = onValueChange,
         leadingIcon = {
-            Icon(imageVector = Icons.Default.Search, contentDescription = null)
+            Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
         },
         placeholder = {
-            Text(placeholder)
+            Text(placeholder, style = MaterialTheme.typography.bodyLarge)
         },
         singleLine = true,
         modifier =
             modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(CustomBackground)
-                .padding(end = if (text.isNotEmpty()) 48.dp else 0.dp), // 수정된 부분
+                .background(CustomBackground, RoundedCornerShape(8.dp)),
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
         trailingIcon = {
             Row(
@@ -76,5 +78,14 @@ fun AutocompleteTextField2(
                 }
             }
         },
+        colors =
+            TextFieldDefaults.colors(
+                focusedContainerColor = CustomWhiteSmoke,
+                unfocusedContainerColor = CustomWhite,
+                cursorColor = MaterialTheme.colorScheme.onSurface,
+                focusedIndicatorColor = CustomWhiteSmoke, // 포커스 상태에서 밑줄 제거
+                unfocusedIndicatorColor = CustomWhite, // 비포커스 상태에서
+            ),
+        shape = RoundedCornerShape(8.dp),
     )
 }

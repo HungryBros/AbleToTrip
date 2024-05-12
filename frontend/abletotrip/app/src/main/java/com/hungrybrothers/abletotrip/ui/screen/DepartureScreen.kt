@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +46,8 @@ import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomDisable
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.theme.CustomTertiary
+import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
+import com.hungrybrothers.abletotrip.ui.theme.CustomWhiteSmoke
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 
 @Composable
@@ -103,7 +104,6 @@ fun DepartureTopBox(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.Red)
                     .padding()
                     .clip(RoundedCornerShape(8.dp)),
         )
@@ -122,10 +122,10 @@ fun DepartureTopBox(
             enabled = false,
             colors =
                 TextFieldDefaults.colors(
-                    unfocusedContainerColor = CustomBackground,
-                    focusedContainerColor = CustomBackground,
-                    unfocusedPlaceholderColor = Color.Gray,
-                    focusedPlaceholderColor = Color.LightGray,
+                    unfocusedContainerColor = CustomWhite,
+                    focusedContainerColor = CustomWhiteSmoke,
+                    unfocusedPlaceholderColor = CustomWhiteSmoke,
+                    focusedPlaceholderColor = CustomWhite,
                 ),
             placeholder = {
                 Text("$myendpoint")
@@ -133,7 +133,6 @@ fun DepartureTopBox(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.Red)
                     .padding()
                     .clip(RoundedCornerShape(8.dp)),
         )
