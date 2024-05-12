@@ -63,7 +63,12 @@ class NavigationViewModel : ViewModel() {
         departure: String?,
         arrival: String?,
     ) {
-        // 초기화 로직 추가
+        // LiveData 초기화
+        _navigationData.value = Resource.loading(null) // 로딩 상태로 초기화
+        _departureData.value = Resource.loading(null)
+        _arrivalData.value = Resource.loading(null)
+        _duration.value = 0 // 초기값을 0 또는 적절한 기본값으로 설정
+        _detailRouteInfo.value = emptyList() // 빈 리스트로 초기화
         polylineDataList.value = emptyList()
         walkDataList1.value = PolylineData(emptyList(), Color.Blue)
         walkDataList2.value = PolylineData(emptyList(), Color.Blue)
@@ -113,7 +118,6 @@ class NavigationViewModel : ViewModel() {
                     _duration.postValue(data.duration) // duration 업데이트
                     _detailRouteInfo.postValue(data.detail_route_info) // detail_route_info 업데이트
 
-                    var flag = false
                     val polylineData =
                         data.polyline_info.flatMap { polylineInfo ->
                             polylineInfo.info.map { info ->
@@ -131,7 +135,6 @@ class NavigationViewModel : ViewModel() {
 
                                     val points =
                                         if (info.polyline != null) {
-                                            flag = true
                                             val decodedPoints = fetchPolylineData(info.polyline).data
                                             decodedPoints.map { LatLng(it[0], it[1]) }
                                         } else {

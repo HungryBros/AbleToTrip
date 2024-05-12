@@ -73,7 +73,7 @@ fun TotalRouteScreen(
     navigationViewModel: NavigationViewModel,
 ) {
     val openDialog = remember { mutableStateOf(false) }
-
+    println("im so angry : ${openDialog.value}")
     if (openDialog.value) {
         AlertDialog(
             onDismissRequest = {
@@ -187,9 +187,9 @@ fun TotalRouteGoogleMap(
     openDialogState: MutableState<Boolean>,
 ) {
     // 네비게이션 데이터를 가져오기 위한 첫 호출
-    openDialogState.value = false
     LaunchedEffect(Unit) {
         navigationViewModel.fetchNavigationData(departure = departure, arrival = arrival)
+        openDialogState.value = false
         println("im so angry : ${openDialogState.value}")
     }
 
@@ -232,12 +232,6 @@ fun TotalRouteGoogleMap(
         }
     }
 
-    // `duration`이 업데이트될 때 다이얼로그 상태 변경
-    LaunchedEffect(duration) {
-        if (duration == 0) {
-            openDialogState.value = true
-        }
-    }
     var hasErrorOccurred by remember { mutableStateOf(false) }
     // navigationData의 상태에 따른 UI 처리
     navigationData?.let { resource ->
