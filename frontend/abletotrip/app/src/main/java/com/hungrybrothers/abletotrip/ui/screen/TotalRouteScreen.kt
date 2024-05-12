@@ -187,8 +187,10 @@ fun TotalRouteGoogleMap(
     openDialogState: MutableState<Boolean>,
 ) {
     // 네비게이션 데이터를 가져오기 위한 첫 호출
+    openDialogState.value = false
     LaunchedEffect(Unit) {
         navigationViewModel.fetchNavigationData(departure = departure, arrival = arrival)
+        println("im so angry : ${openDialogState.value}")
     }
 
     // LiveData를 Compose 상태로 변환
@@ -202,8 +204,8 @@ fun TotalRouteGoogleMap(
     val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
 
     // 초기값을 0.0으로 설정하고, `_departureData`와 `_arrivalData`에 맞게 업데이트
-    var mystartpoint by remember { mutableStateOf(LatLng(0.0, 0.0)) }
-    var myendpoint by remember { mutableStateOf(LatLng(0.0, 0.0)) }
+    var mystartpoint by remember { mutableStateOf(LatLng(37.501286, 127.0396029)) }
+    var myendpoint by remember { mutableStateOf(LatLng(37.501286, 127.0396029)) }
 
     // 마커 상태 선언
     val startMarkerState = rememberMarkerState(position = mystartpoint)
@@ -236,7 +238,7 @@ fun TotalRouteGoogleMap(
             openDialogState.value = true
         }
     }
-
+    var hasErrorOccurred by remember { mutableStateOf(false) }
     // navigationData의 상태에 따른 UI 처리
     navigationData?.let { resource ->
         when (resource.status) {
@@ -246,19 +248,23 @@ fun TotalRouteGoogleMap(
                 Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
 
                 Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
-                if (data != null && !data.is_subway_exist && !data.is_pedestrian_route) {
-                    openDialogState.value = true
-                } else {
-                    // 필요한 경우 else 블럭에 다른 처리를 추가할 수 있습니다.
-                }
+                Log.d("TotalRouteGoogleMap", "navigationData: $navigationData")
             }
             Resource.Status.ERROR -> {
                 val errorMessage = resource.message
                 // 오류 처리
                 Log.e("TotalRouteGoogleMap", "Error: $errorMessage")
+                if (!hasErrorOccurred) {
+                    hasErrorOccurred = true // 오류 발생 표시
+                    openDialogState.value = true // 오류 발생 시 다이얼로그 표시
+                } else {
+                    // 필요한 경우 else 블럭에 다른 처리를 추가할 수 있습니다.
+                }
             }
             Resource.Status.LOADING -> {
                 // 로딩 중 처리
+                hasErrorOccurred = false
+                openDialogState.value = false
                 Log.d("TotalRouteGoogleMap", "Loading navigation data...")
             }
         }
@@ -278,6 +284,8 @@ fun TotalRouteGoogleMap(
 
     // `mystartpoint`나 `myendpoint`가 변경될 때마다 카메라 위치를 업데이트
     LaunchedEffect(mystartpoint, myendpoint) {
+        openDialogState.value = false
+        hasErrorOccurred = false
         coroutineScope.launch {
             cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
             println("polylineOptionsList data : $polylineDataList")
