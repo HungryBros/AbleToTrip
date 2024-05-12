@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,6 +41,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -175,16 +178,28 @@ fun HomeScreen(
 
                 CategorySelector(categories, selectedCategories.value) { updatedSelectedCategories ->
                     val selectedString = updatedSelectedCategories.joinToString("-")
-                    catalog2ViewModel.fetchCatalog2Data(latitude!!, longitude!!, selectedString, 1)
-                    selectedCategories.value = updatedSelectedCategories.toMutableList()
+                    if (selectedString.isBlank()) {
+                    } else {
+                        if (latitude == null || longitude == null) {
+                            Toast.makeText(context, "위치 정보를 확인할 수 없습니다. 위치 권한을 확인해주세요.", Toast.LENGTH_LONG).show()
+                        } else {
+                            catalog2ViewModel.fetchInitialData(latitude!!, longitude!!, selectedString)
+                            selectedCategories.value = updatedSelectedCategories.toMutableList()
+                        }
+                    }
                 }
+
                 when {
                     selectedCategories.value.isNotEmpty() ->
                         DisplayCustomAttractionsScreen(
                             catalog2ViewModel,
                             navController,
+                            latitude,
+                            longitude,
+                            selectedCategories.value.joinToString("-"),
                         )
-                    else -> DisplayAttractionsScreen(homeViewModel, navController, latitude!!, longitude!!)
+                    else ->
+                        DisplayAttractionsScreen(homeViewModel, navController, latitude!!, longitude!!)
                 }
             }
         } else {
@@ -259,15 +274,32 @@ fun CategorySelector(
 fun DisplayCustomAttractionsScreen(
     viewModel: Catalog2ViewModel,
     navController: NavController,
+    latitude: String?,
+    longitude: String?,
+    category: String,
 ) {
+    // ViewModel에 현재 위치와 카테고리 설정
+    viewModel.currentLatitude = latitude
+    viewModel.currentLongitude = longitude
+    viewModel.currentCategory = category
+
     val attractionsData by viewModel.catalog2Data.collectAsState()
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+            .collect { visibleItems ->
+                val lastVisibleItem = visibleItems.lastOrNull()
+                if (lastVisibleItem != null && lastVisibleItem.index == attractionsData?.attractions?.size?.minus(1)) {
+                    viewModel.fetchMoreData()
+                }
+            }
+    }
 
     if (attractionsData != null) {
         LazyColumn(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 8.dp),
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
         ) {
             items(attractionsData!!.attractions) { attraction ->
                 NewAttractionItem(attraction, navController)

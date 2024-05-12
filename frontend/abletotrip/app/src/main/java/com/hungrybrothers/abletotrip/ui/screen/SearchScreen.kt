@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -111,7 +112,6 @@ fun DisplaySearchResultScreen(
     val searchResultData by viewModel.attractionSearchResultData.collectAsState()
     val listState = rememberLazyListState()
 
-    // Null 체크 후 attractions 리스트를 LazyColumn에 전달
     if (searchResultData != null) {
         Column {
             Text(
@@ -119,39 +119,27 @@ fun DisplaySearchResultScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
             LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(vertical = 8.dp),
+                modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
                 state = listState,
             ) {
                 items(searchResultData!!.attractions!!) { attraction ->
-                    Log.d("Catalog", "로드 완료$attraction")
                     SearchResultItem(attraction, navController)
                 }
-
                 item {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("로딩 중...")
+                    if (viewModel.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
                 }
             }
         }
     } else {
-        Log.e("Catalog", "로드 실패")
-        // 데이터가 null이면 로딩 표시 또는 비어 있는 상태 표시
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("검색 결과가 없습니다.")
+            Text("검색 결과가 없습니다.", style = MaterialTheme.typography.bodyLarge)
         }
     }
 
-    if (latitude != null && longitude != null) {
+    // 스크롤 리스너에서 페이지 로딩 처리
+    if (latitude != null && longitude != null && !viewModel.isLoading) {
         LaunchedEffect(listState) {
             snapshotFlow { listState.layoutInfo.visibleItemsInfo }
                 .collect { visibleItems ->

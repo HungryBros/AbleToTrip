@@ -1,5 +1,6 @@
 package com.hungrybrothers.abletotrip.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hungrybrothers.abletotrip.ui.datatype.AttractionSearchResult
@@ -13,7 +14,8 @@ class AttractionSearchResultViewModel(private val repository: AttractionSearchRe
     val attractionSearchResultData: StateFlow<AttractionSearchResult?> = _attractionSearchResultData
 
     private var currentPage = 1
-    private var lastPageReached = false
+    private var isLastPage = false
+    var isLoading = false
 
     fun fetchInitialData(
         latitude: String,
@@ -21,14 +23,8 @@ class AttractionSearchResultViewModel(private val repository: AttractionSearchRe
         keyword: String,
     ) {
         currentPage = 1
-        lastPageReached = false
-        fetchData(
-            latitude,
-            longitude,
-            keyword,
-            currentPage,
-            reset = true,
-        )
+        isLastPage = false
+        fetchData(latitude, longitude, keyword, currentPage, true)
     }
 
     fun fetchMoreData(
@@ -36,13 +32,8 @@ class AttractionSearchResultViewModel(private val repository: AttractionSearchRe
         longitude: String,
         keyword: String,
     ) {
-        if (lastPageReached) return
-        fetchData(
-            latitude,
-            longitude,
-            keyword,
-            currentPage,
-        )
+        if (isLastPage || isLoading) return
+        fetchData(latitude, longitude, keyword, ++currentPage)
     }
 
     private fun fetchData(
@@ -53,29 +44,19 @@ class AttractionSearchResultViewModel(private val repository: AttractionSearchRe
         reset: Boolean = false,
     ) {
         viewModelScope.launch {
-            val result =
-                repository.fetchAttractionSearchResultData(
-                    latitude,
-                    longitude,
-                    keyword,
-                    page,
-                )
-            if (result != null) {
-                if (reset) {
-                    _attractionSearchResultData.value = result
-                } else {
-                    _attractionSearchResultData.value =
-                        _attractionSearchResultData.value?.copy(
-                            attractions = _attractionSearchResultData.value?.attractions.orEmpty() + (result.attractions ?: emptyList()),
-                            counts = result.counts,
-                        )
-                }
-                if (result.attractions.isNullOrEmpty()) {
-                    lastPageReached = true
-                } else {
-                    currentPage++
+            isLoading = true
+            val result = repository.fetchAttractionSearchResultData(latitude, longitude, keyword, page)
+            Log.d("SearchResult", "page = $page")
+            if (reset) {
+                _attractionSearchResultData.value = result
+            } else {
+                result?.attractions?.let { newAttractions ->
+                    val currentAttractions = _attractionSearchResultData.value?.attractions.orEmpty()
+                    _attractionSearchResultData.value = result.copy(attractions = currentAttractions + newAttractions)
                 }
             }
+            isLoading = false
+            isLastPage = result?.attractions.isNullOrEmpty()
         }
     }
 }
