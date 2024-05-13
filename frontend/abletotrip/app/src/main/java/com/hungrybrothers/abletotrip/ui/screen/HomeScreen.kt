@@ -274,10 +274,10 @@ fun GohomeActionButton(navController: NavController) {
                 val userData = userInfoRepository.fetchUserInfoData()
                 if (userData != null) {
                     val arrivalLatitude = userData.latitude ?: 37.5665 // 사용자 데이터 혹은 기본값
-                    val arrivalLongitude = userData.longtitude ?: 126.9780 // 사용자 데이터 혹은 기본값
+                    val arrivalLongitude = userData.longitude ?: 126.9780 // 사용자 데이터 혹은 기본값
                     val arrivalAddress = userData.address ?: "서울특별시 중구 태평로1가 31" // 사용자 데이터 혹은 기본값
 
-                    if (arrivalAddress.isNotEmpty() && userData.latitude != null && userData.longtitude != null) {
+                    if (arrivalAddress.isNotEmpty() && userData.latitude != null && userData.longitude != null) {
                         navController.navigate(
                             "DEPARTURE/$arrivalLatitude/$arrivalLongitude/$arrivalAddress",
                         )
