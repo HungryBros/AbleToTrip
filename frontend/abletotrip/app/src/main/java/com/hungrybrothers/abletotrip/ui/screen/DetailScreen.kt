@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -70,83 +71,86 @@ fun DetailScreen(
     }
 
     val attractionDetail by attractionDetailViewModel.attractionDetailData.collectAsState()
-    Box(
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-    ) {
-        HeaderBar(navController = navController, showBackButton = true)
-        Spacer(modifier = Modifier.size(16.dp))
-        Column(
-            modifier =
-                Modifier
-                    .padding(top = 72.dp, bottom = 72.dp) // Adjust the padding as needed
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Top,
-        ) {
-            attractionDetail?.let { detail ->
-                Image(
-                    painter = rememberAsyncImagePainter(model = detail.image_url),
-                    contentDescription = "Attraction Image",
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(240.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop,
-                )
-                Spacer(Modifier.height(16.dp))
-                Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
-                    detail.attraction_name?.let {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            text = it,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    detail.category2?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray,
-                        )
-                    }
-                }
-                (detail.road_name_address ?: detail.lot_number_address)?.let { InfoRow(R.drawable.locationon, it) }
-                InfoRow(
-                    R.drawable.clock,
-                    if (detail.operation_hours?.isNotEmpty() == true) "OPEN . ${detail.operation_hours}" else "OPEN . 정보 없음",
-                )
-                InfoRow(
-                    R.drawable.calendarmonth,
-                    if (detail.closed_days?.isNotEmpty() == true) "휴무일 . ${detail.closed_days}" else "휴무일 . 정보 없음",
-                )
-                InfoLinkRow(R.drawable.call, detail.contact_number, "tel:")
-                InfoLinkRow(R.drawable.earth, detail.homepage_url, "http://")
-                InfoRow(R.drawable.ticket2, if (detail.is_entrance_fee) "입장료 . 무료" else "입장료 . 유료")
-                Spacer(Modifier.height(24.dp))
-                FacilitiesGrid(detail)
-            } ?: Text("Loading details...", style = MaterialTheme.typography.bodyLarge)
+
+    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        Column {
+            Spacer(modifier = Modifier.height(16.dp)) // 헤더 위의 간격 추가
+            HeaderBar(navController = navController, showBackButton = true)
+            Spacer(modifier = Modifier.height(16.dp)) // 헤더 아래의 간격 추가
         }
 
-        // Fixed RouteButton at the bottom
-        attractionDetail?.let { detail ->
-            detail.lot_number_address?.let {
-                RouteButton(
-                    navController = navController,
-                    latitude = detail.latitude,
-                    longitude = detail.longitude,
-                    lotNumberAddress = it,
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(vertical = 16.dp),
-                )
+        if (attractionDetail == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator() // 데이터 로딩 중 표시
             }
+        } else {
+            Column(
+                modifier =
+                    Modifier
+                        .padding(top = 112.dp, bottom = 72.dp)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Top,
+            ) {
+                attractionDetail?.let { detail ->
+                    Image(
+                        painter = rememberAsyncImagePainter(model = detail.image_url),
+                        contentDescription = "Attraction Image",
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(240.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
+                        detail.attraction_name?.let {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                text = it,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        detail.category2?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray,
+                            )
+                        }
+                    }
+                    detail.road_name_address?.let { InfoRow(R.drawable.locationon, it) }
+                    InfoRow(
+                        R.drawable.clock,
+                        if (detail.operation_hours?.isNotEmpty() == true) "OPEN . ${detail.operation_hours}" else "OPEN . 정보 없음",
+                    )
+                    InfoRow(
+                        R.drawable.calendarmonth,
+                        if (detail.closed_days?.isNotEmpty() == true) "휴무일 . ${detail.closed_days}" else "휴무일 . 정보 없음",
+                    )
+                    InfoLinkRow(R.drawable.call, detail.contact_number, "tel:")
+                    InfoLinkRow(R.drawable.earth, detail.homepage_url, "http://")
+                    InfoRow(R.drawable.ticket2, if (detail.is_entrance_fee) "입장료 . 무료" else "입장료 . 유료")
+                    Spacer(Modifier.height(24.dp))
+                    FacilitiesGrid(detail)
+                } // 제거된 CircularProgressIndicator 위치
+            }
+        }
+
+        attractionDetail?.lot_number_address?.let { lotNumberAddress ->
+            RouteButton(
+                navController = navController,
+                latitude = attractionDetail!!.latitude,
+                longitude = attractionDetail!!.longitude,
+                lotNumberAddress = lotNumberAddress,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(vertical = 16.dp),
+            )
         }
     }
 }

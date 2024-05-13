@@ -82,13 +82,11 @@ import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attraction
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.AttractionsRepository
 import com.hungrybrothers.abletotrip.ui.network.Catalog2Repository
-import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
 import com.hungrybrothers.abletotrip.ui.network.UserInfoRepository
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.viewmodel.Catalog2ViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.HomeViewModel
-import com.hungrybrothers.abletotrip.ui.viewmodel.ShowMoreViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -105,7 +103,6 @@ fun HomeScreen(
 ) {
     val homeViewModel: HomeViewModel = viewModel { HomeViewModel(AttractionsRepository()) }
     val catalog2ViewModel: Catalog2ViewModel = viewModel { Catalog2ViewModel(Catalog2Repository()) }
-    val showMoreViewModel: ShowMoreViewModel = viewModel { ShowMoreViewModel(ShowMoreInfoRepository()) }
     val context = LocalContext.current
     val kakaoAuthViewModel: KakaoAuthViewModel = viewModel()
     var searchText by remember { mutableStateOf("") }
