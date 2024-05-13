@@ -1,12 +1,12 @@
-package com.hungrybrothers.abletotrip.ui.network
+package com.hungrybrothers.abletotrip.ui.datatype
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class User(
-    val id: Int,
-    val name: String,
-    val email: String,
+    val latitude: Double,
+    val longitude: Double,
+    val address: String,
 )
 
 @Serializable
