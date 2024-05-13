@@ -202,7 +202,7 @@ fun CompleteButton(
                     val apiKey = BuildConfig.PLACES_API_KEY
                     val placeDetails = fetchPlaceDetails(selectedPlaceId, apiKey)
                     if (placeDetails != null) {
-                        val isSuccess = postAddress("$nameInput $addressInput", placeDetails.lat, placeDetails.lng)
+                        val isSuccess = postAddress("$addressInput $nameInput", placeDetails.lat, placeDetails.lng)
                         if (isSuccess) {
                             navController.navigate(NavRoute.HOME.routeName)
                         }
