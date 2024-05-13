@@ -63,8 +63,6 @@ class NavigationViewModel : ViewModel() {
         departure: String?,
         arrival: String?,
     ) {
-        _navigationData.value = Resource.loading(null)
-
         // 초기화 로직 추가
         polylineDataList.value = emptyList()
         walkDataList1.value = PolylineData(emptyList(), Color.Blue)
@@ -148,7 +146,7 @@ class NavigationViewModel : ViewModel() {
                             .firstOrNull { it.type == "walk" } // 첫 번째 walk만 가져옴
                             ?.info
                             ?.map { info ->
-                                LatLng(info.latitude ?: 0.0, info.longitude ?: 0.0)
+                                LatLng(info.latitude ?: 37.501286, info.longitude ?: 127.0396029)
                             }
                             ?: emptyList()
                     val walktwoData =
@@ -156,7 +154,7 @@ class NavigationViewModel : ViewModel() {
                             .lastOrNull { it.type == "walk" } // 마지막 번째 walk만 가져옴
                             ?.info
                             ?.map { info ->
-                                LatLng(info.latitude ?: 0.0, info.longitude ?: 0.0)
+                                LatLng(info.latitude ?: 37.501286, info.longitude ?: 127.0396029)
                             }
                             ?: emptyList()
                     withContext(Dispatchers.Main) {
@@ -167,7 +165,13 @@ class NavigationViewModel : ViewModel() {
                         println("data check check : one $walktwoData")
                     }
                 } else {
-                    _navigationData.postValue(Resource.error("Failed to load data", null))
+//                    isErrorOccurred = true // 오류가 발생했음을 표시
+                    _navigationData.postValue(
+                        Resource.error(
+                            "Failed to load data: HTTP ${response.status.value}",
+                            null,
+                        ),
+                    )
                 }
             } catch (e: Exception) {
                 _navigationData.postValue(Resource.error("Error occurred: ${e.message}", null))
