@@ -47,6 +47,8 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.Dot
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
@@ -231,6 +233,8 @@ fun TotalRouteGoogleMap(
             }
         }
     }
+    var dottedPolylineList1 by remember { mutableStateOf(listOf<LatLng>()) }
+    var dottedPolylineList2 by remember { mutableStateOf(listOf<LatLng>()) }
 
     var hasErrorOccurred by remember { mutableStateOf(false) }
     // navigationData의 상태에 따른 UI 처리
@@ -243,6 +247,26 @@ fun TotalRouteGoogleMap(
 
                 Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
                 Log.d("TotalRouteGoogleMap", "navigationData: $navigationData")
+
+                val lastWalkPoint = walkDataList1.points.lastOrNull()
+                val firstPolylinePoint = polylineDataList.firstOrNull()?.points?.firstOrNull()
+
+                val lastPolylinePoint = polylineDataList.lastOrNull()?.points?.lastOrNull()
+                val firstWalkPoint = walkDataList2.points.firstOrNull()
+                println("dotted check : $polylineDataList")
+
+                println("dotted check : $lastWalkPoint")
+                println("dotted check : $firstPolylinePoint")
+                println("dotted check : $lastPolylinePoint")
+                println("dotted check : $firstWalkPoint")
+                if (lastWalkPoint != null && firstPolylinePoint != null && lastPolylinePoint != null && firstWalkPoint != null) {
+                    // 새로운 polyline 생성
+                    dottedPolylineList1 = listOf(lastWalkPoint, firstPolylinePoint)
+                    dottedPolylineList2 = listOf(lastPolylinePoint, firstWalkPoint)
+                    println("dotted check : $dottedPolylineList1")
+                    println("dotted check : $dottedPolylineList2")
+                } else {
+                }
             }
             Resource.Status.ERROR -> {
                 val errorMessage = resource.message
@@ -287,6 +311,7 @@ fun TotalRouteGoogleMap(
     }
 
     val context = LocalContext.current
+    val dotPattern = listOf(Dot(), Gap(10f))
 
     if (polylineDataList.isNotEmpty() && walkDataList1.points.isNotEmpty() && walkDataList2.points.isNotEmpty()) {
         GoogleMap(
@@ -305,6 +330,12 @@ fun TotalRouteGoogleMap(
                 color = walkDataList1.color,
                 width = 25f,
             )
+            Polyline(
+                points = dottedPolylineList1,
+                color = Color.Blue,
+                width = 40f,
+                pattern = dotPattern,
+            )
             polylineDataList.forEach { polylineData ->
                 println("walk data : $polylineData")
                 Polyline(
@@ -313,6 +344,12 @@ fun TotalRouteGoogleMap(
                     width = 25f,
                 )
             }
+            Polyline(
+                points = dottedPolylineList2,
+                color = Color.Blue,
+                width = 40f,
+                pattern = dotPattern,
+            )
             Polyline(
                 points = walkDataList2.points,
                 color = walkDataList2.color,

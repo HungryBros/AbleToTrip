@@ -21,7 +21,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -30,6 +29,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.invoke
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -143,7 +143,7 @@ class NavigationViewModel : ViewModel() {
                                     PolylineData(points, color)
                                 }
                             }
-                        }.awaitAll()
+                        }.awaitAll().filterNot { it.points.isEmpty() } // 비어 있는 points를 제외합니다.
                     val walkoneData =
                         data.polyline_info
                             .firstOrNull { it.type == "walk" } // 첫 번째 walk만 가져옴

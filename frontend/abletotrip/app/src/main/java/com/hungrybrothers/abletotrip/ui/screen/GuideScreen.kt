@@ -61,6 +61,8 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.Dot
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
@@ -154,6 +156,29 @@ fun GoogleMapGuide(
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
     val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
     val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
+    var dottedPolylineList1 by remember { mutableStateOf(listOf<LatLng>()) }
+    var dottedPolylineList2 by remember { mutableStateOf(listOf<LatLng>()) }
+
+    LaunchedEffect(true) {
+        val lastWalkPoint = walkDataList1.points.lastOrNull()
+        val firstPolylinePoint = polylineDataList.firstOrNull()?.points?.firstOrNull()
+
+        val lastPolylinePoint = polylineDataList.lastOrNull()?.points?.lastOrNull()
+        val firstWalkPoint = walkDataList2.points.firstOrNull()
+        println("dotted check : $polylineDataList")
+
+        println("dotted check : $lastWalkPoint")
+        println("dotted check : $firstPolylinePoint")
+        println("dotted check : $lastPolylinePoint")
+        println("dotted check : $firstWalkPoint")
+        if (lastWalkPoint != null && firstPolylinePoint != null && lastPolylinePoint != null && firstWalkPoint != null) {
+            // 새로운 polyline 생성
+            dottedPolylineList1 = listOf(lastWalkPoint, firstPolylinePoint)
+            dottedPolylineList2 = listOf(lastPolylinePoint, firstWalkPoint)
+            println("dotted check : $dottedPolylineList1")
+            println("dotted check : $dottedPolylineList2")
+        }
+    }
 
     // 지도 상태 관리를 위한 remember
     var uiSettings by remember { mutableStateOf(com.google.maps.android.compose.MapUiSettings()) }
@@ -267,6 +292,8 @@ fun GoogleMapGuide(
 
     val arrowIcon = getResizedBitmapDescriptor(context, R.drawable.arrow, 20, 20)
 
+    val dotPattern = listOf(Dot(), Gap(10f))
+
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = modifier,
@@ -280,6 +307,12 @@ fun GoogleMapGuide(
                 width = 40f,
             )
             addArrowsToPolyline(walkDataList1.points, arrowIcon)
+            Polyline(
+                points = dottedPolylineList1,
+                color = Color.Blue,
+                width = 40f,
+                pattern = dotPattern,
+            )
             polylineDataList.forEach { polylineData ->
                 println("walk data : $polylineData")
                 Polyline(
@@ -289,6 +322,12 @@ fun GoogleMapGuide(
                 )
                 addArrowsToPolyline(polylineData.points, arrowIcon)
             }
+            Polyline(
+                points = dottedPolylineList2,
+                color = Color.Blue,
+                width = 40f,
+                pattern = dotPattern,
+            )
             Polyline(
                 points = walkDataList2.points,
                 color = walkDataList2.color,
