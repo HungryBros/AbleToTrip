@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +56,7 @@ import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.theme.CustomTertiary
 import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
 import com.hungrybrothers.abletotrip.ui.theme.CustomWhiteSmoke
+import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
