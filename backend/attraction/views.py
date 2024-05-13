@@ -10,6 +10,7 @@ from .serializers import AttractionSerializer
 from heapq import heappop, heappush
 from .utils import category1_map, category2_map, calculate_distance, get_image_url
 from member.utils import is_logged_in
+import urllib.parse
 
 User = get_user_model()
 
@@ -245,7 +246,7 @@ def attraction_search(request):
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
-    keyword = request.GET.get("keyword", "").rstrip("/")
+    keyword = urllib.parse.unquote(request.GET.get("keyword", "").rstrip("/")).strip()
     page = int(request.GET.get("page", "1").rstrip("/"))  # 스크롤 횟수
 
     user_latitude = float(
