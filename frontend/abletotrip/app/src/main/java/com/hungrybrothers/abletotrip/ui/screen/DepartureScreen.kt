@@ -146,6 +146,7 @@ fun DepartureTopBox(
         }
         Spacer(modifier = Modifier.size(8.dp))
         TextField(
+            singleLine = true,
             value = textState2.value,
             onValueChange = { textState2.value = it },
             enabled = false,

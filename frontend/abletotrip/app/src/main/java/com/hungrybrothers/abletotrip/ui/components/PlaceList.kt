@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.android.libraries.places.api.model.Place
-import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
+import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
 
 @Composable
 fun PlacesList(
@@ -33,7 +33,7 @@ fun PlacesList(
                     Modifier
                         .fillMaxWidth()
                         .clickable { onPlaceClicked(place) }
-                        .background(CustomBackground), // 항목의 배경색 설정
+                        .background(CustomWhite), // 항목의 배경색 설정
             ) {
                 Text(
                     text = place.name ?: "Unknown name",
