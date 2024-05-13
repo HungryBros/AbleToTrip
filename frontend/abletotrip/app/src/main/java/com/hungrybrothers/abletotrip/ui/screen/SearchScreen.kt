@@ -122,7 +122,7 @@ fun DisplaySearchResultScreen(
     if (searchResultData != null) {
         val cameraPositionState =
             rememberCameraPositionState {
-                position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 10f)
+                position = CameraPosition.fromLatLngZoom(LatLng(37.501286, 127.0396029), 10f)
             }
 
         GoogleMap(
