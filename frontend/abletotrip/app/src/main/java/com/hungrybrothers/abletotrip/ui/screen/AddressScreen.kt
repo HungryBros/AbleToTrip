@@ -33,6 +33,7 @@ import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.ui.components.AutocompleteTextField
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.PlacesList
+import com.hungrybrothers.abletotrip.ui.datatype.AddressBody
 import com.hungrybrothers.abletotrip.ui.datatype.PlaceDetailsResponse
 import com.hungrybrothers.abletotrip.ui.datatype.PlaceLocation
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
@@ -70,6 +71,7 @@ suspend fun fetchPlaceDetails(
                         Json {
                             prettyPrint = true
                             isLenient = true
+                            ignoreUnknownKeys = true
                         },
                     )
                 }
@@ -96,14 +98,15 @@ suspend fun postAddress(
 ): Boolean {
     return withContext(Dispatchers.IO) {
         Log.d("Places: button post", "POST 요청 시작: $address") // 요청 시작 로그
+        Log.d("placesss = ", "address = $address , lat = $lat,lng = $lng")
         try {
             KtorClient.client.post("member/info/") {
                 contentType(ContentType.Application.Json)
                 setBody(
-                    mapOf(
-                        "address" to address,
-                        "latitude" to lat,
-                        "longitude" to lng,
+                    AddressBody(
+                        address = address,
+                        latitude = lat,
+                        longitude = lng,
                     ),
                 )
             }
