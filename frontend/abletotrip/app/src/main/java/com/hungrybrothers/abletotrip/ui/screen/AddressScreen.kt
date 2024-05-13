@@ -29,31 +29,84 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.ui.components.AutocompleteTextField
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.PlacesList
+import com.hungrybrothers.abletotrip.ui.datatype.AddressBody
+import com.hungrybrothers.abletotrip.ui.datatype.PlaceDetailsResponse
+import com.hungrybrothers.abletotrip.ui.datatype.PlaceLocation
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.KtorClient
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
-suspend fun postAddress(address: String): Boolean {
+suspend fun fetchPlaceDetails(
+    placeId: String,
+    apiKey: String,
+): PlaceLocation? {
+    return withContext(Dispatchers.IO) {
+        val client =
+            HttpClient(CIO) {
+                install(ContentNegotiation) {
+                    json(
+                        Json {
+                            prettyPrint = true
+                            isLenient = true
+                            ignoreUnknownKeys = true
+                        },
+                    )
+                }
+            }
+        val url = "https://maps.googleapis.com/maps/api/place/details/json"
+        val response: HttpResponse =
+            client.get(url) {
+                parameter("place_id", placeId)
+                parameter("fields", "geometry/location")
+                parameter("key", apiKey)
+            }
+        if (response.status == HttpStatusCode.OK) {
+            response.body<PlaceDetailsResponse>().result.geometry.location
+        } else {
+            null
+        }
+    }
+}
+
+suspend fun postAddress(
+    address: String,
+    lat: Double,
+    lng: Double,
+): Boolean {
     return withContext(Dispatchers.IO) {
         Log.d("Places: button post", "POST 요청 시작: $address") // 요청 시작 로그
+        Log.d("placesss = ", "address = $address , lat = $lat,lng = $lng")
         try {
             KtorClient.client.post("member/info/") {
                 contentType(ContentType.Application.Json)
                 setBody(
-                    mapOf(
-                        "address" to address,
+                    AddressBody(
+                        address = address,
+                        latitude = lat,
+                        longitude = lng,
                     ),
                 )
             }
@@ -76,7 +129,7 @@ fun AddressScreen(
     var selectedAddress by remember { mutableStateOf<String?>(null) }
     var textFieldValue by remember { mutableStateOf("") }
     var showPlacesList by remember { mutableStateOf(true) }
-
+    var selectedPlaceId by remember { mutableStateOf<String?>(null) }
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier =
@@ -104,6 +157,7 @@ fun AddressScreen(
                     placeholder = selectedAddress ?: "장소 검색",
                     onClear = {
                         textFieldValue = ""
+                        selectedPlaceId = null
                         selectedAddress = null
                         showPlacesList = false
                         keyboardController?.hide() // 키보드를 숨깁니다.
@@ -111,6 +165,7 @@ fun AddressScreen(
                 )
                 if (showPlacesList) {
                     PlacesList(places = places) { Place ->
+                        selectedPlaceId = Place.id
                         selectedAddress = Place.address
                         textFieldValue = Place.name
                         showPlacesList = false
@@ -120,7 +175,7 @@ fun AddressScreen(
                 Log.d("Places : AddressScreen", "places = ${autocompleteViewModel.places.value}")
             }
             Spacer(Modifier.weight(1f))
-            CompleteButton(navController, nameInput = textFieldValue, addressInput = selectedAddress)
+            CompleteButton(navController, nameInput = textFieldValue, addressInput = selectedAddress, selectedPlaceId)
         }
     }
 }
@@ -130,6 +185,7 @@ fun CompleteButton(
     navController: NavController,
     nameInput: String?,
     addressInput: String?,
+    selectedPlaceId: String?,
 ) {
     val buttonColors =
         ButtonDefaults.buttonColors(
@@ -141,11 +197,15 @@ fun CompleteButton(
 
     Button(
         onClick = {
-            if (addressInput != null) {
+            if (addressInput != null && selectedPlaceId != null) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    val isSuccess = postAddress("$nameInput, $addressInput")
-                    if (isSuccess) {
-                        navController.navigate(NavRoute.HOME.routeName)
+                    val apiKey = BuildConfig.PLACES_API_KEY
+                    val placeDetails = fetchPlaceDetails(selectedPlaceId, apiKey)
+                    if (placeDetails != null) {
+                        val isSuccess = postAddress("$nameInput $addressInput", placeDetails.lat, placeDetails.lng)
+                        if (isSuccess) {
+                            navController.navigate(NavRoute.HOME.routeName)
+                        }
                     }
                 }
             }
