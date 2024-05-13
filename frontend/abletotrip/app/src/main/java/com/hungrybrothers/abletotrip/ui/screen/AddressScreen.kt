@@ -103,7 +103,7 @@ suspend fun postAddress(
                     mapOf(
                         "address" to address,
                         "latitude" to lat,
-                        "longtitude" to lng,
+                        "longitude" to lng,
                     ),
                 )
             }
