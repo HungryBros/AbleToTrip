@@ -5,6 +5,8 @@ import com.hungrybrothers.abletotrip.ui.datatype.AttractionSearchResult
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.isSuccess
 
 class AttractionSearchResultRepository {
@@ -19,7 +21,7 @@ class AttractionSearchResultRepository {
             return null
         }
         Log.d("AttractionSearchResultRepository", "longitude = $longitude latitude = $latitude")
-        val url = "attraction/search/?keyword=$keyword&page=$page"
+        val url = "attraction/search/?keyword=${keyword.encodeURLParameter()}&page=$page"
 
         return try {
             Log.d("SearchResultData", "Sending request...")
@@ -29,6 +31,7 @@ class AttractionSearchResultRepository {
                     header("longitude", longitude)
                 }
             Log.d("SearchResultData", "Response success: ${response.status}")
+            Log.d("SearchResultData", "SearchResultData: ${response.bodyAsText()}")
             if (response.status.isSuccess()) {
                 response.body<AttractionSearchResult>()
             } else {

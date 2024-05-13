@@ -3,7 +3,6 @@ package com.hungrybrothers.abletotrip.ui.screen
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,8 +44,10 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.compose.*
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.SearchBar
 import com.hungrybrothers.abletotrip.ui.datatype.SearchResult
@@ -83,8 +82,7 @@ fun SearchScreen(
     // 키보드
     val keyboardController = LocalSoftwareKeyboardController.current
     Column(
-        modifier = Modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         HeaderBar(navController = navController, showBackButton = false)
         // 검색창
@@ -126,7 +124,7 @@ fun DisplaySearchResultScreen(
             }
 
         GoogleMap(
-            modifier = Modifier.fillMaxWidth().height(300.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).aspectRatio(16f / 9f),
             cameraPositionState = cameraPositionState,
         ) {
             searchResultData!!.attractions?.forEach { location ->
@@ -170,11 +168,11 @@ fun DisplaySearchResultScreen(
                 items(searchResultData!!.attractions!!) { attraction ->
                     SearchResultItem(attraction, navController)
                 }
-                item {
-                    if (viewModel.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                    }
-                }
+//                item {
+//                    if (viewModel.isLoading) {
+//                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+//                    }
+//                }
             }
         }
     } else {
