@@ -247,7 +247,6 @@ def attraction_search(request):
         )
 
     keyword = urllib.parse.unquote(request.GET.get("keyword", "").rstrip("/")).strip()
-    print(keyword)
     page = int(request.GET.get("page", "1").rstrip("/"))  # 스크롤 횟수
 
     user_latitude = float(
