@@ -1,5 +1,10 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
+import android.content.Context
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,15 +23,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,26 +53,31 @@ import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomDisable
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.theme.CustomTertiary
+import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
+import com.hungrybrothers.abletotrip.ui.theme.CustomWhiteSmoke
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 @Composable
 fun DepartureScreen(
     navController: NavController,
     autocompleteViewModel: PlaceCompleteViewModel,
-    latitude: Double,
-    longitude: Double,
-    address: String,
+    arrivallatitude: Double,
+    arrivallongitude: Double,
+    arrivaladdress: String,
+    currentLocationViewModel: CurrentLocationViewModel,
 ) {
     Surface(modifier = Modifier.fillMaxSize(), color = CustomBackground) {
         Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(CustomPrimary),
+            modifier = Modifier.fillMaxSize().background(CustomPrimary),
         ) {
             HeaderBar(navController = navController, true)
-            DepartureTopBox(navController, autocompleteViewModel, address)
-            PinGoogleMap(latitude, longitude, address)
+            DepartureTopBox(navController, autocompleteViewModel, arrivaladdress, currentLocationViewModel)
+            PinGoogleMap(arrivallatitude, arrivallongitude, arrivaladdress)
         }
     }
 }
@@ -75,15 +86,32 @@ fun DepartureScreen(
 fun DepartureTopBox(
     navController: NavController,
     autocompleteViewModel: PlaceCompleteViewModel,
-    address: String,
+    arrivaladdress: String,
+    currentLocationViewModel: CurrentLocationViewModel,
 ) {
-    val myendpoint: String = address // 밑에 텍스트칸
+    val myendpoint: String = arrivaladdress // 밑에 텍스트칸
+    val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current // 키보드 컨트롤
     val places by autocompleteViewModel.places.observeAsState(initial = emptyList()) // 받아온 전체 플레이스
     var selectedAddress by remember { mutableStateOf<String?>(null) } // 선택한 주소의 상세주소
-    val textFieldValue = remember { mutableStateOf("") } // 텍스트 필드 초기
+
+    val departureAddress =
+        produceState<String?>(initialValue = null) {
+            val address = getCurrentLocationAddress(context, currentLocationViewModel)
+            value = address
+        }
+
+    val textFieldValue = remember { mutableStateOf(departureAddress.value ?: "") } // 텍스트 필드 초기값 설정
+
     var showPlacesList by remember { mutableStateOf(true) } // 받아온데이터 보여줄지 말지
     val textState2 = remember { mutableStateOf(TextFieldValue()) } // 밑에 텍스트칸
+
+    // departureAddress가 업데이트 될 때 textFieldValue도 업데이트
+    LaunchedEffect(departureAddress.value) {
+        textFieldValue.value = departureAddress.value ?: ""
+    }
+
+    Log.d("departureAddress", "departureAddress: ${departureAddress.value}")
 
     Column(modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp)) {
         AutocompleteTextField2(
@@ -103,7 +131,6 @@ fun DepartureTopBox(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.Red)
                     .padding()
                     .clip(RoundedCornerShape(8.dp)),
         )
@@ -122,10 +149,10 @@ fun DepartureTopBox(
             enabled = false,
             colors =
                 TextFieldDefaults.colors(
-                    unfocusedContainerColor = CustomBackground,
-                    focusedContainerColor = CustomBackground,
-                    unfocusedPlaceholderColor = Color.Gray,
-                    focusedPlaceholderColor = Color.LightGray,
+                    unfocusedContainerColor = CustomWhite,
+                    focusedContainerColor = CustomWhiteSmoke,
+                    unfocusedPlaceholderColor = CustomWhiteSmoke,
+                    focusedPlaceholderColor = CustomWhite,
                 ),
             placeholder = {
                 Text("$myendpoint")
@@ -133,12 +160,59 @@ fun DepartureTopBox(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .background(Color.Red)
                     .padding()
                     .clip(RoundedCornerShape(8.dp)),
         )
         ActionsRow(navController, textFieldValue, selectedAddress, myendpoint)
     }
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+suspend fun getCurrentLocationAddress(
+    context: Context,
+    currentLocationViewModel: CurrentLocationViewModel,
+): String? {
+    val latitude = currentLocationViewModel.latitude.value?.toDoubleOrNull()
+    val longitude = currentLocationViewModel.longitude.value?.toDoubleOrNull()
+
+    if (latitude != null && longitude != null) {
+        return withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    suspendCancellableCoroutine { continuation ->
+                        geocoder.getFromLocation(
+                            latitude,
+                            longitude,
+                            1,
+                            object : Geocoder.GeocodeListener {
+                                override fun onGeocode(addresses: MutableList<Address>) {
+                                    if (addresses.isNotEmpty()) {
+                                        continuation.resume(addresses[0].getAddressLine(0)) {}
+                                    } else {
+                                        continuation.resume(null) {}
+                                    }
+                                }
+
+                                override fun onError(errorMessage: String?) {
+                                    Log.e("GeocodeListener", "Error: $errorMessage")
+                                    continuation.resume(null) {}
+                                }
+                            },
+                        )
+                    }
+                } else {
+                    // 이전 버전에서는 동기식 API 사용
+                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                    addresses?.getOrNull(0)?.getAddressLine(0)
+                }
+            } catch (e: Exception) {
+                Log.e("getCurrentLocationAddress", "Error converting coordinates to address", e)
+                null
+            }
+        }
+    }
+    return null
 }
 
 @Composable
@@ -169,7 +243,11 @@ fun ActionsRow(
                     containerColor = if (isRouteButtonEnabled) CustomTertiary else CustomDisable,
                 ),
             onClick = {
-                navController.navigate("TOTAL_ROUTE/${textFieldValue.value} $selectedAddress/$arrival")
+                if (selectedAddress == null) {
+                    navController.navigate("TOTAL_ROUTE/${textFieldValue.value}/$arrival")
+                } else {
+                    navController.navigate("TOTAL_ROUTE/$selectedAddress ${textFieldValue.value}/$arrival")
+                }
             },
             enabled = isRouteButtonEnabled,
             shape = RoundedCornerShape(8.dp),
@@ -181,11 +259,11 @@ fun ActionsRow(
 
 @Composable
 fun PinGoogleMap(
-    latitude: Double,
-    longitude: Double,
-    address: String,
+    arrivallatitude: Double,
+    arrivallongitude: Double,
+    arrivaladdress: String,
 ) {
-    val myendpoint = LatLng(latitude, longitude) // 예시 위경도, 실제 위경도로 변경 필요
+    val myendpoint = LatLng(arrivallatitude, arrivallongitude) // 예시 위경도, 실제 위경도로 변경 필요
     val cameraPositionState =
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(myendpoint, 15f)
@@ -203,7 +281,7 @@ fun PinGoogleMap(
             Marker(
                 state = rememberMarkerState(position = myendpoint),
                 title = "도착지",
-                snippet = address,
+                snippet = arrivaladdress,
             )
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -42,6 +43,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.*
+import com.google.maps.android.compose.rememberCameraPositionState
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.SearchBar
 import com.hungrybrothers.abletotrip.ui.datatype.SearchResult
@@ -113,6 +120,44 @@ fun DisplaySearchResultScreen(
     val listState = rememberLazyListState()
 
     if (searchResultData != null) {
+        val cameraPositionState =
+            rememberCameraPositionState {
+                position = CameraPosition.fromLatLngZoom(LatLng(37.501286, 127.0396029), 10f)
+            }
+
+        GoogleMap(
+            modifier = Modifier.fillMaxWidth().height(300.dp),
+            cameraPositionState = cameraPositionState,
+        ) {
+            searchResultData!!.attractions?.forEach { location ->
+                if (location.latitude != null && location.longitude != null) {
+                    Marker(
+                        state = rememberMarkerState(position = LatLng(location.latitude, location.longitude)),
+                        title = location.attraction_name,
+                        snippet = "${location.si} ${location.gu} ${location.dong}",
+                    )
+                }
+            }
+
+            // Update the camera to include all markers if not empty
+            if (searchResultData!!.attractions?.isNotEmpty() == true) {
+                val boundsBuilder = LatLngBounds.builder()
+                searchResultData!!.attractions?.forEach {
+                        location ->
+                    if (location.latitude != null && location.longitude != null) {
+                        boundsBuilder.include(LatLng(location.latitude, location.longitude))
+                    }
+                }
+                val bounds = boundsBuilder.build()
+
+                // Calculate padding for the bounds, 100 pixels in this case
+                val padding = 150
+                val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding)
+
+                // Move the camera to the calculated bounds
+                cameraPositionState.move(cameraUpdate)
+            }
+        }
         Column {
             Text(
                 text = "검색 결과: ${searchResultData?.counts}개",

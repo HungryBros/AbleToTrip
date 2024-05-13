@@ -63,9 +63,12 @@ class NavigationViewModel : ViewModel() {
         departure: String?,
         arrival: String?,
     ) {
-        _navigationData.value = Resource.loading(null)
-
-        // 초기화 로직 추가
+        // LiveData 초기화
+        _navigationData.value = Resource.loading(null) // 로딩 상태로 초기화
+        _departureData.value = Resource.loading(null)
+        _arrivalData.value = Resource.loading(null)
+        _duration.value = 0 // 초기값을 0 또는 적절한 기본값으로 설정
+        _detailRouteInfo.value = emptyList() // 빈 리스트로 초기화
         polylineDataList.value = emptyList()
         walkDataList1.value = PolylineData(emptyList(), Color.Blue)
         walkDataList2.value = PolylineData(emptyList(), Color.Blue)
@@ -115,7 +118,6 @@ class NavigationViewModel : ViewModel() {
                     _duration.postValue(data.duration) // duration 업데이트
                     _detailRouteInfo.postValue(data.detail_route_info) // detail_route_info 업데이트
 
-                    var flag = false
                     val polylineData =
                         data.polyline_info.flatMap { polylineInfo ->
                             polylineInfo.info.map { info ->
@@ -133,7 +135,6 @@ class NavigationViewModel : ViewModel() {
 
                                     val points =
                                         if (info.polyline != null) {
-                                            flag = true
                                             val decodedPoints = fetchPolylineData(info.polyline).data
                                             decodedPoints.map { LatLng(it[0], it[1]) }
                                         } else {
@@ -148,7 +149,7 @@ class NavigationViewModel : ViewModel() {
                             .firstOrNull { it.type == "walk" } // 첫 번째 walk만 가져옴
                             ?.info
                             ?.map { info ->
-                                LatLng(info.latitude ?: 0.0, info.longitude ?: 0.0)
+                                LatLng(info.latitude ?: 37.501286, info.longitude ?: 127.0396029)
                             }
                             ?: emptyList()
                     val walktwoData =
@@ -156,7 +157,7 @@ class NavigationViewModel : ViewModel() {
                             .lastOrNull { it.type == "walk" } // 마지막 번째 walk만 가져옴
                             ?.info
                             ?.map { info ->
-                                LatLng(info.latitude ?: 0.0, info.longitude ?: 0.0)
+                                LatLng(info.latitude ?: 37.501286, info.longitude ?: 127.0396029)
                             }
                             ?: emptyList()
                     withContext(Dispatchers.Main) {
@@ -167,7 +168,13 @@ class NavigationViewModel : ViewModel() {
                         println("data check check : one $walktwoData")
                     }
                 } else {
-                    _navigationData.postValue(Resource.error("Failed to load data", null))
+//                    isErrorOccurred = true // 오류가 발생했음을 표시
+                    _navigationData.postValue(
+                        Resource.error(
+                            "Failed to load data: HTTP ${response.status.value}",
+                            null,
+                        ),
+                    )
                 }
             } catch (e: Exception) {
                 _navigationData.postValue(Resource.error("Error occurred: ${e.message}", null))

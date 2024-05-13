@@ -97,27 +97,31 @@ fun DetailScreen(
                 )
                 Spacer(Modifier.height(16.dp))
                 Row(modifier = Modifier, verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        text = detail.attraction_name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = detail.category2,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Gray,
-                    )
+                    detail.attraction_name?.let {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            text = it,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    detail.category2?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray,
+                        )
+                    }
                 }
-                InfoRow(R.drawable.locationon, detail.road_name_address ?: detail.lot_number_address)
+                (detail.road_name_address ?: detail.lot_number_address)?.let { InfoRow(R.drawable.locationon, it) }
                 InfoRow(
                     R.drawable.clock,
-                    if (detail.operation_hours.isNotEmpty()) "OPEN . ${detail.operation_hours}" else "OPEN . 정보 없음",
+                    if (detail.operation_hours?.isNotEmpty() == true) "OPEN . ${detail.operation_hours}" else "OPEN . 정보 없음",
                 )
                 InfoRow(
                     R.drawable.calendarmonth,
-                    if (detail.closed_days.isNotEmpty()) "휴무일 . ${detail.closed_days}" else "휴무일 . 정보 없음",
+                    if (detail.closed_days?.isNotEmpty() == true) "휴무일 . ${detail.closed_days}" else "휴무일 . 정보 없음",
                 )
                 InfoLinkRow(R.drawable.call, detail.contact_number, "tel:")
                 InfoLinkRow(R.drawable.earth, detail.homepage_url, "http://")
@@ -129,16 +133,18 @@ fun DetailScreen(
 
         // Fixed RouteButton at the bottom
         attractionDetail?.let { detail ->
-            RouteButton(
-                navController = navController,
-                latitude = detail.latitude,
-                longitude = detail.longitude,
-                lotNumberAddress = detail.lot_number_address,
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(vertical = 16.dp),
-            )
+            detail.lot_number_address?.let {
+                RouteButton(
+                    navController = navController,
+                    latitude = detail.latitude,
+                    longitude = detail.longitude,
+                    lotNumberAddress = it,
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(vertical = 16.dp),
+                )
+            }
         }
     }
 }
