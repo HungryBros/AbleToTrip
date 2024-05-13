@@ -6,6 +6,8 @@ import android.os.Looper
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,9 +27,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +84,7 @@ import com.hungrybrothers.abletotrip.ui.viewmodel.Catalog2ViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.HomeViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.ShowMoreViewModel
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 data class IconData(
@@ -85,25 +95,12 @@ data class IconData(
 
 @Composable
 fun HomeScreen(
-    navController: NavController, // 화면 간 이동을 위한 NavController
+    navController: NavController,
     currentLocationViewModel: CurrentLocationViewModel,
 ) {
-    val homeViewModel: HomeViewModel =
-        remember {
-            val repository = AttractionsRepository()
-            HomeViewModel(repository)
-        }
-    val catalog2ViewModel: Catalog2ViewModel =
-        remember {
-            val repository = Catalog2Repository()
-            Catalog2ViewModel(repository)
-        }
-    val showMoreViewModel: ShowMoreViewModel =
-        remember {
-            val repository = ShowMoreInfoRepository()
-            ShowMoreViewModel(repository)
-        }
-
+    val homeViewModel: HomeViewModel = viewModel { HomeViewModel(AttractionsRepository()) }
+    val catalog2ViewModel: Catalog2ViewModel = viewModel { Catalog2ViewModel(Catalog2Repository()) }
+    val showMoreViewModel: ShowMoreViewModel = viewModel { ShowMoreViewModel(ShowMoreInfoRepository()) }
     val context = LocalContext.current
     val kakaoAuthViewModel: KakaoAuthViewModel = viewModel()
     var searchText by remember { mutableStateOf("") }
@@ -169,7 +166,7 @@ fun HomeScreen(
                     placeholder = "검색어를 입력해주세요.",
                     onClear = {
                         searchText = ""
-                        keyboardController?.hide() // 키보드를 숨깁니다.
+                        keyboardController?.hide()
                     },
                 )
 
@@ -178,23 +175,68 @@ fun HomeScreen(
                     catalog2ViewModel.fetchCatalog2Data(latitude!!, longitude!!, selectedString, 1)
                     selectedCategories.value = updatedSelectedCategories.toMutableList()
                 }
+
                 when {
                     selectedCategories.value.isNotEmpty() ->
-                        DisplayCustomAttractionsScreen(
-                            catalog2ViewModel,
-                            navController,
-                        )
+                        DisplayCustomAttractionsScreen(catalog2ViewModel, navController)
                     else -> DisplayAttractionsScreen(homeViewModel, navController, latitude!!, longitude!!)
                 }
             }
         } else {
-            // Show a loading screen or message if location data is not ready
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
 
-        LogoutButton(navController, kakaoAuthViewModel, Modifier.align(Alignment.BottomEnd))
+        FloatingActionMenu(
+            navController = navController,
+            kakaoAuthViewModel = kakaoAuthViewModel,
+            currentLocationViewModel = currentLocationViewModel,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+        )
+    }
+}
+
+@Composable
+fun FloatingActionMenu(
+    navController: NavController,
+    kakaoAuthViewModel: KakaoAuthViewModel,
+    currentLocationViewModel: CurrentLocationViewModel,
+    modifier: Modifier = Modifier,
+) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.End,
+    ) {
+        AnimatedVisibility(
+            visible = isMenuExpanded,
+            enter = androidx.compose.animation.fadeIn(animationSpec = tween(300)),
+            exit = androidx.compose.animation.fadeOut(animationSpec = tween(300)),
+        ) {
+            LogoutButton(navController = navController, kakaoAuthViewModel = kakaoAuthViewModel)
+        }
+
+        AnimatedVisibility(
+            visible = isMenuExpanded,
+            enter = androidx.compose.animation.fadeIn(animationSpec = tween(300)),
+            exit = androidx.compose.animation.fadeOut(animationSpec = tween(300)),
+        ) {
+            GohomeActionButton(navController = navController)
+        }
+
+        FloatingActionButton(
+            onClick = { isMenuExpanded = !isMenuExpanded },
+            shape = RoundedCornerShape(50),
+            containerColor = MaterialTheme.colorScheme.primary,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Expand Menu",
+            )
+        }
     }
 }
 
@@ -202,28 +244,53 @@ fun HomeScreen(
 fun LogoutButton(
     navController: NavController,
     kakaoAuthViewModel: KakaoAuthViewModel,
-    modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
+    FloatingActionButton(
+        onClick = {
+            kakaoAuthViewModel.clearAuthData()
+            navController.navigate(NavRoute.LOGIN.routeName) {
+                popUpTo(NavRoute.HOME.routeName) { inclusive = true }
+            }
+        },
+        shape = RoundedCornerShape(50),
+        containerColor = MaterialTheme.colorScheme.secondary,
     ) {
-        TextButton(
-            onClick = {
-                kakaoAuthViewModel.clearAuthData()
-                navController.navigate(NavRoute.LOGIN.routeName) {
-                    popUpTo(NavRoute.HOME.routeName) { inclusive = true }
-                }
-            },
-        ) {
-            Text("로그아웃", style = MaterialTheme.typography.bodyMedium)
-        }
+        Icon(
+            imageVector = Icons.Default.Logout,
+            contentDescription = "Logout",
+        )
     }
 }
 
-// 카탈로그 선택부분 (상단)
+@Composable
+fun GohomeActionButton(navController: NavController) {
+    val scope = rememberCoroutineScope()
+    FloatingActionButton(
+        onClick = {
+            scope.launch {
+                val arrivalLatitude = 37.5665 // 임의 값 집주소
+                val arrivallongtitude = 126.9780 // 임의 값 집주소
+                val arrivalAddress = "서울특별시 중구 태평로1가 31" // 임의 값 집주소
+                if (arrivalAddress.isNotEmpty()) {
+                    navController.navigate(
+                        "DEPARTURE/$arrivalLatitude/$arrivallongtitude/$arrivalAddress",
+                    )
+                } else {
+                    Log.e("GohomeActionButton", "Failed to retrieve addresses")
+                }
+            }
+        },
+        shape = RoundedCornerShape(50),
+        containerColor = MaterialTheme.colorScheme.secondary,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Home,
+            contentDescription = "Go Home",
+        )
+    }
+}
+
+// 카탈로그 선택 부분 (상단)
 @Composable
 fun CategorySelector(
     categories: List<IconData>,
@@ -237,7 +304,7 @@ fun CategorySelector(
             val isSelected = category.label in selectedState.value
             CategorySecond(
                 icon = category.icon,
-                label = "${category.labelKo}",
+                label = category.labelKo,
                 isSelected = isSelected,
                 onSelect = {
                     val newSelectedState = selectedState.value.toMutableList()
@@ -254,7 +321,7 @@ fun CategorySelector(
     }
 }
 
-// 카탈로그 선택시 화면 구성 - newattraction 포함
+// 카탈로그 선택 시 화면 구성 - newattraction 포함
 @Composable
 fun DisplayCustomAttractionsScreen(
     viewModel: Catalog2ViewModel,
@@ -280,7 +347,7 @@ fun DisplayCustomAttractionsScreen(
     }
 }
 
-// 카탈로그 선택시 화면의 카드
+// 카탈로그 선택 시 화면의 카드
 @Composable
 fun NewAttractionItem(
     attraction: Catalog2Attraction,
@@ -409,7 +476,7 @@ fun NewAttractionItem(
     }
 }
 
-// 기본화면 구성
+// 기본 화면 구성
 // 카테고리 번역 맵
 val categoryTranslations =
     mapOf(
@@ -520,7 +587,7 @@ fun DisplayAttractionsScreen(
     }
 }
 
-// 기본화면 구성의 카드형식
+// 기본 화면 구성의 카드 형식
 @Composable
 fun AttractionItem(
     attraction: Attraction,

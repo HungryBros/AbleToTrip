@@ -91,7 +91,14 @@ fun NavGraphBuilder.home(
             val address = backStackEntry.arguments?.getString("address") ?: ""
 
             val autocompleteViewModel = viewModel<PlaceCompleteViewModel>()
-            DepartureScreen(navController, autocompleteViewModel, latitude, longitude, address)
+            DepartureScreen(
+                navController,
+                autocompleteViewModel,
+                latitude,
+                longitude,
+                address,
+                currentLocationViewModel,
+            )
         }
         composable(
             route = "TOTAL_ROUTE/{departure}/{arrival}",
