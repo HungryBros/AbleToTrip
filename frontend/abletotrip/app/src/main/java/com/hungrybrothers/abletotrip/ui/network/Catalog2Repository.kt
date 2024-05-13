@@ -14,8 +14,13 @@ class Catalog2Repository {
         category: String,
         page: Int,
     ): Catalog2Attractions? {
+        if (category.isBlank()) {
+            Log.d("Catalog2Data", "카테고리가 비어있습니다. 요청을 보내지 않습니다.")
+            return null
+        }
+
         return try {
-            Log.d("Catalog2Data", "요청 보내는 중...category: $category, page: $page,")
+            Log.d("Catalog2Data", "요청 보내는 중...category: $category, page: $page")
             val response =
                 KtorClient.client.get("attraction/by_category/?category2=$category&page=$page") {
                     header("latitude", latitude)

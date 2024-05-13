@@ -1,5 +1,6 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
+import android.widget.Toast
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,43 +23,42 @@ import com.hungrybrothers.abletotrip.KakaoAuthViewModel
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 
 private const val SPTIME: Long = 3000
 
 @Composable
 fun SplashScreen(navController: NavController) {
+    val context = LocalContext.current
     val viewModel: KakaoAuthViewModel = viewModel()
-    val loggedIn = viewModel.loggedIn.observeAsState().value
-    val loginResult = viewModel.loginResult.observeAsState().value
+    val loggedIn by viewModel.loggedIn.observeAsState()
+    val loginResult by viewModel.loginResult.observeAsState()
 
     LaunchedEffect(loggedIn, loginResult) {
         delay(SPTIME)
-        withContext(Dispatchers.Main) {
-            when {
-                loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.OK -> {
-                    navController.navigate(NavRoute.HOME.routeName) {
-                        popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
-                    }
+        when {
+            loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.OK -> {
+                navController.navigate(NavRoute.HOME.routeName) {
+                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
                 }
-                loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.Accepted -> {
-                    navController.navigate(NavRoute.ADDRESS.routeName) {
-                        popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
-                    }
+                Toast.makeText(context, "로그인 성공! 환영합니다.", Toast.LENGTH_SHORT).show()
+            }
+            loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.Accepted -> {
+                navController.navigate(NavRoute.ADDRESS.routeName) {
+                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
                 }
-                else -> {
-                    navController.navigate(NavRoute.LOGIN.routeName) {
-                        popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
-                    }
+                Toast.makeText(context, "주소를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+            }
+            else -> {
+                navController.navigate(NavRoute.LOGIN.routeName) {
+                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
                 }
+                Toast.makeText(context, "로그인이 필요합니다.", Toast.LENGTH_LONG).show()
             }
         }
     }
-    Column(modifier = Modifier.fillMaxSize()) {
-        Splash()
-    }
+
+    Splash()
 }
 
 @Composable

@@ -15,6 +15,7 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
 
     private var currentPage = 1
     private var lastPageReached = false
+    private var isLoading = false // 데이터 로드 중인지 상태 추가
 
     fun loadInitialData(
         latitude: String,
@@ -31,7 +32,7 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
         longitude: String,
         category: String,
     ) {
-        if (lastPageReached) return
+        if (lastPageReached || isLoading) return // 로드 중이거나 마지막 페이지에 도달한 경우 더 이상 로드하지 않음
         fetchData(latitude, longitude, category, currentPage)
     }
 
@@ -42,17 +43,23 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
         page: Int,
         reset: Boolean = false,
     ) {
-        Log.d("ShowMoreViewModel", "latitude = $latitude, longitude = $longitude, category = $category, page = $page")
         viewModelScope.launch {
+            isLoading = true
             val result = repository.fetchShowMoreInfoData(latitude, longitude, category, page)
+            Log.d("ShowMoreViewModel", "page = $page")
+            Log.d("ShowMoreViewModel", "result = $result")
+            isLoading = false // 데이터 로드가 완료되면 로딩 상태를 false로 설정
             if (result != null) {
                 if (reset) {
                     _showmoreData.value = result
                 } else {
-                    _showmoreData.value =
-                        _showmoreData.value?.copy(
-                            attractions = _showmoreData.value?.attractions.orEmpty() + result.attractions,
-                        )
+                    val currentData = _showmoreData.value
+                    if (currentData == null) {
+                        _showmoreData.value = result
+                    } else {
+                        val updatedAttractions = currentData.attractions + result.attractions
+                        _showmoreData.value = currentData.copy(attractions = updatedAttractions)
+                    }
                 }
                 if (result.attractions.isEmpty()) {
                     lastPageReached = true
