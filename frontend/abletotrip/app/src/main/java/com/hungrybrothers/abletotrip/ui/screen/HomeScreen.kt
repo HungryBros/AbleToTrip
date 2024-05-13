@@ -84,6 +84,7 @@ import com.hungrybrothers.abletotrip.ui.network.AttractionsRepository
 import com.hungrybrothers.abletotrip.ui.network.Catalog2Repository
 import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
 import com.hungrybrothers.abletotrip.ui.network.UserInfoRepository
+import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.viewmodel.Catalog2ViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.HomeViewModel
@@ -248,10 +249,11 @@ fun FloatingActionMenu(
         FloatingActionButton(
             onClick = { isMenuExpanded = !isMenuExpanded },
             shape = RoundedCornerShape(50),
-            containerColor = MaterialTheme.colorScheme.primary,
+            containerColor = CustomPrimary,
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
+                tint = Color.White,
                 contentDescription = "Expand Menu",
             )
         }

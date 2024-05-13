@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,6 +47,7 @@ import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.datatype.AttractionDetail
 import com.hungrybrothers.abletotrip.ui.network.AttractionDetailRepository
+import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.viewmodel.AttractionDetailViewModel
 
 @Composable
@@ -165,8 +167,13 @@ fun RouteButton(
             modifier
                 .fillMaxWidth()
                 .height(48.dp),
+        colors = ButtonDefaults.buttonColors(CustomPrimary),
     ) {
-        Text("길찾기", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "길찾기",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 
