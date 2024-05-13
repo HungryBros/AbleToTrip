@@ -39,6 +39,13 @@ class User(AbstractBaseUser):
         null=True,
     )
 
+    longitude = models.FloatField(
+        null=True, blank=True
+    )  # NULL 값을 허용하고 폼에서 빈 값도 허용
+    latitude = models.FloatField(
+        null=True, blank=True
+    )  # NULL 값을 허용하고 폼에서 빈 값도 허용
+
     objects = UserManager()
 
     USERNAME_FIELD = "email"
