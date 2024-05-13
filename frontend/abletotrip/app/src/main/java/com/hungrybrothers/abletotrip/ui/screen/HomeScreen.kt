@@ -318,7 +318,6 @@ fun GohomeActionButton(navController: NavController) {
             tint = Color.White,
             contentDescription = "Go Home",
         )
-        Text(text = "집가기")
     }
 }
 
