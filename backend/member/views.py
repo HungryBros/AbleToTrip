@@ -16,7 +16,6 @@ def signin(request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            print("회원가입 완료, 주소 등록이 필요합니다")
             return Response(
                 {"message": "회원가입 완료, 주소 등록이 필요합니다"},
                 status=status.HTTP_201_CREATED,
@@ -26,8 +25,12 @@ def signin(request):
             if user_email:
                 try:
                     user = User.objects.get(email=user_email)
-                    address = user.address
-                    if address:
+                    address, latitude, longitude = (
+                        user.address,
+                        user.latitude,
+                        user.longitude,
+                    )
+                    if address and latitude and longitude:
                         return Response(
                             {"message": "기존 회원, 로그인 성공"},
                             status=status.HTTP_200_OK,
@@ -35,7 +38,7 @@ def signin(request):
                     else:
                         return Response(
                             {
-                                "message": "기존 회원이지만 주소 입력을 하지 않았습니다. 주소 입력을 해주세요."
+                                "message": "기존 회원이지만 주소/위도/경도가 저장되지 않았습니다."
                             },
                             status=status.HTTP_202_ACCEPTED,
                         )
@@ -58,10 +61,16 @@ def info(request):
     if request.method == "GET":
         if user_email:
             try:
-                user = get_object_or_404(User, emai=user_email)
+                user = get_object_or_404(User, email=user_email)
                 address = user.address
+                latitude = user.latitude
+                longitude = user.longitude
                 if address:
-                    data = {"address": address}
+                    data = {
+                        "address": address,
+                        "latitude": latitude,
+                        "longitude": longitude,
+                    }
                     return Response(data, status=status.HTTP_200_OK)
                 else:
                     return Response(
@@ -84,9 +93,13 @@ def info(request):
             user = User.objects.get(email=user_email)  # 현재 로그인한 사용자
             user_address = user.address
             address = request.data.get("address")  # 전송된 주소 데이터
+            latitude = request.data.get("latitude")  # 전송된 위도 데이터
+            longitude = request.data.get("longitude")  # 전송된 경도 데이터
             if not user_address:
                 if user and address:
                     user.address = address
+                    user.latitude = latitude
+                    user.longitude = longitude
                     user.save()
                     return Response(
                         {"message": "주소가 성공적으로 저장되었습니다. 로그인 성공"},
