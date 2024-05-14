@@ -3,6 +3,7 @@ package com.hungrybrothers.abletotrip.ui.screen
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -82,9 +83,13 @@ fun SearchScreen(
     // 키보드
     val keyboardController = LocalSoftwareKeyboardController.current
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier =
+            Modifier
+                .padding(16.dp)
+                .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        HeaderBar(navController = navController, showBackButton = false)
+        HeaderBar(navController = navController, showBackButton = true)
         // 검색창
         SearchBar(
             text = searchText,

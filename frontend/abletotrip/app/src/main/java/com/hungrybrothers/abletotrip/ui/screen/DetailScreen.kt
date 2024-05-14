@@ -72,11 +72,15 @@ fun DetailScreen(
 
     val attractionDetail by attractionDetailViewModel.attractionDetailData.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
-        Column {
-            Spacer(modifier = Modifier.height(16.dp)) // 헤더 위의 간격 추가
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier =
+                Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             HeaderBar(navController = navController, showBackButton = true)
-            Spacer(modifier = Modifier.height(16.dp)) // 헤더 아래의 간격 추가
         }
 
         if (attractionDetail == null) {
@@ -87,7 +91,8 @@ fun DetailScreen(
             Column(
                 modifier =
                     Modifier
-                        .padding(top = 112.dp, bottom = 72.dp)
+                        .padding(top = 108.dp, bottom = 72.dp)
+                        .padding(horizontal = 16.dp)
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.Top,
@@ -149,7 +154,7 @@ fun DetailScreen(
                 modifier =
                     Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(vertical = 16.dp),
+                        .padding(16.dp),
             )
         }
     }
