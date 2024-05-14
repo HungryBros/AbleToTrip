@@ -78,7 +78,7 @@ fun DepartureScreen(
             Box(
                 modifier = Modifier.padding(16.dp),
             ) {
-                HeaderBar(navController = navController, true)
+                HeaderBar(navController = navController, true, true)
             }
             Box(
                 modifier = Modifier.background(CustomPrimary).padding(horizontal = 16.dp, vertical = 8.dp),

@@ -93,7 +93,7 @@ fun ShowMoreScreen(
                 .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        HeaderBar(navController, true)
+        HeaderBar(navController, true, true)
         SearchBar(
             text = searchText,
             onValueChange = { newSearchText ->
