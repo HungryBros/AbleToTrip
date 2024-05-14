@@ -10,11 +10,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -73,12 +71,20 @@ fun DepartureScreen(
     arrivaladdress: String,
     currentLocationViewModel: CurrentLocationViewModel,
 ) {
-    Surface(modifier = Modifier.fillMaxSize(), color = CustomBackground) {
+    Surface(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.fillMaxSize().background(CustomPrimary),
+            modifier = Modifier.fillMaxSize(),
         ) {
-            HeaderBar(navController = navController, true)
-            DepartureTopBox(navController, autocompleteViewModel, arrivaladdress, currentLocationViewModel)
+            Box(
+                modifier = Modifier.padding(16.dp),
+            ) {
+                HeaderBar(navController = navController, true)
+            }
+            Box(
+                modifier = Modifier.background(CustomPrimary).padding(horizontal = 16.dp, vertical = 8.dp),
+            ) {
+                DepartureTopBox(navController, autocompleteViewModel, arrivaladdress, currentLocationViewModel)
+            }
             PinGoogleMap(arrivallatitude, arrivallongitude, arrivaladdress)
         }
     }
@@ -115,61 +121,65 @@ fun DepartureTopBox(
 
     Log.d("departureAddress", "departureAddress: ${departureAddress.value}")
 
-    Column(modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 24.dp, bottom = 8.dp)) {
-        AutocompleteTextField2(
-            text = textFieldValue.value,
-            onValueChange = { newText ->
-                textFieldValue.value = newText
-                autocompleteViewModel.queryPlaces(newText)
-                showPlacesList = true
-            },
-            placeholder = "출발지를 입력해주세요.",
-            onClear = {
-                textFieldValue.value = ""
-                selectedAddress = null
-                showPlacesList = false
-                keyboardController?.hide()
-            },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding()
-                    .clip(RoundedCornerShape(8.dp)),
-        )
-        PlacesList(places = places) { place, isValid ->
-            if (isValid) {
-                selectedAddress = place.address
-                textFieldValue.value = place.name
-                showPlacesList = false
-                keyboardController?.hide()
-            } else {
-                textFieldValue.value = ""
-                selectedAddress = null
-                showPlacesList = true
+    Column(
+        modifier = Modifier.padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            AutocompleteTextField2(
+                text = textFieldValue.value,
+                onValueChange = { newText ->
+                    textFieldValue.value = newText
+                    autocompleteViewModel.queryPlaces(newText)
+                    showPlacesList = true
+                },
+                placeholder = "출발지를 입력해주세요.",
+                onClear = {
+                    textFieldValue.value = ""
+                    selectedAddress = null
+                    showPlacesList = false
+                    keyboardController?.hide()
+                },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+            )
+            PlacesList(places = places) { place, isValid ->
+                if (isValid) {
+                    selectedAddress = place.address
+                    textFieldValue.value = place.name
+                    showPlacesList = false
+                    keyboardController?.hide()
+                } else {
+                    textFieldValue.value = ""
+                    selectedAddress = null
+                    showPlacesList = true
+                }
             }
+            TextField(
+                singleLine = true,
+                value = textState2.value,
+                onValueChange = { textState2.value = it },
+                enabled = false,
+                colors =
+                    TextFieldDefaults.colors(
+                        unfocusedContainerColor = CustomWhite,
+                        focusedContainerColor = CustomWhiteSmoke,
+                        unfocusedPlaceholderColor = CustomWhiteSmoke,
+                        focusedPlaceholderColor = CustomWhite,
+                    ),
+                placeholder = {
+                    Text("$myendpoint")
+                },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp)),
+            )
         }
-        Spacer(modifier = Modifier.size(8.dp))
-        TextField(
-            singleLine = true,
-            value = textState2.value,
-            onValueChange = { textState2.value = it },
-            enabled = false,
-            colors =
-                TextFieldDefaults.colors(
-                    unfocusedContainerColor = CustomWhite,
-                    focusedContainerColor = CustomWhiteSmoke,
-                    unfocusedPlaceholderColor = CustomWhiteSmoke,
-                    focusedPlaceholderColor = CustomWhite,
-                ),
-            placeholder = {
-                Text("$myendpoint")
-            },
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding()
-                    .clip(RoundedCornerShape(8.dp)),
-        )
         ActionsRow(navController, textFieldValue, selectedAddress, myendpoint)
     }
 }
@@ -233,8 +243,7 @@ fun ActionsRow(
     Row(
         modifier =
             Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
+                .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Button(

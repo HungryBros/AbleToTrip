@@ -1,8 +1,6 @@
 package com.hungrybrothers.abletotrip.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -69,12 +67,4 @@ fun HeaderBar(
             }
         }
     }
-
-    Spacer(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color.LightGray),
-    )
 }
