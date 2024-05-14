@@ -213,7 +213,7 @@ def get_tmap_info_func(data):
             description = description.replace(" 을 ", "을(를) ")
             description_list.append(description)
 
-    duration = (duration_seconds // 60) + 1
+    duration = ((duration_seconds // 60) + 1) // 7 * 4  # 시속 7km로 계산
 
     return coordinate_list, description_list, duration, distance_meters
 
@@ -246,18 +246,14 @@ def get_additional_ETA_func(
 # Response Value 만들어주는 함수
 def navigation_response_func(
     duration,
-    is_bus_exist,
-    is_subway_exist,
-    is_pedestrian_route,
+    is_subway_route,
     polyline_info=list(),
     detail_route_info=list(),
 ):
 
     response_value = {
         "duration": duration,
-        "is_bus_exist": is_bus_exist,
-        "is_subway_exist": is_subway_exist,
-        "is_pedestrian_route": is_pedestrian_route,
+        "is_subway_route": is_subway_route,
         "polyline_info": polyline_info,
         "detail_route_info": detail_route_info,
     }
