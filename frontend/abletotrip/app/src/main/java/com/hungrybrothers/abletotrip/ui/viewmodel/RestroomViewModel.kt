@@ -24,6 +24,7 @@ class RestroomViewModel : ViewModel() {
                 val response: RestroomResponse =
                     client
                         .get("http://k10a607.p.ssafy.io:8087/navigation/restroom/").body()
+//                        .get("http://10.0.2.2:8000/navigation/restroom/").body()
                 _restrooms.postValue(response.restrooms)
                 _error.postValue(null)
             } catch (e: Exception) {

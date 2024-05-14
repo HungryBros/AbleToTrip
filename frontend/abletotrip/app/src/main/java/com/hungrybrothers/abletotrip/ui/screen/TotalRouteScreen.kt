@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +73,8 @@ fun TotalRouteScreen(
     arrival: String?,
     navigationViewModel: NavigationViewModel,
 ) {
+    val messageInfo by navigationViewModel.messageInfo.observeAsState(null)
+    val totalRouteModal = remember { mutableStateOf(false) }
     val openDialog = remember { mutableStateOf(false) }
     println("im so angry : ${openDialog.value}")
     if (openDialog.value) {
@@ -83,24 +84,22 @@ fun TotalRouteScreen(
             },
             title = {
                 Text(
-                    text = "검색 종료",
+                    text = "탐색 성공",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                 )
             },
             text = {
-                Text(text = "경로가 탐색되지 않습니다.")
+                Text(text = "$messageInfo")
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         openDialog.value = false
-                        navController.navigate(NavRoute.HOME.routeName) {
-                            popUpTo("HOME")
-                        }
+                        totalRouteModal.value = true
                     },
                 ) {
-                    Text("종료하기")
+                    Text("시작하기")
                 }
             },
         )
@@ -117,6 +116,7 @@ fun TotalRouteScreen(
                 departure = departure,
                 arrival = arrival,
                 openDialogState = openDialog,
+                totalRouteModalState = totalRouteModal,
             )
             TotalRouteBottomBox(
                 modifier = Modifier.weight(1f),
@@ -189,12 +189,11 @@ fun TotalRouteGoogleMap(
     departure: String?,
     arrival: String?,
     openDialogState: MutableState<Boolean>,
+    totalRouteModalState: MutableState<Boolean>,
 ) {
     // 네비게이션 데이터를 가져오기 위한 첫 호출
     LaunchedEffect(Unit) {
         navigationViewModel.fetchNavigationData(departure = departure, arrival = arrival)
-        openDialogState.value = false
-        println("im so angry : ${openDialogState.value}")
     }
 
     // LiveData를 Compose 상태로 변환
@@ -202,7 +201,6 @@ fun TotalRouteGoogleMap(
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
     val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
     val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
-    val duration by navigationViewModel.duration.observeAsState(null)
     // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
     val departureResource by navigationViewModel.departureData.observeAsState(Resource.loading(null))
     val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
@@ -240,12 +238,13 @@ fun TotalRouteGoogleMap(
 
     var hasErrorOccurred by remember { mutableStateOf(false) }
     // navigationData의 상태에 따른 UI 처리
+    var modalcheck by remember { mutableStateOf(true) }
     navigationData?.let { resource ->
         when (resource.status) {
             Resource.Status.SUCCESS -> {
                 val data = resource.data
                 // navigationData에서 필요한 작업을 수행하세요
-                Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
+//                Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
 
                 Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
                 Log.d("TotalRouteGoogleMap", "navigationData: $navigationData")
@@ -255,6 +254,13 @@ fun TotalRouteGoogleMap(
 
                 val lastPolylinePoint = polylineDataList.lastOrNull()?.points?.lastOrNull()
                 val firstWalkPoint = walkDataList2.points.firstOrNull()
+
+                if (modalcheck) {
+                    openDialogState.value = true
+                    modalcheck = !modalcheck
+                    Log.d("modalcheck", "navigationData: $modalcheck")
+                    Log.d("modalcheck", "navigationData: ${openDialogState.value}")
+                }
                 println("dotted check : $polylineDataList")
 
                 println("dotted check : $lastWalkPoint")
@@ -276,7 +282,7 @@ fun TotalRouteGoogleMap(
                 Log.e("TotalRouteGoogleMap", "Error: $errorMessage")
                 if (!hasErrorOccurred) {
                     hasErrorOccurred = true // 오류 발생 표시
-                    openDialogState.value = true // 오류 발생 시 다이얼로그 표시
+//                    openDialogState.value = true // 오류 발생 시 다이얼로그 표시
                 } else {
                     // 필요한 경우 else 블럭에 다른 처리를 추가할 수 있습니다.
                 }
@@ -284,7 +290,6 @@ fun TotalRouteGoogleMap(
             Resource.Status.LOADING -> {
                 // 로딩 중 처리
                 hasErrorOccurred = false
-                openDialogState.value = false
                 Log.d("TotalRouteGoogleMap", "Loading navigation data...")
             }
         }
@@ -304,7 +309,6 @@ fun TotalRouteGoogleMap(
 
     // `mystartpoint`나 `myendpoint`가 변경될 때마다 카메라 위치를 업데이트
     LaunchedEffect(mystartpoint, myendpoint) {
-        openDialogState.value = false
         hasErrorOccurred = false
         coroutineScope.launch {
             cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
@@ -312,10 +316,9 @@ fun TotalRouteGoogleMap(
         }
     }
 
-    val context = LocalContext.current
     val dotPattern = listOf(Dot(), Gap(10f))
 
-    if (polylineDataList.isNotEmpty() && walkDataList1.points.isNotEmpty() && walkDataList2.points.isNotEmpty()) {
+    if (totalRouteModalState.value) {
         GoogleMap(
             modifier = modifier,
             cameraPositionState = cameraPositionState,
