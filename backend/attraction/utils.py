@@ -36,6 +36,5 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 
 
 def get_image_url(filename):
-    image_base_url = config("S3_BASE_URL")
-    image_url = f"{image_base_url}images/{filename}.png"
+    image_url = f"images/{filename}.png"
     return image_url
