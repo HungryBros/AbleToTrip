@@ -22,5 +22,5 @@ val CustomWhiteSmoke = Color(0xFFE8E8E8)
 val CustomWhite = Color(0xFFFFFFFF)
 
 val CustomRed = Color(0xFFFF0000)
-val CustomBlue = Color(0xFF027AFF)
 val CustomAccent = Color(0xFFF0E939)
+val CustomBlue = Color(0xFF2E75B6)
