@@ -381,6 +381,7 @@ fun GoogleMapGuide(
                 Image(
                     painter = familyRestroomIcon,
                     contentDescription = "Disabled Restroom Icon",
+                    modifier = Modifier.size(45.dp),
                 )
             }
 
