@@ -134,7 +134,8 @@ fun AddressScreen(
         Column(
             modifier =
                 Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
