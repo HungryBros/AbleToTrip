@@ -214,7 +214,7 @@ def navigation(request):
             user = get_user(request)
             print(f"{log_time_func()} - Navigation: REQUEST USER: {user}")
 
-            # cache.set(user, cached_subway_stops, 3600 * 2)
+            cache.set(user, cached_subway_stops, 3600 * 2)
             print(f"{log_time_func()} - Navigation: REDIS 저장 SUCCESS")
 
             # 엘레베이터 출구 찾기

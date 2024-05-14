@@ -251,7 +251,7 @@ def navigation_response_func(
 ):
 
     response_value = {
-        "message": "모달에 띄울 임시 메세지입니다.",
+        "message": "모달에 띄울 임시 메세지입니다",
         "duration": duration,
         "is_subway_exist": is_subway_exist,
         "polyline_info": polyline_info,
