@@ -28,6 +28,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +59,7 @@ import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -78,7 +80,7 @@ fun DepartureScreen(
             Box(
                 modifier = Modifier.padding(16.dp),
             ) {
-                HeaderBar(navController = navController, true)
+                HeaderBar(navController = navController, true, true)
             }
             Box(
                 modifier = Modifier.background(CustomPrimary).padding(horizontal = 16.dp, vertical = 8.dp),
@@ -119,6 +121,8 @@ fun DepartureTopBox(
         textFieldValue.value = departureAddress.value ?: ""
     }
 
+    val coroutineScope = rememberCoroutineScope()
+
     Log.d("departureAddress", "departureAddress: ${departureAddress.value}")
 
     Column(
@@ -142,21 +146,29 @@ fun DepartureTopBox(
                     showPlacesList = false
                     keyboardController?.hide()
                 },
+                onTargetClick = {
+                    coroutineScope.launch { // 코루틴 스코프 내에서 suspend 함수 호출
+                        val currentLocation = getCurrentLocationAddress(context, currentLocationViewModel)
+                        textFieldValue.value = currentLocation ?: ""
+                    }
+                },
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp)),
             )
-            PlacesList(places = places) { place, isValid ->
-                if (isValid) {
-                    selectedAddress = place.address
-                    textFieldValue.value = place.name
-                    showPlacesList = false
-                    keyboardController?.hide()
-                } else {
-                    textFieldValue.value = ""
-                    selectedAddress = null
-                    showPlacesList = true
+            if (showPlacesList) {
+                PlacesList(places = places) { place, isValid ->
+                    if (isValid) {
+                        selectedAddress = place.address
+                        textFieldValue.value = place.name
+                        showPlacesList = false
+                        keyboardController?.hide()
+                    } else {
+                        textFieldValue.value = ""
+                        selectedAddress = null
+                        showPlacesList = true
+                    }
                 }
             }
             TextField(

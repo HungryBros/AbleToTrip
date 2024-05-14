@@ -114,7 +114,7 @@ fun TotalRouteScreen(
             Box(
                 modifier = Modifier.padding(16.dp),
             ) {
-                HeaderBar(navController = navController, true)
+                HeaderBar(navController = navController, true, true)
             }
             TotalRouteGoogleMap(
                 modifier = Modifier.weight(7f),

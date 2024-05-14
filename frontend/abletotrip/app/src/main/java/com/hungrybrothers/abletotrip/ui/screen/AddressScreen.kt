@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.google.android.libraries.places.api.model.Place
 import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.ui.components.AutocompleteTextField
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
@@ -136,10 +135,10 @@ fun AddressScreen(
             modifier =
                 Modifier
                     .fillMaxWidth(),
-            verticalArrangement = Arrangement.Top,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            HeaderBar(navController = navController, false)
+            HeaderBar(navController = navController, false, false)
             Column(
                 modifier =
                     Modifier

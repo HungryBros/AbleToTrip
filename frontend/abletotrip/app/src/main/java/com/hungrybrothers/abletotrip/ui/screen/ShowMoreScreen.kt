@@ -44,11 +44,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.SearchBar
 import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attraction
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
+import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.ShowMoreViewModel
 
@@ -93,7 +95,7 @@ fun ShowMoreScreen(
                 .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        HeaderBar(navController, true)
+        HeaderBar(navController, true, true)
         SearchBar(
             text = searchText,
             onValueChange = { newSearchText ->
@@ -130,7 +132,7 @@ fun ShowMoreScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = CustomPrimary)
             }
         }
     }
@@ -168,7 +170,7 @@ fun DisplayMoreAttractionsScreen(
                         .padding(8.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = CustomPrimary)
             }
         }
     }
@@ -206,7 +208,7 @@ fun MoreAttractionItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
-                painter = rememberAsyncImagePainter(model = attraction.image_url),
+                painter = rememberAsyncImagePainter(model = BuildConfig.S3_BASE_URL + attraction.image_url),
                 contentDescription = attraction.attraction_name,
                 modifier =
                     Modifier

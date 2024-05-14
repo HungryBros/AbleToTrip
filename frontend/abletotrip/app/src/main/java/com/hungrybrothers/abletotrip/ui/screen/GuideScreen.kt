@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -381,6 +382,7 @@ fun GoogleMapGuide(
                 Image(
                     painter = familyRestroomIcon,
                     contentDescription = "Disabled Restroom Icon",
+                    modifier = Modifier.size(45.dp),
                 )
             }
 
@@ -412,7 +414,7 @@ fun GuideBottomSheet(
 ) {
     val detailRouteInfo by navigationViewModel.detailRouteInfo.observeAsState(emptyList())
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().background(Color.White)) {
         // BottomSheetScaffold로 바텀시트 구현
         BottomSheetScaffold(
             scaffoldState = scaffoldState,
@@ -421,7 +423,8 @@ fun GuideBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .height(300.dp),
+                            .height(300.dp)
+                            .background(Color.White),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {

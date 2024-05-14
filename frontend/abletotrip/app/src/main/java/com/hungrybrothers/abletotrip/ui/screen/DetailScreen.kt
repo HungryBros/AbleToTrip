@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.datatype.AttractionDetail
@@ -82,12 +83,12 @@ fun DetailScreen(
                     .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            HeaderBar(navController = navController, showBackButton = true)
+            HeaderBar(navController = navController, showBackButton = true, searchClick = true)
         }
 
         if (attractionDetail == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator() // 데이터 로딩 중 표시
+                CircularProgressIndicator(color = CustomPrimary) // 데이터 로딩 중 표시
             }
         } else {
             Column(
@@ -101,7 +102,7 @@ fun DetailScreen(
             ) {
                 attractionDetail?.let { detail ->
                     Image(
-                        painter = rememberAsyncImagePainter(model = detail.image_url),
+                        painter = rememberAsyncImagePainter(model = BuildConfig.S3_BASE_URL + detail.image_url),
                         contentDescription = "Attraction Image",
                         modifier =
                             Modifier
