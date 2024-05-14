@@ -154,7 +154,7 @@ fun HomeScreen(
                         .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                HeaderBar(navController = navController, false)
+                HeaderBar(navController = navController, false, true)
                 SearchBar(
                     text = searchText,
                     onValueChange = { newSearchText ->

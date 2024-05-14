@@ -110,7 +110,7 @@ fun TotalRouteScreen(
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            HeaderBar(navController = navController, true)
+            HeaderBar(navController = navController, true, true)
             TotalRouteGoogleMap(
                 modifier = Modifier.weight(7f),
                 navigationViewModel = navigationViewModel,
