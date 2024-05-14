@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -106,11 +107,15 @@ fun TotalRouteScreen(
         )
     }
 
-    Surface(modifier = Modifier, color = CustomBackground) {
+    Surface(modifier = Modifier) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            HeaderBar(navController = navController, true, true)
+            Box(
+                modifier = Modifier.padding(16.dp),
+            ) {
+                HeaderBar(navController = navController, true, true)
+            }
             TotalRouteGoogleMap(
                 modifier = Modifier.weight(7f),
                 navigationViewModel = navigationViewModel,
