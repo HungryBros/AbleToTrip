@@ -147,16 +147,18 @@ fun DepartureTopBox(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp)),
             )
-            PlacesList(places = places) { place, isValid ->
-                if (isValid) {
-                    selectedAddress = place.address
-                    textFieldValue.value = place.name
-                    showPlacesList = false
-                    keyboardController?.hide()
-                } else {
-                    textFieldValue.value = ""
-                    selectedAddress = null
-                    showPlacesList = true
+            if (showPlacesList) {
+                PlacesList(places = places) { place, isValid ->
+                    if (isValid) {
+                        selectedAddress = place.address
+                        textFieldValue.value = place.name
+                        showPlacesList = false
+                        keyboardController?.hide()
+                    } else {
+                        textFieldValue.value = ""
+                        selectedAddress = null
+                        showPlacesList = true
+                    }
                 }
             }
             TextField(
