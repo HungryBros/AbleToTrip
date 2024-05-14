@@ -316,6 +316,7 @@ fun GohomeActionButton(navController: NavController) {
             painter = painterResource(id = R.drawable.wellcomehome),
             tint = Color.White,
             contentDescription = "Go Home",
+            modifier = Modifier.size(36.dp),
         )
     }
 }
