@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -260,53 +262,40 @@ fun openUrl(
     }
 }
 
+data class FacilityInfo(val isAvailable: Boolean, val iconId: Int, val availableDescription: String)
+
 @Composable
 fun FacilitiesGrid(attractionDetail: AttractionDetail) {
     Column(modifier = Modifier.padding(top = 16.dp)) {
         Text("시설 정보", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
+        val facilities =
+            listOf(
+                FacilityInfo(attractionDetail.is_disabled_parking, R.drawable.p, "장애인 주차장"),
+                FacilityInfo(attractionDetail.is_disabled_restroom, R.drawable.men, "장애인 화장실"),
+                FacilityInfo(attractionDetail.is_free_parking, R.drawable.p, "무료 주차"),
+                FacilityInfo(attractionDetail.is_audio_guide, R.drawable.audio, "오디오 가이드"),
+                FacilityInfo(attractionDetail.is_large_parking, R.drawable.parking, "대형차 주차"),
+            )
+        val showFacilities = facilities.any { it.isAvailable }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            FacilityItem(
-                isAvailable = attractionDetail.is_free_parking,
-                iconId = R.drawable.p,
-                availableDescription = "무료 주차",
-            )
-            FacilityItem(
-                isAvailable = attractionDetail.is_paid_parking,
-                iconId = R.drawable.p,
-                availableDescription = "유료 주차",
-            )
-            FacilityItem(
-                isAvailable = attractionDetail.is_audio_guide,
-                iconId = R.drawable.audio,
-                availableDescription = "오디오 가이드",
-            )
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            FacilityItem(
-                isAvailable = attractionDetail.is_disabled_restroom,
-                iconId = R.drawable.men,
-                availableDescription = "장애인 화장실",
-            )
-            FacilityItem(
-                isAvailable = attractionDetail.is_large_parking,
-                iconId = R.drawable.parking,
-                availableDescription = "대형차 주차",
-            )
-            FacilityItem(
-                isAvailable = attractionDetail.is_disabled_parking,
-                iconId = R.drawable.p,
-                availableDescription = "장애인용 주차장",
+        if (showFacilities) {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                items(facilities) { facility ->
+                    if (facility.isAvailable) {
+                        FacilityItem(
+                            iconId = facility.iconId,
+                            availableDescription = facility.availableDescription,
+                        )
+                    }
+                }
+            }
+        } else {
+            Text(
+                text = "장애인 편의시설이 없습니다.",
+                modifier = Modifier.padding(8.dp),
             )
         }
     }
@@ -315,7 +304,6 @@ fun FacilitiesGrid(attractionDetail: AttractionDetail) {
 
 @Composable
 fun FacilityItem(
-    isAvailable: Boolean,
     iconId: Int,
     availableDescription: String,
 ) {
@@ -334,15 +322,12 @@ fun FacilityItem(
                 modifier = Modifier.size(24.dp),
                 tint = Color.Unspecified,
             )
-            if (!isAvailable) {
-                DrawXMark()
-            }
         }
         Spacer(Modifier.height(4.dp))
         Text(
             text = availableDescription,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isAvailable) Color.Black else Color.Gray,
+            color = Color.Black,
         )
     }
 }
