@@ -95,7 +95,9 @@ fun TotalRouteScreen(
                 TextButton(
                     onClick = {
                         openDialog.value = false
-                        navController.navigate(NavRoute.HOME.routeName)
+                        navController.navigate(NavRoute.HOME.routeName) {
+                            popUpTo("HOME")
+                        }
                     },
                 ) {
                     Text("종료하기")

@@ -108,7 +108,10 @@ fun GuideScreen(
                 TextButton(
                     onClick = {
                         openDialog.value = false
-                        navController.navigate(NavRoute.HOME.routeName)
+                        navController.navigate(NavRoute.HOME.routeName) {
+                            // 스택에서 모든 대상을 제거하고 홈으로 이동
+                            popUpTo("HOME")
+                        }
                     },
                 ) {
                     Text("종료하기")
