@@ -23,6 +23,7 @@ import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 fun HeaderBar(
     navController: NavController,
     showBackButton: Boolean = false,
+    searchClick: Boolean = false,
 ) {
     Surface(
         modifier =
@@ -51,9 +52,24 @@ fun HeaderBar(
                     )
                 }
             }
-
+            println("searchDontClick $searchClick")
             IconButton(
-                onClick = { navController.navigate(NavRoute.HOME.routeName) },
+//                onClick = {
+//                    if (searchClick) {
+//                        println("searchDontClick $showBackButton")
+//                        navController.navigate(NavRoute.HOME.routeName)
+//                    }
+//
+//                },
+                onClick = {
+                    if (searchClick) {
+                        navController.navigate(NavRoute.HOME.routeName) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                },
                 modifier =
                     Modifier
                         .align(Alignment.Center)

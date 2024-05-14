@@ -83,7 +83,7 @@ fun DetailScreen(
                     .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            HeaderBar(navController = navController, showBackButton = true)
+            HeaderBar(navController = navController, showBackButton = true, searchClick = true)
         }
 
         if (attractionDetail == null) {

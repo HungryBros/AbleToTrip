@@ -92,7 +92,7 @@ fun SearchScreen(
                 .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        HeaderBar(navController = navController, showBackButton = true)
+        HeaderBar(navController = navController, showBackButton = true, searchClick = true)
         // 검색창
         SearchBar(
             text = searchText,
