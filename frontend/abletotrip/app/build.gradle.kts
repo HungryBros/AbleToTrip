@@ -28,6 +28,7 @@ android {
                 }
             }
         resValue("string", "kakao_oauth_host", props.getProperty("kakao_oauth_host", "default_oauth_host"))
+        resValue("string", "google_api_key", props.getProperty("google_api_key", "default_oauth_host"))
     }
 
     buildTypes {
