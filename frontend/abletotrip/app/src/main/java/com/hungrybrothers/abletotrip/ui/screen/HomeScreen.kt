@@ -31,7 +31,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -211,7 +210,10 @@ fun HomeScreen(
             navController = navController,
             kakaoAuthViewModel = kakaoAuthViewModel,
             currentLocationViewModel = currentLocationViewModel,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
         )
     }
 }
@@ -312,7 +314,8 @@ fun GohomeActionButton(navController: NavController) {
         containerColor = MaterialTheme.colorScheme.secondary,
     ) {
         Icon(
-            imageVector = Icons.Default.Home,
+            painter = painterResource(id = R.drawable.wellcomehome),
+            tint = Color.White,
             contentDescription = "Go Home",
         )
     }
@@ -379,7 +382,10 @@ fun DisplayCustomAttractionsScreen(
     if (attractionsData != null) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
         ) {
             items(attractionsData!!.attractions) { attraction ->
                 NewAttractionItem(attraction, navController)
@@ -425,17 +431,26 @@ fun NewAttractionItem(
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(
-                modifier = Modifier.weight(1f).padding(),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .padding(),
             ) {
                 // 텍스트를 나란히 표시하기 위해 Row 사용
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 1.dp),
                 ) {
                     // 관광지 이름
                     Text(
                         text = attraction.attraction_name,
-                        modifier = Modifier.padding(horizontal = 8.dp).weight(1f),
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 8.dp)
+                                .weight(1f),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
