@@ -28,6 +28,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +59,7 @@ import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -119,6 +121,8 @@ fun DepartureTopBox(
         textFieldValue.value = departureAddress.value ?: ""
     }
 
+    val coroutineScope = rememberCoroutineScope()
+
     Log.d("departureAddress", "departureAddress: ${departureAddress.value}")
 
     Column(
@@ -141,6 +145,12 @@ fun DepartureTopBox(
                     selectedAddress = null
                     showPlacesList = false
                     keyboardController?.hide()
+                },
+                onTargetClick = {
+                    coroutineScope.launch { // 코루틴 스코프 내에서 suspend 함수 호출
+                        val currentLocation = getCurrentLocationAddress(context, currentLocationViewModel)
+                        textFieldValue.value = currentLocation ?: ""
+                    }
                 },
                 modifier =
                     Modifier
