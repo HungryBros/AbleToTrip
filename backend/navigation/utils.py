@@ -2,12 +2,12 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from decouple import config
 from PyKakao import Local
-from pprint import pprint
 import pandas as pd
 import requests
 import joblib
 import time
 import re
+from pprint import pprint
 
 # Import Models and Serializers
 from .models import Convenient
@@ -107,9 +107,16 @@ def find_exit_func(station_name):
         if not info.strip() or info[0] != "승":
             return None
 
+        s, l = station_name.split()
+
+        if s[-1] != "역":
+            s += "역"
+
         station_elevator_exit = (
-            station_name + "호선 " + re.findall(r"\d+번\s?출구", info)[0]
+            s + " " + l + "호선 " + re.findall(r"\d+번\s?출구", info)[0]
         )
+
+        print("엘출", station_elevator_exit)
 
         return station_elevator_exit
 
@@ -121,8 +128,8 @@ def find_exit_func(station_name):
 def coordinate_request_func(keyword):
     api = Local(service_key=KAKAO_MAPS_API_KEY)
     result = api.search_keyword(keyword, dataframe=False)
-    print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 반환 result")
-    pprint(result)
+    # print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 반환 result")
+    # pprint(result)
     result_documents = result.get("documents")
 
     if len(result_documents):

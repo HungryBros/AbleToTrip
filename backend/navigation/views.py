@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.cache import cache
 from member.utils import is_logged_in, get_user
+from pprint import pprint
 
 # Import Models and Serializers
 from .models import Restroom
@@ -54,6 +55,9 @@ def navigation(request):
     is_bus_exist = False  # "BUS" 유무
     is_subway_exist = False  # "SUBWAY" 유무
     is_pedestrian_route = False  # 도보 경로 안내 유무
+
+    # print("구글 경로")
+    # pprint(steps)
 
     # 각 Step 확인
     for step in steps:
@@ -214,12 +218,14 @@ def navigation(request):
             user = get_user(request)
             print(f"{log_time_func()} - Navigation: REQUEST USER: {user}")
 
-            cache.set(user, cached_subway_stops, 3600 * 2)
+            # cache.set(user, cached_subway_stops, 3600 * 2)
             print(f"{log_time_func()} - Navigation: REDIS 저장 SUCCESS")
 
             # 엘레베이터 출구 찾기
             departure_station_elevator_exit = find_exit_func(subway_stops[0])
             arrival_station_elevator_exit = find_exit_func(subway_stops[-1])
+
+            print("지하철", subway_stops)
 
             # 두 출구 하나라도 엘레베이터가 없는 경우 => 탐색 종료
             if not (departure_station_elevator_exit and arrival_station_elevator_exit):
@@ -271,6 +277,9 @@ def navigation(request):
                 departure_exit_lat,
             )
 
+            # print("출발지 - 승차역 티맵경로")
+            # pprint(start_pedestrian_route)
+
             # T Map: "하차역 엘레베이터 출구 - 도착지" 도보 경로 요청
             end_pedestrian_route = pedestrian_request_func(
                 arrival_exit_lon,
@@ -278,6 +287,9 @@ def navigation(request):
                 end_lon,
                 end_lat,
             )
+
+            # print("하차역 - 도착지 티맵경로")
+            # pprint(end_pedestrian_route)
 
             print(
                 f"{log_time_func()} - Navigation: 양 출구 T Map 도보 경로 요청 SUCCESS"
