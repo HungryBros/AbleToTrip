@@ -59,6 +59,9 @@ class NavigationViewModel : ViewModel() {
     private val _detailRouteInfo = MutableLiveData<List<DetailRouteInfo>>()
     val detailRouteInfo: LiveData<List<DetailRouteInfo>> = _detailRouteInfo
 
+    private val _messageInfo = MutableLiveData<String>("")
+    val messageInfo: LiveData<String> = _messageInfo
+
     fun fetchNavigationData(
         departure: String?,
         arrival: String?,
@@ -72,6 +75,7 @@ class NavigationViewModel : ViewModel() {
         polylineDataList.value = emptyList()
         walkDataList1.value = PolylineData(emptyList(), Color.Blue)
         walkDataList2.value = PolylineData(emptyList(), Color.Blue)
+        _messageInfo.value = ""
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -81,10 +85,13 @@ class NavigationViewModel : ViewModel() {
                     buildJsonObject {
                         put("departure", departure ?: "")
                         put("arrival", arrival ?: "")
+//                        put("departure", "멀티캠퍼스 역삼")
+//                        put("arrival", "도곡근린공원")
                     }
                 println("viewmodel check : $requestBody")
                 val response: HttpResponse =
                     client.post("http://k10a607.p.ssafy.io:8087/navigation/search-direction/") {
+//                    client.post("http://10.0.2.2:8000/navigation/search-direction/") {
                         contentType(ContentType.Application.Json)
                         setBody(requestBody)
                     }
@@ -93,7 +100,7 @@ class NavigationViewModel : ViewModel() {
                     val data = Json { ignoreUnknownKeys = true }.decodeFromString<NavigationData>(responseBody)
                     _navigationData.postValue(Resource.success(data))
 
-                    println("viewmodel check : $responseBody")
+                    println("viewmodel check responseBody : $responseBody")
 
                     _departureData.postValue(
                         Resource.success(
@@ -117,6 +124,7 @@ class NavigationViewModel : ViewModel() {
                     )
                     _duration.postValue(data.duration) // duration 업데이트
                     _detailRouteInfo.postValue(data.detail_route_info) // detail_route_info 업데이트
+                    _messageInfo.postValue(data.message)
 
                     val polylineData =
                         data.polyline_info.flatMap { polylineInfo ->
@@ -209,10 +217,11 @@ data class Resource<out T>(val status: Status, val data: T?, val message: String
 
 @Serializable
 data class NavigationData(
+    val message: String,
     val duration: Int,
-    val is_bus_exist: Boolean,
+//    val is_bus_exist: Boolean,
     val is_subway_exist: Boolean,
-    val is_pedestrian_route: Boolean,
+//    val is_pedestrian_route: Boolean,
 //    val is_pedestrian_route: Boolean,
     val polyline_info: List<PolylineInfo>,
     val detail_route_info: List<DetailRouteInfo>,
