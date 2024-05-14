@@ -213,7 +213,7 @@ def get_tmap_info_func(data):
             description = description.replace(" 을 ", "을(를) ")
             description_list.append(description)
 
-    duration = ((duration_seconds // 60) + 1) // 7 * 4  # 시속 7km로 계산
+    duration = (((duration_seconds // 60) + 1) // 7 * 4) + 1  # 시속 7km로 계산
 
     return coordinate_list, description_list, duration, distance_meters
 
