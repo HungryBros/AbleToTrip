@@ -136,12 +136,16 @@ fun DepartureTopBox(
                     .padding()
                     .clip(RoundedCornerShape(8.dp)),
         )
-        if (showPlacesList) {
-            PlacesList(places = places) { Place ->
-                selectedAddress = Place.address
-                textFieldValue.value = Place.name
+        PlacesList(places = places) { place, isValid ->
+            if (isValid) {
+                selectedAddress = place.address
+                textFieldValue.value = place.name
                 showPlacesList = false
                 keyboardController?.hide()
+            } else {
+                textFieldValue.value = ""
+                selectedAddress = null
+                showPlacesList = true
             }
         }
         Spacer(modifier = Modifier.size(8.dp))

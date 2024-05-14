@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.libraries.places.api.model.Place
 import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.ui.components.AutocompleteTextField
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
@@ -164,14 +165,28 @@ fun AddressScreen(
                     },
                 )
                 if (showPlacesList) {
-                    PlacesList(places = places) { Place ->
-                        selectedPlaceId = Place.id
-                        selectedAddress = Place.address
-                        textFieldValue = Place.name
-                        showPlacesList = false
-                        keyboardController?.hide() // 주소 선택시 키보드 숨기기
+//                    PlacesList(places = places) { Place ->
+//                        selectedPlaceId = Place.id
+//                        selectedAddress = Place.address
+//                        textFieldValue = Place.name
+//                        showPlacesList = false
+//                        keyboardController?.hide() // 주소 선택시 키보드 숨기기
+//                    }
+                    PlacesList(places = places) { place, isValid ->
+                        if (isValid) {
+                            selectedPlaceId = place.id
+                            selectedAddress = place.address
+                            textFieldValue = place.name
+                            showPlacesList = false
+                            keyboardController?.hide()
+                        } else {
+                            textFieldValue = ""
+                            selectedAddress = null
+                            showPlacesList = true
+                        }
                     }
                 }
+
                 Log.d("Places : AddressScreen", "places = ${autocompleteViewModel.places.value}")
             }
             Spacer(Modifier.weight(1f))
