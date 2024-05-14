@@ -85,12 +85,13 @@ def navigation(request):
 
     pedestrian_response_value = navigation_response_func(
         tmap_duration,
-        is_subway_route,
+        False,
         pedestrian_polyline_info,
         pedestrian_detail_route_info,
     )
 
     ##################### 2) Google Maps 경로 API Request #####################
+
     mode = "transit"  # Options : walking, driving, bicycling, transit
     transit_mode = "subway"
 
@@ -99,15 +100,14 @@ def navigation(request):
     # Routes & Steps 데이터
     steps, google_duration = get_steps_func(response_json)
 
-    #######################################################################################################################
-    #######################################################################################################################
-    # 합리적인 걸 판단해서 if 도보가 나으면 도보
-    # 아니면 else로 밑에 코드 가게 하면 됨
-    # tmap_duration과 google_duration을 비교
-    # 어떤 게 더 합리적인지 비교해야 함
-    # "합리적"이라는 걸 어떤 기준으로 판단할까??
-    #######################################################################################################################
-    #######################################################################################################################
+    ############################# 도보 경로랑 대중교통경로 1차 비교 #############################
+
+    if tmap_duration <= 15 or abs(google_duration - tmap_duration) <= 5:
+        print(f"{log_time_func()} - Navigation: 1차 비교에서 도보가 더 낫다!")
+        return Response(
+            pedestrian_response_value,
+            status=status.HTTP_200_OK,
+        )
 
     ################################### 지하철 있는지 확인 ###################################
 
@@ -116,7 +116,7 @@ def navigation(request):
     step_travel_mode_list = list()
 
     # Transit Flags
-    is_subway_route = True  # "SUBWAY" 유무
+    is_subway_exist = True  # "SUBWAY" 유무
 
     # 각 Step 확인
     for step in steps:
@@ -131,7 +131,7 @@ def navigation(request):
             # 경로 상에 버스가 포함된 경우, 종료
             if transit_type == "BUS":
                 print(f"{log_time_func()} - Navigation: 경로에 버스 포함")
-                is_subway_route = False
+                is_subway_exist = False
 
                 break
 
@@ -147,8 +147,9 @@ def navigation(request):
     )
 
     ############################## 경로에 버스가 있는 경우 ##############################
+
     # 1) "지하철 x" -> 도보 경로 안내
-    if not is_subway_route:
+    if not is_subway_exist:
         print(f"{log_time_func()} - Navigation: 지하철 없음, 도보 경로 안내")
 
         return Response(
@@ -157,6 +158,7 @@ def navigation(request):
         )
 
     ################################ 지하철 경로가 있는 경우 ##################################
+
     # 2) "지하철 o" -> 지하철 경로 안내
     else:
         try:
@@ -222,6 +224,7 @@ def navigation(request):
             print("지하철", subway_stops)
 
             ################################################ 엘출 없는 경우 ################################################
+
             # 두 출구 하나라도 엘레베이터가 없는 경우 => 도보 경로 안내
             if not (departure_station_elevator_exit and arrival_station_elevator_exit):
                 print(
@@ -238,6 +241,7 @@ def navigation(request):
                 )
 
             ########################################## 엘출 있는 경우 ##########################################
+
             print(
                 f"{log_time_func()} - Navigation: DB에서 엘레베이터 출구 탐색 SUCCESS"
             )
@@ -379,7 +383,7 @@ def navigation(request):
 
             subway_response_value = navigation_response_func(
                 google_duration,
-                is_subway_route,
+                is_subway_exist,
                 subway_polyline_info,
                 subway_detail_route_info,
             )

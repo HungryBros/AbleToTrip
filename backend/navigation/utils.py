@@ -237,7 +237,6 @@ def get_additional_ETA_func(
     }
 
     X_ETA_test = pd.DataFrame(eta_model_input_data)
-    # dtest = xgb.DMatrix(X_ETA_test)
     additional_ETA = int(trained_ETA_model.predict(X_ETA_test))
 
     return additional_ETA
@@ -246,14 +245,15 @@ def get_additional_ETA_func(
 # Response Value 만들어주는 함수
 def navigation_response_func(
     duration,
-    is_subway_route,
+    is_subway_exist,
     polyline_info=list(),
     detail_route_info=list(),
 ):
 
     response_value = {
+        "message": "모달에 띄울 임시 메세지입니다.",
         "duration": duration,
-        "is_subway_route": is_subway_route,
+        "is_subway_exist": is_subway_exist,
         "polyline_info": polyline_info,
         "detail_route_info": detail_route_info,
     }
