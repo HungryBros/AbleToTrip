@@ -16,6 +16,7 @@ import com.hungrybrothers.abletotrip.ui.screen.DetailScreen
 import com.hungrybrothers.abletotrip.ui.screen.GuideScreen
 import com.hungrybrothers.abletotrip.ui.screen.HomeScreen
 import com.hungrybrothers.abletotrip.ui.screen.LoginScreen
+import com.hungrybrothers.abletotrip.ui.screen.OnboardingScreen
 import com.hungrybrothers.abletotrip.ui.screen.SearchScreen
 import com.hungrybrothers.abletotrip.ui.screen.ShowMoreScreen
 import com.hungrybrothers.abletotrip.ui.screen.SplashScreen
@@ -28,6 +29,7 @@ import com.kakao.sdk.common.KakaoSdk.type
 
 enum class NavRoute(val routeName: String, val description: String) {
     SPLASH("SPLASH", "스플래시화면"),
+    ONBOARDING("ONBOARDING", "온보딩 화면"),
     HOME("HOME", "홈화면"),
     LOGIN("LOGIN", "로그인화면"),
     ADDRESS("ADDRESS", "초기주소입력화면"),
@@ -42,12 +44,12 @@ enum class NavRoute(val routeName: String, val description: String) {
 
 @Composable
 fun Navigation(navController: NavHostController) {
-    // 전역적으로 사용하지 않고 각 네비게이션 그래프에 전달
     val currentLocationViewModel = viewModel<CurrentLocationViewModel>()
     val navigationViewModel = viewModel<NavigationViewModel>()
 
     NavHost(navController, startDestination = NavRoute.SPLASH.routeName) {
         composable(NavRoute.SPLASH.routeName) { SplashScreen(navController) }
+        composable(NavRoute.ONBOARDING.routeName) { OnboardingScreen(navController) }
         auth(navController)
         home(navController, currentLocationViewModel, navigationViewModel)
     }
