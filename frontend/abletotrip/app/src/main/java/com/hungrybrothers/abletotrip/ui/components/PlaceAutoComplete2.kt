@@ -1,12 +1,10 @@
 package com.hungrybrothers.abletotrip.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +14,9 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
 import com.hungrybrothers.abletotrip.ui.theme.CustomWhiteSmoke
@@ -27,6 +27,7 @@ fun AutocompleteTextField2(
     onValueChange: (String) -> Unit,
     placeholder: String,
     onClear: () -> Unit,
+    onTargetClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
@@ -44,29 +45,24 @@ fun AutocompleteTextField2(
         textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
         trailingIcon = {
             Row(
-                Modifier.padding(end = 8.dp), // 아이콘 간격 조정
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        (
+                            -16
+                        ).dp,
+                    ),
+                // 아이콘 사이의 간격을 4dp로 설정
             ) {
                 if (text.isNotEmpty()) {
                     IconButton(onClick = onClear) {
-                        Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
+                        Icon(
+                            painter = painterResource(id = R.drawable.cancel),
+                            contentDescription = "cancel",
+                        )
                     }
-                } else {
-//                    Icon(
-//                        modifier =
-//                            Modifier
-//                                .size(16.dp)
-//                                .clickable { /* Handle target icon click */ },
-//                        painter = painterResource(id = R.drawable.target),
-//                        contentDescription = "Target",
-//                    )
-//                    Icon(
-//                        modifier =
-//                            Modifier
-//                                .size(16.dp)
-//                                .clickable { /* Handle home icon click */ },
-//                        painter = painterResource(id = R.drawable.home),
-//                        contentDescription = "Home",
-//                    )
+                }
+                IconButton(onClick = onTargetClick) {
+                    Icon(painter = painterResource(id = R.drawable.target2), contentDescription = "Target")
                 }
             }
         },
