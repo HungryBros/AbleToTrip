@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.node.CanFocusChecker.end
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +75,7 @@ import com.google.maps.android.compose.rememberMarkerState
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
+import com.hungrybrothers.abletotrip.ui.theme.CustomBlue
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PolylineData
 import com.hungrybrothers.abletotrip.ui.viewmodel.Resource
@@ -361,62 +363,59 @@ fun GoogleMapGuide(
                 }
             }
         }
-        val containerColor = if (isRestroom) Color.Gray else Color.Red
-        // 오른쪽 상단에 고정된 종료 원형 버튼
-        FloatingActionButton(
-            onClick = { openDialogState.value = !openDialogState.value },
+        Column(
             modifier =
                 Modifier
-                    .align(Alignment.TopEnd) // 우측 상단에 위치
-                    .padding(top = 16.dp, end = 16.dp),
-            shape = CircleShape,
-            containerColor = Color.White,
-            contentColor = Color.Black,
+                    .fillMaxSize()
+                    .padding(end = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.End,
         ) {
-            val closeIcon: Painter = painterResource(id = R.drawable.close)
+            // 종료 원형 버튼
+            FloatingActionButton(
+                onClick = { openDialogState.value = !openDialogState.value },
+                shape = CircleShape,
+                containerColor = Color.White,
+                contentColor = Color.Black,
+                modifier = Modifier.padding(top = 16.dp),
+            ) {
+                val closeIcon: Painter = painterResource(id = R.drawable.close)
+                Image(
+                    painter = closeIcon,
+                    contentDescription = "Close Icon",
+                    modifier = Modifier.padding(8.dp),
+                )
+            }
 
-            Image(
-                painter = closeIcon,
-                contentDescription = "Close Icon",
-                modifier = Modifier.padding(8.dp),
-            )
-        }
-        // 오른쪽 상단에 고정된 빨간색 화장실 원형 버튼
-        FloatingActionButton(
-            onClick = { isRestroom = !isRestroom },
-            modifier =
-                Modifier
-                    .align(Alignment.TopEnd) // 우측 상단에 위치
-                    .padding(top = 88.dp, end = 16.dp),
-            shape = CircleShape,
-            containerColor = containerColor,
-            contentColor = Color.White,
-        ) {
-            val restroomIcon: Painter = painterResource(id = R.drawable.family_restroom)
+            // 빨간색 화장실 원형 버튼
+            val containerColor = if (isRestroom) CustomBlue else Color.Gray
+            FloatingActionButton(
+                onClick = { isRestroom = !isRestroom },
+                shape = CircleShape,
+                containerColor = containerColor,
+                contentColor = Color.White,
+            ) {
+                val familyRestroomIcon: Painter = painterResource(id = R.drawable.family_restroom)
+                Image(
+                    painter = familyRestroomIcon,
+                    contentDescription = "Disabled Restroom Icon",
+                )
+            }
 
-            Image(
-                painter = restroomIcon,
-                contentDescription = "disabled restroom Icon",
-            )
-        }
-        // 오른쪽 상단에 고정된 GPS 원형 버튼
-        FloatingActionButton(
-            onClick = { gpsButtonClicked = !gpsButtonClicked },
-            modifier =
-                Modifier
-                    .align(Alignment.TopEnd) // 우측 상단에 위치
-                    .padding(top = 160.dp, end = 16.dp),
-            shape = CircleShape,
-            containerColor = Color.White,
-            contentColor = Color.White,
-        ) {
-            val restroomIcon: Painter = painterResource(id = R.drawable.target)
-
-            Image(
-                painter = restroomIcon,
-                contentDescription = "disabled restroom Icon",
-                modifier = Modifier.padding(top = 12.dp),
-            )
+            // GPS 원형 버튼
+            FloatingActionButton(
+                onClick = { gpsButtonClicked = !gpsButtonClicked },
+                shape = CircleShape,
+                containerColor = Color.White,
+                contentColor = Color.White,
+            ) {
+                val targetIcon: Painter = painterResource(id = R.drawable.target)
+                Image(
+                    painter = targetIcon,
+                    contentDescription = "GPS Icon",
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+            }
         }
     }
 }
