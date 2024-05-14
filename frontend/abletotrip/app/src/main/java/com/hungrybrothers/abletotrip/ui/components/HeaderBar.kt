@@ -59,7 +59,7 @@ fun HeaderBar(
                 modifier =
                     Modifier
                         .align(Alignment.Center)
-                        .fillMaxWidth(),
+                        .size(96.dp),
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.abletotrip_logo),
