@@ -286,7 +286,6 @@ fun FacilitiesGrid(attractionDetail: AttractionDetail) {
                 items(facilities) { facility ->
                     if (facility.isAvailable) {
                         FacilityItem(
-                            isAvailable = facility.isAvailable,
                             iconId = facility.iconId,
                             availableDescription = facility.availableDescription,
                         )
@@ -305,7 +304,6 @@ fun FacilitiesGrid(attractionDetail: AttractionDetail) {
 
 @Composable
 fun FacilityItem(
-    isAvailable: Boolean,
     iconId: Int,
     availableDescription: String,
 ) {
@@ -324,15 +322,12 @@ fun FacilityItem(
                 modifier = Modifier.size(24.dp),
                 tint = Color.Unspecified,
             )
-            if (!isAvailable) {
-                DrawXMark()
-            }
         }
         Spacer(Modifier.height(4.dp))
         Text(
             text = availableDescription,
             style = MaterialTheme.typography.bodySmall,
-            color = if (isAvailable) Color.Black else Color.Gray,
+            color = Color.Black,
         )
     }
 }
