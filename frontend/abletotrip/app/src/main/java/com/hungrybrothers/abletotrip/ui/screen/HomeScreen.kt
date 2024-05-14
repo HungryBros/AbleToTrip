@@ -71,6 +71,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.KakaoAuthViewModel
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.components.CategorySecond
@@ -174,6 +175,7 @@ fun HomeScreen(
                 CategorySelector(categories, selectedCategories.value) { updatedSelectedCategories ->
                     val selectedString = updatedSelectedCategories.joinToString("-")
                     if (selectedString.isBlank()) {
+                        selectedCategories.value = updatedSelectedCategories.toMutableList()
                     } else {
                         if (latitude == null || longitude == null) {
                             Toast.makeText(context, "위치 정보를 확인할 수 없습니다. 위치 권한을 확인해주세요.", Toast.LENGTH_LONG).show()
@@ -199,7 +201,7 @@ fun HomeScreen(
             }
         } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = CustomPrimary)
             }
         }
 
@@ -390,7 +392,7 @@ fun DisplayCustomAttractionsScreen(
         }
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("데이터를 불러오는 중...")
+            CircularProgressIndicator(color = CustomPrimary)
         }
     }
 }
@@ -417,7 +419,7 @@ fun NewAttractionItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
-                painter = rememberAsyncImagePainter(model = attraction.image_url),
+                painter = rememberAsyncImagePainter(model = BuildConfig.S3_BASE_URL + attraction.image_url),
                 contentDescription = attraction.attraction_name,
                 modifier =
                     Modifier
@@ -588,10 +590,10 @@ fun DisplayAttractionsScreen(
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(
-                            onClick = { navController.navigate("${NavRoute.SHOWMORE.routeName}/$category") },
-                        ) {
-                            if (category != "nearby") {
+                        if (category != "nearby") {
+                            TextButton(
+                                onClick = { navController.navigate("${NavRoute.SHOWMORE.routeName}/$category") },
+                            ) {
                                 Text(
                                     text = "더보기 >",
                                     style = MaterialTheme.typography.bodyMedium,
@@ -639,7 +641,7 @@ fun DisplayAttractionsScreen(
         }
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = CustomPrimary)
         }
     }
 }
@@ -654,13 +656,13 @@ fun AttractionItem(
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         modifier =
             Modifier
-                .fillMaxWidth()
                 .padding(4.dp)
+                .width(150.dp)
                 .clickable(onClick = { navController.navigate("${NavRoute.DETAIL.routeName}/${attraction.id}") }),
     ) {
         Column {
             Image(
-                painter = rememberAsyncImagePainter(model = attraction.image_url),
+                painter = rememberAsyncImagePainter(model = BuildConfig.S3_BASE_URL + attraction.image_url),
                 contentDescription = attraction.attraction_name,
                 modifier =
                     Modifier
@@ -668,8 +670,19 @@ fun AttractionItem(
                         .fillMaxSize(1f),
                 contentScale = ContentScale.Crop,
             )
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text(text = attraction.attraction_name, style = MaterialTheme.typography.titleMedium)
+            Column(
+                modifier =
+                    Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+            ) {
+                Text(
+                    text = attraction.attraction_name,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 val distanceText =
                     if (attraction.distance < 1) {
                         "${(attraction.distance * 1000).toInt()}m"
@@ -680,11 +693,17 @@ fun AttractionItem(
                     text = distanceText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = "${attraction.si} ${attraction.gu}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
