@@ -1,6 +1,7 @@
 package com.hungrybrothers.abletotrip.ui.network
 
 import android.util.Log
+import com.hungrybrothers.abletotrip.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -18,7 +19,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 object KtorClient {
-    private const val BASE_URL = "http://k10a607.p.ssafy.io:8087/"
+    private const val BASE_URL = BuildConfig.API_URL
     var authToken: String? = null
 
     val client =

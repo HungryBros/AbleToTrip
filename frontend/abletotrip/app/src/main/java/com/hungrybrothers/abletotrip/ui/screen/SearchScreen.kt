@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,11 +50,13 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.hungrybrothers.abletotrip.BuildConfig
 import com.hungrybrothers.abletotrip.ui.components.HeaderBar
 import com.hungrybrothers.abletotrip.ui.components.SearchBar
 import com.hungrybrothers.abletotrip.ui.datatype.SearchResult
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.network.AttractionSearchResultRepository
+import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import com.hungrybrothers.abletotrip.ui.viewmodel.AttractionSearchResultViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 
@@ -173,11 +176,14 @@ fun DisplaySearchResultScreen(
                 items(searchResultData!!.attractions!!) { attraction ->
                     SearchResultItem(attraction, navController)
                 }
-//                item {
-//                    if (viewModel.isLoading) {
-//                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-//                    }
-//                }
+                item {
+                    if (viewModel.isLoading) {
+                        CircularProgressIndicator(
+                            color = CustomPrimary,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
+                    }
+                }
             }
         }
     } else {
@@ -222,7 +228,7 @@ fun SearchResultItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
-                painter = rememberAsyncImagePainter(model = attraction.image_url),
+                painter = rememberAsyncImagePainter(model = BuildConfig.S3_BASE_URL + attraction.image_url),
                 contentDescription = attraction.attraction_name,
                 modifier =
                     Modifier
