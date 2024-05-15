@@ -13,9 +13,6 @@ class CurrentLocationViewModel : ViewModel() {
     val longitude: LiveData<String?>
         get() = _longitude
 
-    /**
-     * `null` 값이 전달된 경우, 기존 값을 유지하고 `null`이 아닌 경우에만 업데이트합니다.
-     */
     fun setLocation(
         latitude: String?,
         longitude: String?,
