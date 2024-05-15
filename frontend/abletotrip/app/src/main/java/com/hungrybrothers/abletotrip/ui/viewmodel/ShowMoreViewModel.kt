@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attractions
 import com.hungrybrothers.abletotrip.ui.network.ShowMoreInfoRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -43,12 +44,12 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
         page: Int,
         reset: Boolean = false,
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             isLoading = true
             val result = repository.fetchShowMoreInfoData(latitude, longitude, category, page)
             Log.d("ShowMoreViewModel", "page = $page")
             Log.d("ShowMoreViewModel", "result = $result")
-            isLoading = false // 데이터 로드가 완료되면 로딩 상태를 false로 설정
+            isLoading = false
             if (result != null) {
                 if (reset) {
                     _showmoreData.value = result
