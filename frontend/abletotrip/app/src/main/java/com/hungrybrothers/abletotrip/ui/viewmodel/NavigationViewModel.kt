@@ -297,8 +297,9 @@ suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
             }
         println("Sending data: $requestBody")
         val response =
-            client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
+//            client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
 //            client.post("http://10.0.2.2:8000/navigation/polyline/") {
+            client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
                 contentType(ContentType.Application.Json)
                 setBody(requestBody)
             }
