@@ -202,6 +202,9 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
         # pprint(route_data)
         return route_data
     else:
+        print(
+            f"{log_time_func()} - Navigation: TMAP에서 받아온 데이터 JSON으로 변경 불가"
+        )
         return None
 
 
