@@ -91,6 +91,7 @@ def get_point_coordinate_func(steps, is_start):
     point_location = steps[step_idx].get(location)
     lat = round(float(point_location.get("lat")), 6)
     lon = round(float(point_location.get("lng")), 6)
+    print(point_location)
 
     return (lon, lat)
 
@@ -124,12 +125,13 @@ def find_exit_func(station_name):
         return None
 
 
-# Kakao Maps 좌표반환 API 요청 함수
-def coordinate_request_func(keyword):
+# Kakao Maps 좌표반환 API 요청 함수(키워드)
+def search_keyword_func(keyword):
+    if keyword.startswith("대한민국 서울"):
+        keyword = keyword.replace("대한민국 서울", "서울", 1)
+
     api = Local(service_key=KAKAO_MAPS_API_KEY)
     result = api.search_keyword(keyword, dataframe=False)
-    # print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 반환 result")
-    # pprint(result)
     result_documents = result.get("documents")
 
     if len(result_documents):
@@ -137,11 +139,39 @@ def coordinate_request_func(keyword):
         lon = round(float(first_result.get("x")), 6)
         lat = round(float(first_result.get("y")), 6)
 
-    else:
-        print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 검색결과 없음")
-        lon = lat = 0
+        return (lon, lat)
 
-    return (lon, lat)
+    else:
+        print(
+            f"{log_time_func()} - Navigation: 카카오 지도에서 {keyword}의 검색 결과 없음"
+        )
+        return (0, 0)
+
+
+# Kakao Maps 좌표반환 API 요청 함수(주소)
+def coordinate_request_func(keyword):
+    if keyword.startswith("대한민국 서울"):
+        keyword = keyword.replace("대한민국 서울", "서울", 1)
+
+    api = Local(service_key=KAKAO_MAPS_API_KEY)
+    # result = api.search_address(keyword, dataframe=False)
+    result = api.search_keyword(keyword, dataframe=False)
+    result_documents = result.get("documents")
+
+    if len(result_documents):
+        first_result = result_documents[0]
+        lon = round(float(first_result.get("x")), 6)
+        lat = round(float(first_result.get("y")), 6)
+
+        return (lon, lat)
+
+    else:
+        print(
+            f"{log_time_func()} - Navigation: {keyword}의 카카오 지도 주소로 검색 실패, 키워드로 검색 START"
+        )
+
+        # 주소로 검색에 실패하는 경우, 키워드로 검색하게 함
+        return search_keyword_func(keyword)
 
 
 # T Map 도보 경로 API 요청 함수
@@ -167,7 +197,9 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
     route_response = requests.post(route_url, headers=headers, params=route_params)
 
     if route_response.status_code == 200:
+        # print("안될 땐 얘가 안됨")
         route_data = route_response.json()
+        # pprint(route_data)
         return route_data
     else:
         return None
@@ -208,7 +240,6 @@ def get_tmap_info_func(data):
         else:
             if i == (features_length - 1):
                 break
-
             description = feature.get("properties").get("description").strip()
             description = description.replace(" 을 ", "을(를) ")
             description_list.append(description)
@@ -244,6 +275,7 @@ def get_additional_ETA_func(
 
 # Response Value 만들어주는 함수
 def navigation_response_func(
+    message,
     duration,
     is_subway_exist,
     polyline_info=list(),
@@ -251,7 +283,7 @@ def navigation_response_func(
 ):
 
     response_value = {
-        "message": "모달에 띄울 임시 메세지입니다",
+        "message": message,
         "duration": duration,
         "is_subway_exist": is_subway_exist,
         "polyline_info": polyline_info,
