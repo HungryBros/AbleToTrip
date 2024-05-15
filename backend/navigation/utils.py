@@ -91,7 +91,6 @@ def get_point_coordinate_func(steps, is_start):
     point_location = steps[step_idx].get(location)
     lat = round(float(point_location.get("lat")), 6)
     lon = round(float(point_location.get("lng")), 6)
-    print(point_location)
 
     return (lon, lat)
 
@@ -117,7 +116,7 @@ def find_exit_func(station_name):
             s + " " + l + "호선 " + re.findall(r"\d+번\s?출구", info)[0]
         )
 
-        print("엘출", station_elevator_exit)
+        print("엘레베이터 출구", station_elevator_exit)
 
         return station_elevator_exit
 
@@ -202,6 +201,9 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
         # pprint(route_data)
         return route_data
     else:
+        print(
+            f"{log_time_func()} - Navigation: TMAP에서 받아온 데이터 JSON으로 변경 불가"
+        )
         return None
 
 

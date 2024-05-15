@@ -161,14 +161,6 @@ def navigation(request):
             "지하철을 이용하는 경로가 없어요.\n도보 경로를 안내할게요."
         )
 
-        pedestrian_response_value = navigation_response_func(
-            message,
-            tmap_duration,
-            False,
-            pedestrian_polyline_info,
-            pedestrian_detail_route_info,
-        )
-
         return Response(
             pedestrian_response_value,
             status=status.HTTP_200_OK,
