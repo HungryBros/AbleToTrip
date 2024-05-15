@@ -174,6 +174,7 @@ fun RouteButton(
     Button(
         onClick = {
             navController.navigate("DEPARTURE/${latitude.toFloat()}/${longitude.toFloat()}/$lotNumberAddress")
+            Log.d("DetailRouteBotton", "DetailRouteBotton = $lotNumberAddress")
         },
         modifier =
             modifier

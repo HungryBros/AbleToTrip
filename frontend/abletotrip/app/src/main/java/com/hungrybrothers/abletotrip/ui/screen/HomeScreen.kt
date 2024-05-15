@@ -1,8 +1,12 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
+import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -41,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,12 +62,15 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
@@ -124,8 +132,11 @@ fun HomeScreen(
             contract = ActivityResultContracts.RequestPermission(),
             onResult = { isGranted: Boolean ->
                 if (isGranted) {
+                    Log.d("HomeScreen", "Location permission granted.")
                     startLocationUpdates(context, currentLocationViewModel)
                 } else {
+                    Log.d("HomeScreen", "Location permission denied.")
+                    Toast.makeText(context, "위치 권한이 거부되었습니다.", Toast.LENGTH_LONG).show()
                     currentLocationViewModel.setLocation(null, null)
                 }
             },
@@ -133,8 +144,37 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         when (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-            PackageManager.PERMISSION_GRANTED -> startLocationUpdates(context, currentLocationViewModel)
-            else -> locationPermissionRequest.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            PackageManager.PERMISSION_GRANTED -> {
+                Log.d("HomeScreen", "Location permission already granted.")
+                startLocationUpdates(context, currentLocationViewModel)
+            }
+            else -> {
+                Log.d("HomeScreen", "Requesting location permission.")
+                locationPermissionRequest.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        Log.d("HomeScreen", "Location permission granted on resume.")
+                        startLocationUpdates(context, currentLocationViewModel)
+                    } else {
+                        Log.d("HomeScreen", "Location permission denied on resume.")
+                    }
+                }
+            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -146,62 +186,74 @@ fun HomeScreen(
     val selectedCategories = remember { mutableStateOf(mutableListOf<String>()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (latitude != null && longitude != null) {
-            Column(
-                modifier =
-                    Modifier
-                        .padding(16.dp)
-                        .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                HeaderBar(navController = navController, false, true)
-                SearchBar(
-                    text = searchText,
-                    onValueChange = { newSearchText ->
-                        searchText = newSearchText
-                    },
-                    onSearch = {
-                        if (searchText.isNotEmpty()) {
-                            navController.navigate("${NavRoute.SEARCH.routeName}/$searchText")
-                        }
-                    },
-                    placeholder = "검색어를 입력해주세요.",
-                    onClear = {
-                        searchText = ""
-                        keyboardController?.hide()
-                    },
-                )
+        Column(
+            modifier =
+                Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            HeaderBar(navController = navController, false, true)
+            SearchBar(
+                text = searchText,
+                onValueChange = { newSearchText ->
+                    searchText = newSearchText
+                },
+                onSearch = {
+                    if (searchText.isNotEmpty()) {
+                        navController.navigate("${NavRoute.SEARCH.routeName}/$searchText")
+                    }
+                },
+                placeholder = "검색어를 입력해주세요.",
+                onClear = {
+                    searchText = ""
+                    keyboardController?.hide()
+                },
+            )
 
-                CategorySelector(categories, selectedCategories.value) { updatedSelectedCategories ->
-                    val selectedString = updatedSelectedCategories.joinToString("-")
-                    if (selectedString.isBlank()) {
-                        selectedCategories.value = updatedSelectedCategories.toMutableList()
+            CategorySelector(categories, selectedCategories.value) { updatedSelectedCategories ->
+                val selectedString = updatedSelectedCategories.joinToString("-")
+                if (selectedString.isBlank()) {
+                    selectedCategories.value = updatedSelectedCategories.toMutableList()
+                } else {
+                    if (latitude == null || longitude == null) {
+                        Toast.makeText(context, "위치 정보를 확인할 수 없습니다. 위치 권한을 확인해주세요.", Toast.LENGTH_LONG).show()
                     } else {
-                        if (latitude == null || longitude == null) {
-                            Toast.makeText(context, "위치 정보를 확인할 수 없습니다. 위치 권한을 확인해주세요.", Toast.LENGTH_LONG).show()
-                        } else {
-                            catalog2ViewModel.fetchInitialData(latitude!!, longitude!!, selectedString)
-                            selectedCategories.value = updatedSelectedCategories.toMutableList()
-                        }
+                        catalog2ViewModel.fetchInitialData(latitude!!, longitude!!, selectedString)
+                        selectedCategories.value = updatedSelectedCategories.toMutableList()
                     }
                 }
-
-                when {
-                    selectedCategories.value.isNotEmpty() ->
-                        DisplayCustomAttractionsScreen(
-                            catalog2ViewModel,
-                            navController,
-                            latitude,
-                            longitude,
-                            selectedCategories.value.joinToString("-"),
-                        )
-                    else ->
-                        DisplayAttractionsScreen(homeViewModel, navController, latitude!!, longitude!!)
-                }
             }
-        } else {
+
+            when {
+                selectedCategories.value.isNotEmpty() ->
+                    DisplayCustomAttractionsScreen(
+                        catalog2ViewModel,
+                        navController,
+                        latitude,
+                        longitude,
+                        selectedCategories.value.joinToString("-"),
+                    )
+                else ->
+                    DisplayAttractionsScreen(homeViewModel, navController, latitude, longitude)
+            }
+        }
+
+        if (latitude == null || longitude == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = CustomPrimary)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextButton(onClick = {
+                        // 설정 화면으로 이동하도록 유도
+                        val intent =
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                        context.startActivity(intent)
+                    }) {
+                        Text(text = "위치 권한을 설정하려면 여기를 클릭하세요.")
+                    }
+                }
             }
         }
 
@@ -550,11 +602,13 @@ val categoryTranslations =
 fun DisplayAttractionsScreen(
     viewModel: HomeViewModel,
     navController: NavController,
-    latitude: String,
-    longitude: String,
+    latitude: String?,
+    longitude: String?,
 ) {
-    LaunchedEffect(latitude, longitude) {
-        viewModel.loadPlaceData(latitude, longitude)
+    if (latitude != null && longitude != null) {
+        LaunchedEffect(latitude, longitude) {
+            viewModel.loadPlaceData(latitude, longitude)
+        }
     }
 
     val attractionsData by viewModel.placeData.observeAsState()
@@ -728,8 +782,9 @@ fun startLocationUpdates(
     val locationRequest =
         LocationRequest.create().apply {
             interval = 300000 // 5분
-            fastestInterval = 300000
+            fastestInterval = 60000 // 1분
             priority = Priority.PRIORITY_HIGH_ACCURACY
+            maxWaitTime = 60000 // 1분
         }
 
     val locationCallback =
@@ -746,5 +801,23 @@ fun startLocationUpdates(
             }
         }
 
+    // 초기 위치 요청 (한번만)
+    fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+        location?.let {
+            val latitude = it.latitude.toString()
+            val longitude = it.longitude.toString()
+            Log.d("LocationUpdates", "Initial Latitude: $latitude, Longitude: $longitude")
+            currentLocationViewModel.setLocation(latitude, longitude)
+        } ?: run {
+            // 만약 마지막 위치를 가져오지 못하면, 위치 업데이트 요청을 시작합니다.
+            fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper(),
+            )
+        }
+    }
+
+    // 정기적인 위치 업데이트 요청
     fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
 }

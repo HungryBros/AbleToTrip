@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hungrybrothers.abletotrip.ui.datatype.Attractions
 import com.hungrybrothers.abletotrip.ui.network.AttractionsRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class HomeViewModel(private val repository: AttractionsRepository) : ViewModel() {
@@ -18,7 +19,7 @@ class HomeViewModel(private val repository: AttractionsRepository) : ViewModel()
         longitude: String,
     ) {
         Log.d("HomeViewModel", "latitude = $latitude,longitude = $longitude")
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val data = repository.fetchPlaceData(latitude, longitude)
             _placeData.postValue(data)
         }
