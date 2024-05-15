@@ -3,11 +3,8 @@ package com.hungrybrothers.abletotrip.ui.screen
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.LocationListener
-import android.location.LocationManager
+import android.os.Looper
 import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -40,10 +37,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
@@ -52,10 +51,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
@@ -64,8 +68,8 @@ import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
@@ -73,19 +77,23 @@ import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomBackground
 import com.hungrybrothers.abletotrip.ui.theme.CustomBlue
+import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
+import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PolylineData
 import com.hungrybrothers.abletotrip.ui.viewmodel.Resource
 import com.hungrybrothers.abletotrip.ui.viewmodel.RestroomViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GuideScreen(
     navController: NavController,
     navigationViewModel: NavigationViewModel,
+    currentLocationViewModel: CurrentLocationViewModel,
 ) {
     val scaffoldState = rememberBottomSheetScaffoldState()
-
+    val context = LocalContext.current
     val openDialog = remember { mutableStateOf(false) }
 
     if (openDialog.value) {
@@ -108,7 +116,6 @@ fun GuideScreen(
                     onClick = {
                         openDialog.value = false
                         navController.navigate(NavRoute.HOME.routeName) {
-                            // 스택에서 모든 대상을 제거하고 홈으로 이동
                             popUpTo("HOME")
                         }
                     },
@@ -128,17 +135,21 @@ fun GuideScreen(
         )
     }
 
-    Surface(modifier = Modifier, color = CustomBackground) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-        ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = CustomBackground) {
+        Column(modifier = Modifier.fillMaxSize()) {
             GuideBottomSheet(
                 modifier = Modifier,
                 scaffoldState = scaffoldState,
                 navigationViewModel = navigationViewModel,
                 openDialogState = openDialog,
+                currentLocationViewModel = currentLocationViewModel,
             )
         }
+    }
+
+    // 자주 위치 업데이트 시작
+    LaunchedEffect(Unit) {
+        startFrequentLocationUpdates(context, currentLocationViewModel)
     }
 }
 
@@ -148,13 +159,10 @@ fun GoogleMapGuide(
     navigationViewModel: NavigationViewModel,
     viewModel: RestroomViewModel = viewModel(),
     openDialogState: MutableState<Boolean>,
+    currentLocationViewModel: CurrentLocationViewModel,
 ) {
     var isRestroom by remember { mutableStateOf(false) }
     val restrooms by viewModel.restrooms.observeAsState(emptyList())
-//    val error by viewModel.error.observeAsState(null)
-
-    // LiveData를 Compose 상태로 변환
-//    val navigationData by navigationViewModel.navigationData.observeAsState()
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
     val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
     val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
@@ -164,120 +172,78 @@ fun GoogleMapGuide(
     LaunchedEffect(true) {
         val lastWalkPoint = walkDataList1.points.lastOrNull()
         val firstPolylinePoint = polylineDataList.firstOrNull()?.points?.firstOrNull()
-
         val lastPolylinePoint = polylineDataList.lastOrNull()?.points?.lastOrNull()
         val firstWalkPoint = walkDataList2.points.firstOrNull()
-        println("dotted check : $polylineDataList")
 
-        println("dotted check : $lastWalkPoint")
-        println("dotted check : $firstPolylinePoint")
-        println("dotted check : $lastPolylinePoint")
-        println("dotted check : $firstWalkPoint")
         if (lastWalkPoint != null && firstPolylinePoint != null && lastPolylinePoint != null && firstWalkPoint != null) {
-            // 새로운 polyline 생성
             dottedPolylineList1 = listOf(lastWalkPoint, firstPolylinePoint)
             dottedPolylineList2 = listOf(lastPolylinePoint, firstWalkPoint)
-            println("dotted check : $dottedPolylineList1")
-            println("dotted check : $dottedPolylineList2")
         }
     }
 
-    // 지도 상태 관리를 위한 remember
-    var uiSettings by remember { mutableStateOf(com.google.maps.android.compose.MapUiSettings()) }
+    val uiSettings by remember { mutableStateOf(MapUiSettings(zoomControlsEnabled = false)) }
 
-    // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
     val departureResource by navigationViewModel.departureData.observeAsState(Resource.loading(null))
     val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
 
-    // `LatLng` 값으로부터 마커 상태를 선언
-    val startLatLng = departureResource.data ?: LatLng(37.501286, 127.0396029)
-    val endLatLng = arrivalResource.data ?: LatLng(37.501286, 127.0396029)
+    val startLatLng = departureResource.data ?: LatLng(0.0, 0.0)
+    val endLatLng = arrivalResource.data ?: LatLng(0.0, 0.0)
+    val currentLatitude by currentLocationViewModel.latitude.observeAsState(null)
+    val currentLongitude by currentLocationViewModel.longitude.observeAsState(null)
+    val gpsPoint =
+        currentLatitude?.let { lat ->
+            currentLongitude?.let { lng -> LatLng(lat.toDouble(), lng.toDouble()) }
+        }
 
     val startMarkerState = rememberMarkerState(position = startLatLng)
     val endMarkerState = rememberMarkerState(position = endLatLng)
+    val gpsMarkerState = rememberMarkerState(position = gpsPoint ?: LatLng(0.0, 0.0))
 
     LaunchedEffect(Unit) {
         viewModel.fetchRestrooms()
-        uiSettings = uiSettings.copy(zoomControlsEnabled = false)
-    }
-
-    var gpsPoint by remember { mutableStateOf(LatLng(37.501286, 127.0396029)) }
-    val context = LocalContext.current
-    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-    // 위치 리스너 먼저 선언
-    val locationListener =
-        LocationListener { location ->
-            Log.d("LocationUpdates", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
-            gpsPoint = LatLng(location.latitude, location.longitude)
-        }
-
-    // 권한 요청 처리
-    val permissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestMultiplePermissions(),
-        ) { permissions ->
-            permissions.entries.forEach {
-                if (it.key == Manifest.permission.ACCESS_FINE_LOCATION && it.value) {
-                    // 권한이 승인된 후 위치 업데이트 요청
-                    if (ActivityCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        locationManager.requestLocationUpdates(
-                            LocationManager.GPS_PROVIDER,
-                            0,
-                            1f,
-                            locationListener,
-                        )
-                    }
-                }
-            }
-        }
-
-    // 디버깅을 위해 `polylineDataList` 출력
-    println("guide check : $polylineDataList")
-
-    LaunchedEffect(key1 = true) {
-        permissionLauncher.launch(
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-        )
     }
 
     val bounds =
         LatLngBounds.Builder()
             .include(startLatLng)
             .include(endLatLng)
-            .include(gpsPoint)
+            .apply { if (gpsPoint != null) include(gpsPoint) }
             .build()
-
-    val gpsMarkerState = remember(gpsPoint) { MarkerState(position = gpsPoint) }
 
     val cameraPositionState =
         rememberCameraPositionState {
             position = CameraPosition.fromLatLngZoom(bounds.center, 13f)
         }
 
-    var gpsButtonClicked by remember { mutableStateOf(false) }
-    LaunchedEffect(gpsPoint, gpsButtonClicked) {
-        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(gpsPoint, 17f))
-        println("restroom check : $restrooms")
+    val coroutineScope = rememberCoroutineScope()
+
+    // 카메라 위치 및 줌 레벨 업데이트 - 현재 위치(gpsPoint)가 업데이트될 때마다 카메라 위치와 줌 레벨을 업데이트합니다.
+    LaunchedEffect(gpsPoint) {
+        if (gpsPoint != null) {
+            gpsMarkerState.position = gpsPoint
+            coroutineScope.launch {
+                val update = CameraUpdateFactory.newLatLngZoom(gpsPoint, 20f)
+                cameraPositionState.animate(update, 1000)
+            }
+        }
     }
 
-    var bearing by remember { mutableStateOf(0f) }
-
+    // 카메라 회전 조정 - 현재 위치(gpsPoint)와 가장 가까운 경로 지점을 기준으로 카메라를 회전시킵니다.
     LaunchedEffect(gpsPoint, endLatLng) {
-        bearing = calculateBearing(gpsPoint, endLatLng)
-        cameraPositionState.position =
-            CameraPosition(
-                gpsPoint, // target
-                17f, // zoom
-                45f, // tilt
-                bearing, // bearing
-            )
-        cameraPositionState.animate(CameraUpdateFactory.newCameraPosition(cameraPositionState.position))
-//        Log.d("Camera", "Azimuth: $azimuth")
+        if (gpsPoint != null) {
+            coroutineScope.launch {
+                val nearestPoint =
+                    findNearestPoint(gpsPoint, walkDataList1.points + polylineDataList.flatMap { it.points })
+                val nextPoint =
+                    findNextPoint(nearestPoint, walkDataList1.points + polylineDataList.flatMap { it.points })
+                if (nearestPoint != null && nextPoint != null) {
+                    val bearing = calculateBearing(gpsPoint, nextPoint)
+                    val cameraPosition = CameraPosition(gpsPoint, 20f, 55f, bearing)
+                    val update = CameraUpdateFactory.newCameraPosition(cameraPosition)
+                    cameraPositionState.animate(update, 1000)
+                }
+            }
+        }
     }
 
     val dotPattern = listOf(Dot(), Gap(10f))
@@ -288,58 +254,39 @@ fun GoogleMapGuide(
             cameraPositionState = cameraPositionState,
             uiSettings = uiSettings,
         ) {
-//            println("data check check : in $walkDataList2")
-            Polyline(
-                points = walkDataList1.points,
-                color = walkDataList1.color,
-                width = 40f,
-            )
-            Polyline(
-                points = dottedPolylineList1,
-                color = Color.Blue,
-                width = 40f,
-                pattern = dotPattern,
-            )
+            Polyline(points = walkDataList1.points, color = walkDataList1.color, width = 40f)
+            Polyline(points = dottedPolylineList1, color = Color.Blue, width = 40f, pattern = dotPattern)
             polylineDataList.forEach { polylineData ->
-                println("walk data : $polylineData")
-                Polyline(
-                    points = polylineData.points,
-                    color = polylineData.color,
-                    width = 40f,
-                )
+                Polyline(points = polylineData.points, color = polylineData.color, width = 40f)
             }
-            Polyline(
-                points = dottedPolylineList2,
-                color = Color.Blue,
-                width = 40f,
-                pattern = dotPattern,
-            )
-            Polyline(
-                points = walkDataList2.points,
-                color = walkDataList2.color,
-                width = 40f,
-            )
+            Polyline(points = dottedPolylineList2, color = Color.Blue, width = 40f, pattern = dotPattern)
+            Polyline(points = walkDataList2.points, color = walkDataList2.color, width = 40f)
             Marker(
                 icon = BitmapDescriptorFactory.fromResource(R.drawable.departurepin),
                 state = startMarkerState,
                 title = "출발지",
+                anchor = Offset(0.5f, 0.5f),
             )
             Marker(
                 icon = BitmapDescriptorFactory.fromResource(R.drawable.arrivalpin),
                 state = endMarkerState,
                 title = "도착지",
+                anchor = Offset(0.5f, 0.5f),
             )
-            Marker(
-                icon = BitmapDescriptorFactory.fromResource(R.drawable.linepoint),
-                state = gpsMarkerState,
-                title = "현재 위치",
-            )
+            if (gpsPoint != null) {
+                Marker(
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.linepoint),
+                    state = gpsMarkerState,
+                    title = "현재 위치",
+                    anchor = Offset(0.5f, 0.5f),
+                )
+            }
             if (isRestroom) {
                 restrooms.forEach { restroom ->
                     val position = LatLng(restroom.coordinate.latitude, restroom.coordinate.longitude)
                     Marker(
                         icon = BitmapDescriptorFactory.fromResource(R.drawable.toilet),
-                        state = com.google.maps.android.compose.rememberMarkerState(position = position),
+                        state = rememberMarkerState(position = position),
                         title = restroom.station_fullname,
                         snippet = "Floor: ${restroom.floor}, Location: ${restroom.restroom_location}",
                     )
@@ -354,7 +301,6 @@ fun GoogleMapGuide(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.End,
         ) {
-            // 종료 원형 버튼
             FloatingActionButton(
                 onClick = { openDialogState.value = !openDialogState.value },
                 shape = CircleShape,
@@ -363,14 +309,9 @@ fun GoogleMapGuide(
                 modifier = Modifier.padding(top = 16.dp),
             ) {
                 val closeIcon: Painter = painterResource(id = R.drawable.close)
-                Image(
-                    painter = closeIcon,
-                    contentDescription = "Close Icon",
-                    modifier = Modifier.padding(8.dp),
-                )
+                Image(painter = closeIcon, contentDescription = "Close Icon", modifier = Modifier.padding(8.dp))
             }
 
-            // 빨간색 화장실 원형 버튼
             val containerColor = if (isRestroom) CustomBlue else Color.Gray
             FloatingActionButton(
                 onClick = { isRestroom = !isRestroom },
@@ -386,19 +327,37 @@ fun GoogleMapGuide(
                 )
             }
 
-            // GPS 원형 버튼
+            var isPressed by remember { mutableStateOf(false) }
+
             FloatingActionButton(
-                onClick = { gpsButtonClicked = !gpsButtonClicked },
+                onClick = {
+                    coroutineScope.launch {
+                        isPressed = true // 클릭 시 isPressed를 true로 설정
+                        gpsPoint?.let {
+                            val nearestPoint =
+                                findNearestPoint(it, walkDataList1.points + polylineDataList.flatMap { it.points })
+                            val nextPoint =
+                                @Suppress("ktlint:standard:max-line-length")
+                                findNextPoint(
+                                    nearestPoint,
+                                    walkDataList1.points + polylineDataList.flatMap { it.points },
+                                )
+                            if (nearestPoint != null && nextPoint != null) {
+                                val bearing = calculateBearing(it, nextPoint)
+                                val cameraPosition = CameraPosition(it, 20f, 55f, bearing)
+                                val update = CameraUpdateFactory.newCameraPosition(cameraPosition)
+                                cameraPositionState.animate(update, 1000)
+                            }
+                        }
+                        isPressed = false // 작업이 완료된 후 isPressed를 false로 설정
+                    }
+                },
                 shape = CircleShape,
-                containerColor = Color.White,
+                containerColor = if (isPressed) CustomPrimary else Color.White,
                 contentColor = Color.White,
             ) {
-                val targetIcon: Painter = painterResource(id = R.drawable.target)
-                Image(
-                    painter = targetIcon,
-                    contentDescription = "GPS Icon",
-                    modifier = Modifier.padding(top = 12.dp),
-                )
+                val targetIcon: Painter = painterResource(id = R.drawable.target2)
+                Image(painter = targetIcon, contentDescription = "GPS Icon")
             }
         }
     }
@@ -411,51 +370,38 @@ fun GuideBottomSheet(
     scaffoldState: BottomSheetScaffoldState,
     navigationViewModel: NavigationViewModel,
     openDialogState: MutableState<Boolean>,
+    currentLocationViewModel: CurrentLocationViewModel,
 ) {
     val detailRouteInfo by navigationViewModel.detailRouteInfo.observeAsState(emptyList())
 
     Box(modifier = modifier.fillMaxSize().background(Color.White)) {
-        // BottomSheetScaffold로 바텀시트 구현
         BottomSheetScaffold(
             scaffoldState = scaffoldState,
             sheetContent = {
                 LazyColumn(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
-                            .background(Color.White),
+                    modifier = Modifier.fillMaxWidth().height(300.dp).background(Color.White),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     detailRouteInfo.forEach { routeInfo ->
-                        val iconResource =
-                            if (routeInfo.type == "subway") {
-                                R.drawable.subway
-                            } else {
-                                R.drawable.walk
-                            }
+                        val iconResource = if (routeInfo.type == "subway") R.drawable.subway else R.drawable.walk
                         item {
                             routeInfo.info.forEach { detail ->
                                 Box(
                                     modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(100.dp)
-                                            .padding(16.dp)
-                                            .drawBottomBorder(borderColor = Color.LightGray, borderWidth = 1f),
+                                        Modifier.fillMaxWidth().height(100.dp).padding(16.dp).drawBottomBorder(
+                                            borderColor = Color.LightGray,
+                                            borderWidth = 1f,
+                                        ),
                                 ) {
                                     Row {
                                         Icon(
                                             painter = painterResource(id = iconResource),
                                             contentDescription = "${routeInfo.type} Icon",
-                                            modifier = Modifier.size(24.dp).padding(end = 8.dp), // 아이콘 크기 조절
-                                            tint = Color.Unspecified, // 원래 아이콘 색상 유지
+                                            modifier = Modifier.size(24.dp).padding(end = 8.dp),
+                                            tint = Color.Unspecified,
                                         )
-                                        Text(
-                                            text = detail,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                        )
+                                        Text(text = detail, style = MaterialTheme.typography.bodyMedium)
                                     }
                                 }
                             }
@@ -463,12 +409,13 @@ fun GuideBottomSheet(
                     }
                 }
             },
-            sheetPeekHeight = 60.dp, // 시트가 보일 때의 최소 높이
+            sheetPeekHeight = 30.dp,
         ) {
             GoogleMapGuide(
                 modifier = Modifier,
                 navigationViewModel = navigationViewModel,
                 openDialogState = openDialogState,
+                currentLocationViewModel = currentLocationViewModel,
             )
         }
     }
@@ -484,14 +431,13 @@ fun Modifier.drawBottomBorder(
             val y = size.height - strokeWidth / 2
             drawLine(
                 color = borderColor,
-                start = androidx.compose.ui.geometry.Offset(0f, y),
-                end = androidx.compose.ui.geometry.Offset(size.width, y),
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
                 strokeWidth = strokeWidth,
             )
         },
     )
 
-// 도착지 방향을 가리키는 `bearing` 값 계산 함수
 fun calculateBearing(
     start: LatLng,
     end: LatLng,
@@ -509,9 +455,95 @@ fun calculateBearing(
     return ((Math.toDegrees(Math.atan2(y, x)) + 360) % 360).toFloat()
 }
 
+fun findNearestPoint(
+    current: LatLng,
+    path: List<LatLng>,
+): LatLng? {
+    return path.minByOrNull { distanceBetween(current, it) }
+}
+
+fun findNextPoint(
+    currentPoint: LatLng?,
+    path: List<LatLng>,
+): LatLng? {
+    currentPoint ?: return null
+    val currentIndex = path.indexOf(currentPoint)
+    return if (currentIndex != -1 && currentIndex < path.size - 1) {
+        path[currentIndex + 1]
+    } else if (currentIndex > 0) {
+        path[currentIndex - 1]
+    } else {
+        null
+    }
+}
+
+fun distanceBetween(
+    point1: LatLng,
+    point2: LatLng,
+): Double {
+    val lat1 = Math.toRadians(point1.latitude)
+    val lng1 = Math.toRadians(point1.longitude)
+    val lat2 = Math.toRadians(point2.latitude)
+    val lng2 = Math.toRadians(point2.longitude)
+
+    val dLat = lat2 - lat1
+    val dLng = lng2 - lng1
+
+    val a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2)
+    val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+    val radius = 6371e3 // 지구의 반지름 (미터)
+    return radius * c
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewGuideScreen() {
-    // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
-    GuideScreen(navController = rememberNavController(), navigationViewModel = NavigationViewModel())
+    GuideScreen(
+        navController = rememberNavController(),
+        navigationViewModel = NavigationViewModel(),
+        currentLocationViewModel = CurrentLocationViewModel(),
+    )
+}
+
+fun startFrequentLocationUpdates(
+    context: Context,
+    currentLocationViewModel: CurrentLocationViewModel,
+) {
+    if (ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        return
+    }
+
+    val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+
+    val locationRequest =
+        LocationRequest.create().apply {
+            interval = 10000 // 10초
+            fastestInterval = 5000 // 5초
+            priority = Priority.PRIORITY_HIGH_ACCURACY
+            maxWaitTime = 5000 // 5초
+        }
+
+    val locationCallback =
+        object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                if (locationResult.locations.isEmpty()) return
+
+                locationResult.locations.lastOrNull()?.let { location ->
+                    val latitude = location.latitude.toString()
+                    val longitude = location.longitude.toString()
+                    Log.d("LocationUpdates", "Updated Latitude: $latitude, Longitude: $longitude")
+                    currentLocationViewModel.setLocation(latitude, longitude)
+                }
+            }
+        }
+
+    fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
 }
