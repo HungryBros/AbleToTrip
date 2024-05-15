@@ -77,6 +77,7 @@ fun TotalRouteScreen(
     val messageInfo by navigationViewModel.messageInfo.observeAsState(null)
     val totalRouteModal = remember { mutableStateOf(false) }
     val openDialog = remember { mutableStateOf(false) }
+    val failopenDialog = remember { mutableStateOf(false) }
     println("im so angry : ${openDialog.value}")
     if (openDialog.value) {
         AlertDialog(
@@ -106,6 +107,36 @@ fun TotalRouteScreen(
         )
     }
 
+    if (failopenDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            title = {
+                Text(
+                    text = "탐색 종료",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Text(text = "경로가 없습니다.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        failopenDialog.value = false
+                        navController.navigate(NavRoute.HOME.routeName) {
+                            popUpTo("HOME")
+                        }
+                    },
+                ) {
+                    Text("종료하기")
+                }
+            },
+        )
+    }
+
     Surface(modifier = Modifier) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -121,6 +152,7 @@ fun TotalRouteScreen(
                 departure = departure,
                 arrival = arrival,
                 openDialogState = openDialog,
+                failopenDialogstate = failopenDialog,
                 totalRouteModalState = totalRouteModal,
             )
             TotalRouteBottomBox(
@@ -203,6 +235,7 @@ fun TotalRouteGoogleMap(
     departure: String?,
     arrival: String?,
     openDialogState: MutableState<Boolean>,
+    failopenDialogstate: MutableState<Boolean>,
     totalRouteModalState: MutableState<Boolean>,
 ) {
     // 네비게이션 데이터를 가져오기 위한 첫 호출
@@ -296,7 +329,7 @@ fun TotalRouteGoogleMap(
                 Log.e("TotalRouteGoogleMap", "Error: $errorMessage")
                 if (!hasErrorOccurred) {
                     hasErrorOccurred = true // 오류 발생 표시
-//                    openDialogState.value = true // 오류 발생 시 다이얼로그 표시
+                    failopenDialogstate.value = true // 오류 발생 시 다이얼로그 표시
                 } else {
                     // 필요한 경우 else 블럭에 다른 처리를 추가할 수 있습니다.
                 }
