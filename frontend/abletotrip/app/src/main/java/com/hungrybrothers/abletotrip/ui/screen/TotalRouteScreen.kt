@@ -170,7 +170,16 @@ fun TotalRouteBottomBox(
                     .weight(2f)
                     .fillMaxSize()
                     .background(CustomPrimary)
-                    .clickable(onClick = { navController.navigate(NavRoute.GUIDE.routeName) }),
+                    .clickable(onClick = {
+                        navController.navigate(NavRoute.GUIDE.routeName) {
+                            // 현재 경로를 뒤로가기 스택에서 제거
+                            popUpTo(
+                                navController.currentBackStackEntry?.destination?.route ?: NavRoute.GUIDE.routeName,
+                            ) { inclusive = true }
+                            // 새로운 경로가 이미 스택 상단에 있을 경우 중복 생성을 방지
+                            launchSingleTop = true
+                        }
+                    }),
             contentAlignment = Alignment.Center,
             content = {
                 Text(
