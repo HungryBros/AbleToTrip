@@ -8,6 +8,7 @@ import joblib
 import time
 import re
 from pprint import pprint
+import json
 
 # Import Models and Serializers
 from .models import Convenient
@@ -202,10 +203,10 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
     route_response = requests.post(route_url, headers=headers, params=route_params)
 
     try:
-        # print("안될 땐 얘가 안됨")
         route_data = route_response.json()
-        # pprint(route_data)
+
         return route_data
+
     except Exception as err:
         print(
             f"{log_time_func()} - Navigation: TMAP에서 받아온 데이터 JSON으로 변경 불가"
