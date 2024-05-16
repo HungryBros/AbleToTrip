@@ -10,8 +10,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -150,6 +150,11 @@ fun GuideScreen(
     // 자주 위치 업데이트 시작
     LaunchedEffect(Unit) {
         startFrequentLocationUpdates(context, currentLocationViewModel)
+    }
+
+    // BottomSheet 기본적으로 열리게 설정
+    LaunchedEffect(scaffoldState) {
+        scaffoldState.bottomSheetState.expand()
     }
 }
 
@@ -380,7 +385,6 @@ fun GuideBottomSheet(
             sheetContent = {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().height(300.dp).background(Color.White),
-                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     detailRouteInfo.forEach { routeInfo ->
@@ -389,19 +393,27 @@ fun GuideBottomSheet(
                             routeInfo.info.forEach { detail ->
                                 Box(
                                     modifier =
-                                        Modifier.fillMaxWidth().height(100.dp).padding(16.dp).drawBottomBorder(
+                                        Modifier.fillMaxWidth().drawBottomBorder(
                                             borderColor = Color.LightGray,
-                                            borderWidth = 1f,
+                                            borderWidth = 2f,
                                         ),
                                 ) {
-                                    Row {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(16.dp),
+                                    ) {
                                         Icon(
                                             painter = painterResource(id = iconResource),
                                             contentDescription = "${routeInfo.type} Icon",
-                                            modifier = Modifier.size(24.dp).padding(end = 8.dp),
+                                            modifier = Modifier.size(48.dp).padding(end = 8.dp),
                                             tint = Color.Unspecified,
                                         )
-                                        Text(text = detail, style = MaterialTheme.typography.bodyMedium)
+                                        Text(
+                                            text = detail,
+                                            modifier = Modifier.fillMaxHeight(),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Bold,
+                                        )
                                     }
                                 }
                             }
