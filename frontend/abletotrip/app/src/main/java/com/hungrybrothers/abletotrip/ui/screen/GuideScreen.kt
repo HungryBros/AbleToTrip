@@ -116,7 +116,7 @@ fun GuideScreen(
                     onClick = {
                         openDialog.value = false
                         navController.navigate(NavRoute.HOME.routeName) {
-                            popUpTo("HOME")
+                            popUpTo("HOME") { inclusive = true }
                         }
                     },
                 ) {
