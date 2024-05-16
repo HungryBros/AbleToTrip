@@ -162,17 +162,17 @@ fun DisplayMoreAttractionsScreen(
             }
         }
 
-        item {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(color = CustomPrimary)
-            }
-        }
+//        item {
+//            Box(
+//                modifier =
+//                    Modifier
+//                        .fillMaxWidth()
+//                        .padding(8.dp),
+//                contentAlignment = Alignment.Center,
+//            ) {
+//                CircularProgressIndicator(color = CustomPrimary)
+//            }
+//        }
     }
 
     LaunchedEffect(listState) {
