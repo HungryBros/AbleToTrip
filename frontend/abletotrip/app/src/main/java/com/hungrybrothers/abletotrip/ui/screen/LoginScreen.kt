@@ -48,7 +48,7 @@ fun LoginScreen(navController: NavController) {
                 }
                 HttpStatusCode.OK -> {
                     navController.navigate(NavRoute.HOME.routeName) {
-                        popUpTo("AUTHGRAPH") {
+                        popUpTo("HOMEGRAPH") {
                             inclusive = true
                         }
                         launchSingleTop = true
