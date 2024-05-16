@@ -109,7 +109,7 @@ fun GuideScreen(
                         openDialog.value = false
                         navController.navigate(NavRoute.HOME.routeName) {
                             // 스택에서 모든 대상을 제거하고 홈으로 이동
-                            popUpTo("HOME")
+                            popUpTo("HOME") { inclusive = true }
                         }
                     },
                 ) {
