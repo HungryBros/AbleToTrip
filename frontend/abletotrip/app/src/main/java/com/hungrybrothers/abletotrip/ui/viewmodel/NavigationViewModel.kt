@@ -49,8 +49,11 @@ class NavigationViewModel : ViewModel() {
     private val _detailRouteInfo = MutableLiveData<List<DetailRouteInfo>>()
     val detailRouteInfo: LiveData<List<DetailRouteInfo>> = _detailRouteInfo
 
-    private val _messageInfo = MutableLiveData<String>("")
-    val messageInfo: LiveData<String> = _messageInfo
+    private val _messageInfo = MutableLiveData<String?>("")
+    val messageInfo: LiveData<String?> = _messageInfo
+
+    private val _errorMessageInfo = MutableLiveData<String?>(null)
+    val errorMessageInfo: LiveData<String?> = _errorMessageInfo
 
     fun fetchNavigationData(
         departure: String?,
@@ -65,7 +68,8 @@ class NavigationViewModel : ViewModel() {
         polylineDataList.value = emptyList()
         walkDataList1.value = PolylineData(emptyList(), Color.Blue)
         walkDataList2.value = PolylineData(emptyList(), Color.Blue)
-        _messageInfo.value = ""
+        _messageInfo.value = null
+        _errorMessageInfo.value = null
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -166,6 +170,15 @@ class NavigationViewModel : ViewModel() {
                         println("data check check : one $walktwoData")
                     }
                 } else {
+                    val responseBody = response.bodyAsText()
+                    println("Response error body: $responseBody") // 실패 응답 본문을 로그로 출력
+
+                    // JSON 응답 파싱
+                    val errorData = Json { ignoreUnknownKeys = true }.decodeFromString<ErrorData>(responseBody)
+                    println("Error message from server: ${errorData.message}") // 서버로부터의 에러 메시지 출력
+
+                    _errorMessageInfo.postValue(errorData.message)
+
 //                    isErrorOccurred = true // 오류가 발생했음을 표시
                     _navigationData.postValue(
                         Resource.error(
@@ -246,6 +259,11 @@ data class PolylineResponse(
 data class PolylineData(
     val points: List<LatLng>,
     val color: Color,
+)
+
+@Serializable
+data class ErrorData(
+    val message: String,
 )
 
 // suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {

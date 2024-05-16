@@ -75,11 +75,12 @@ fun TotalRouteScreen(
     navigationViewModel: NavigationViewModel,
 ) {
     val messageInfo by navigationViewModel.messageInfo.observeAsState(null)
+    val errorMessageInfo by navigationViewModel.errorMessageInfo.observeAsState(null)
     val totalRouteModal = remember { mutableStateOf(false) }
     val openDialog = remember { mutableStateOf(false) }
     val failopenDialog = remember { mutableStateOf(false) }
     println("im so angry : ${openDialog.value}")
-    if (openDialog.value) {
+    if (openDialog.value && messageInfo != null) {
         AlertDialog(
             onDismissRequest = {
                 openDialog.value = false
@@ -107,7 +108,7 @@ fun TotalRouteScreen(
         )
     }
 
-    if (failopenDialog.value) {
+    if (failopenDialog.value && errorMessageInfo != null) {
         AlertDialog(
             onDismissRequest = {
                 openDialog.value = false
@@ -120,7 +121,7 @@ fun TotalRouteScreen(
                 )
             },
             text = {
-                Text(text = "경로가 없습니다.")
+                Text(text = "$errorMessageInfo")
             },
             confirmButton = {
                 TextButton(
@@ -283,10 +284,12 @@ fun TotalRouteGoogleMap(
     var dottedPolylineList1 by remember { mutableStateOf(listOf<LatLng>()) }
     var dottedPolylineList2 by remember { mutableStateOf(listOf<LatLng>()) }
 
+    var enterLoading by remember { mutableStateOf(false) }
     var hasErrorOccurred by remember { mutableStateOf(false) }
     // navigationData의 상태에 따른 UI 처리
     var modalcheck by remember { mutableStateOf(true) }
     navigationData?.let { resource ->
+        println("resource status : ${resource.status}")
         when (resource.status) {
             Resource.Status.SUCCESS -> {
                 val data = resource.data
@@ -302,24 +305,24 @@ fun TotalRouteGoogleMap(
                 val lastPolylinePoint = polylineDataList.lastOrNull()?.points?.lastOrNull()
                 val firstWalkPoint = walkDataList2.points.firstOrNull()
 
-                if (modalcheck) {
+                if (enterLoading && modalcheck) {
                     openDialogState.value = true
                     modalcheck = !modalcheck
                     Log.d("modalcheck", "navigationData: $modalcheck")
                     Log.d("modalcheck", "navigationData: ${openDialogState.value}")
                 }
-                println("dotted check : $polylineDataList")
-
-                println("dotted check : $lastWalkPoint")
-                println("dotted check : $firstPolylinePoint")
-                println("dotted check : $lastPolylinePoint")
-                println("dotted check : $firstWalkPoint")
+//                println("dotted check : $polylineDataList")
+//
+//                println("dotted check : $lastWalkPoint")
+//                println("dotted check : $firstPolylinePoint")
+//                println("dotted check : $lastPolylinePoint")
+//                println("dotted check : $firstWalkPoint")
                 if (lastWalkPoint != null && firstPolylinePoint != null && lastPolylinePoint != null && firstWalkPoint != null) {
                     // 새로운 polyline 생성
                     dottedPolylineList1 = listOf(lastWalkPoint, firstPolylinePoint)
                     dottedPolylineList2 = listOf(lastPolylinePoint, firstWalkPoint)
-                    println("dotted check : $dottedPolylineList1")
-                    println("dotted check : $dottedPolylineList2")
+//                    println("dotted check : $dottedPolylineList1")
+//                    println("dotted check : $dottedPolylineList2")
                 } else {
                 }
             }
@@ -327,7 +330,7 @@ fun TotalRouteGoogleMap(
                 val errorMessage = resource.message
                 // 오류 처리
                 Log.e("TotalRouteGoogleMap", "Error: $errorMessage")
-                if (!hasErrorOccurred) {
+                if (enterLoading && !hasErrorOccurred) {
                     hasErrorOccurred = true // 오류 발생 표시
                     failopenDialogstate.value = true // 오류 발생 시 다이얼로그 표시
                 } else {
@@ -336,7 +339,11 @@ fun TotalRouteGoogleMap(
             }
             Resource.Status.LOADING -> {
                 // 로딩 중 처리
-                hasErrorOccurred = false
+//                modalcheck = true
+//                openDialogState.value = false
+//                hasErrorOccurred = false
+//                failopenDialogstate.value = false
+                enterLoading = true
                 Log.d("TotalRouteGoogleMap", "Loading navigation data...")
             }
         }
