@@ -74,6 +74,7 @@ fun OnboardingPage(
                             append("무장애 관광지")
                         }
                         append("를 찾아보세요")
+                        append("\n")
                     },
             )
         1 ->
