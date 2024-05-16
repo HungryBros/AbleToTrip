@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.hungrybrothers.abletotrip.R
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
-import com.hungrybrothers.abletotrip.ui.theme.CustomWhite
 
 @Composable
 fun HeaderBar(
@@ -31,7 +30,6 @@ fun HeaderBar(
             Modifier
                 .fillMaxWidth()
                 .height(80.dp),
-        color = CustomWhite,
     ) {
         Box(
             modifier =
