@@ -74,11 +74,12 @@ fun OnboardingPage(
                             append("무장애 관광지")
                         }
                         append("를 찾아보세요")
+                        append("\n")
                     },
             )
         1 ->
             OnboardingContent(
-                imageResId = R.drawable.onboard1,
+                imageResId = R.drawable.onboard2,
                 text =
                     buildAnnotatedString {
                         append("도보 - 지하철 길안내는 물론\n")
@@ -89,7 +90,7 @@ fun OnboardingPage(
             )
         2 ->
             OnboardingContent(
-                imageResId = R.drawable.onboard1,
+                imageResId = R.drawable.onboard3,
                 text =
                     buildAnnotatedString {
                         append("지하철 장애인 화장실 안내와\n경로 상세 안내까지")
@@ -97,7 +98,7 @@ fun OnboardingPage(
             )
         3 ->
             OnboardingContent(
-                imageResId = R.drawable.onboard1,
+                imageResId = R.drawable.onboard4,
                 text =
                     buildAnnotatedString {
                         withStyle(style = SpanStyle(color = CustomPrimary, fontWeight = FontWeight.Bold)) {
@@ -152,8 +153,9 @@ fun OnboardingContent(
                 contentDescription = null,
                 modifier =
                     Modifier
-                        .fillMaxWidth()
-                        .height(500.dp)
+                        .fillMaxSize()
+//                        .fillMaxWidth()
+//                        .height(600.dp)
                         .padding(16.dp),
             )
         }

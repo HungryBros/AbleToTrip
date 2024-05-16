@@ -9,23 +9,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.hungrybrothers.abletotrip.ui.network.KtorClient.client
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.DEFAULT
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -258,44 +248,69 @@ data class PolylineData(
     val color: Color,
 )
 
-suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
-    val client =
-        HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(
-                    Json {
-                        // JSON 설정: 예를 들어, 직렬화 기능을 커스터마이즈할 수 있습니다.
-                        prettyPrint = true
-                        isLenient = true
-                    },
-                )
-            }
-            install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.BODY
-            }
-        }
+// suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
+//    val client =
+//        HttpClient(CIO) {
+//            install(ContentNegotiation) {
+//                json(
+//                    Json {
+//                        // JSON 설정: 예를 들어, 직렬화 기능을 커스터마이즈할 수 있습니다.
+//                        prettyPrint = true
+//                        isLenient = true
+//                    },
+//                )
+//            }
+//            install(Logging) {
+//                logger = Logger.DEFAULT
+//                level = LogLevel.BODY
+//            }
+//        }
+//
+//    println("Received data: $incodedpolyline")
+//    val requestBody =
+//        buildJsonObject {
+//            put("input", incodedpolyline)
+//            put("type", "decode")
+//        }
+//    println("Received data: aaaa  $requestBody")
+//    val response: HttpResponse =
+//        client.post("https://apihut.in/api/polyline") {
+//            setBody(requestBody)
+//            headers {
+//                append("X-Avatar-Key", "bd92b6bd-fbcc-4dfd-a68d-d225d2c7f8c3")
+//                append(HttpHeaders.ContentType, "application/json")
+//                append(HttpHeaders.Accept, "application/json")
+//            }
+//        }
+//    println("Received data: $response")
+//    val responseBody = response.bodyAsText()
+//    val data = Json { ignoreUnknownKeys = true }.decodeFromString<PolylineResponse>(responseBody)
+//    return data
+// }
 
-    println("Received data: $incodedpolyline")
-    val requestBody =
-        buildJsonObject {
-            put("input", incodedpolyline)
-            put("type", "decode")
-        }
-    println("Received data: aaaa  $requestBody")
-    val response: HttpResponse =
-        client.post("https://apihut.in/api/polyline") {
-            setBody(requestBody)
-            headers {
-                append("X-Avatar-Key", "bd92b6bd-fbcc-4dfd-a68d-d225d2c7f8c3")
-                append(HttpHeaders.ContentType, "application/json")
-                append(HttpHeaders.Accept, "application/json")
+suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
+    try {
+        println("Received data: $incodedpolyline")
+        val requestBody =
+            buildJsonObject {
+                put("input", incodedpolyline)
             }
-        }
-    println("Received data: $response")
-    val responseBody = response.bodyAsText()
-    val data = Json { ignoreUnknownKeys = true }.decodeFromString<PolylineResponse>(responseBody)
-    return data
+        println("Sending data: $requestBody")
+        val response =
+//            client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
+//            client.post("http://10.0.2.2:8000/navigation/polyline/") {
+            client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+            }
+        val responseBody = response.bodyAsText()
+        val data = Json { ignoreUnknownKeys = true }.decodeFromString<PolylineResponse>(responseBody)
+        println("Received response body: $responseBody")
+        return data
+    } catch (e: Exception) {
+        println("Error in fetchPolylineData: ${e.message}")
+        throw e // 또는 적절한 에러 처리를 할 수 있도록 변경
+    }
 }
 
 val subwayColor =
