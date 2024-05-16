@@ -222,7 +222,7 @@ fun GoogleMapGuide(
         if (gpsPoint != null) {
             gpsMarkerState.position = gpsPoint
             coroutineScope.launch {
-                val update = CameraUpdateFactory.newLatLngZoom(gpsPoint, 20f)
+                val update = CameraUpdateFactory.newLatLngZoom(gpsPoint, 18f)
                 cameraPositionState.animate(update, 1000)
             }
         }
@@ -238,7 +238,7 @@ fun GoogleMapGuide(
                     findNextPoint(nearestPoint, walkDataList1.points + polylineDataList.flatMap { it.points })
                 if (nearestPoint != null && nextPoint != null) {
                     val bearing = calculateBearing(gpsPoint, nextPoint)
-                    val cameraPosition = CameraPosition(gpsPoint, 20f, 55f, bearing)
+                    val cameraPosition = CameraPosition(gpsPoint, 18f, 55f, bearing)
                     val update = CameraUpdateFactory.newCameraPosition(cameraPosition)
                     cameraPositionState.animate(update, 1000)
                 }
@@ -344,7 +344,7 @@ fun GoogleMapGuide(
                                 )
                             if (nearestPoint != null && nextPoint != null) {
                                 val bearing = calculateBearing(it, nextPoint)
-                                val cameraPosition = CameraPosition(it, 20f, 55f, bearing)
+                                val cameraPosition = CameraPosition(it, 18f, 55f, bearing)
                                 val update = CameraUpdateFactory.newCameraPosition(cameraPosition)
                                 cameraPositionState.animate(update, 1000)
                             }
