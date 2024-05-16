@@ -125,7 +125,9 @@ fun NavGraphBuilder.home(
             val category = backStackEntry.arguments?.getString("category") ?: ""
             ShowMoreScreen(navController, category, currentLocationViewModel)
         }
-        composable(NavRoute.GUIDE.routeName) { GuideScreen(navController, navigationViewModel) }
+        composable(
+            NavRoute.GUIDE.routeName,
+        ) { GuideScreen(navController, navigationViewModel, currentLocationViewModel) }
         composable(NavRoute.TESTNAV.routeName) { TestNavFile(navController) }
     }
 }
