@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -102,6 +103,7 @@ fun DepartureTopBox(
     val myendpoint: String = arrivaladdress // 밑에 텍스트칸
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current // 키보드 컨트롤
+    val focusManager = LocalFocusManager.current // 커서 포인터 컨트롤
     val places by autocompleteViewModel.places.observeAsState(initial = emptyList()) // 받아온 전체 플레이스
     var selectedAddress by remember { mutableStateOf<String?>(null) } // 선택한 주소의 상세주소
 
@@ -150,6 +152,8 @@ fun DepartureTopBox(
                     coroutineScope.launch { // 코루틴 스코프 내에서 suspend 함수 호출
                         val currentLocation = getCurrentLocationAddress(context, currentLocationViewModel)
                         textFieldValue.value = currentLocation ?: ""
+                        keyboardController?.hide()
+                        focusManager.clearFocus(true)
                     }
                 },
                 modifier =
@@ -263,7 +267,10 @@ fun ActionsRow(
             onClick = { textFieldValue.value = "" },
             shape = RoundedCornerShape(8.dp),
         ) {
-            Text("재입력", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, color = CustomBackground))
+            Text(
+                "출발지 초기화",
+                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, color = CustomBackground),
+            )
         }
         Button(
             colors =
