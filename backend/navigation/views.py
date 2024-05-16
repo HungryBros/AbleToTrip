@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -51,7 +50,7 @@ def navigation(request):
 
             return Response(
                 navigation_response_func(message, 0, False),
-                status=status.HTTP_204_NO_CONTENT,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # T Map: "출발지 - 도착지" 도보 경로 요청
@@ -97,6 +96,8 @@ def navigation(request):
             pedestrian_detail_route_info,
         )
 
+        print("여기까진 잘 넘어옴~")
+
     except Exception as err:
         print(f"{log_time_func()} - Navigation: 경로 탐색 FAILED")
         print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
@@ -105,18 +106,31 @@ def navigation(request):
 
         return Response(
             navigation_response_func(message, 0, False),
-            status=status.HTTP_204_NO_CONTENT,
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     ##################### 2) Google Maps 경로 API Request #####################
 
-    mode = "transit"  # Options : walking, driving, bicycling, transit
-    transit_mode = "subway"
+    try:
 
-    response_json = direction_request_func(origin, destination, mode, transit_mode)
+        mode = "transit"  # Options : walking, driving, bicycling, transit
+        transit_mode = "subway"
 
-    # Routes & Steps 데이터
-    steps, google_duration = get_steps_func(response_json)
+        response_json = direction_request_func(origin, destination, mode, transit_mode)
+
+        # Routes & Steps 데이터
+        steps, google_duration = get_steps_func(response_json)
+
+    except Exception as err:
+
+        pedestrian_response_value["message"] = (
+            "대중교통 경로를 받아올 수 없어요.\n도보 경로로 안내합니다."
+        )
+
+        return Response(
+            pedestrian_response_value,
+            status=status.HTTP_200_OK,
+        )
 
     ############################# 도보 경로랑 대중교통경로 1차 비교 #############################
 
