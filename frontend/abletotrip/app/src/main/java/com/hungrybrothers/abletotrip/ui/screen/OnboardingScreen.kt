@@ -152,8 +152,9 @@ fun OnboardingContent(
                 contentDescription = null,
                 modifier =
                     Modifier
-                        .fillMaxWidth()
-                        .height(500.dp)
+                        .fillMaxSize()
+//                        .fillMaxWidth()
+//                        .height(600.dp)
                         .padding(16.dp),
             )
         }
