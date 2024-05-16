@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">abletotrip</string>
+    <string name="find_address">주소를 입력해주세요</string>
 </resources>
