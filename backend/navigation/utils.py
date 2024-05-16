@@ -149,28 +149,34 @@ def search_keyword_func(keyword):
 
 # Kakao Maps 좌표반환 API 요청 함수(주소)
 def coordinate_request_func(keyword):
-    if keyword.startswith("대한민국 서울"):
-        keyword = keyword.replace("대한민국 서울", "서울", 1)
+    try:
+        if keyword.startswith("대한민국 서울"):
+            keyword = keyword.replace("대한민국 서울", "서울", 1)
 
-    api = Local(service_key=KAKAO_MAPS_API_KEY)
-    # result = api.search_address(keyword, dataframe=False)
-    result = api.search_keyword(keyword, dataframe=False)
-    result_documents = result.get("documents")
+        api = Local(service_key=KAKAO_MAPS_API_KEY)
+        # result = api.search_address(keyword, dataframe=False)
+        result = api.search_keyword(keyword, dataframe=False)
+        result_documents = result.get("documents")
 
-    if len(result_documents):
-        first_result = result_documents[0]
-        lon = round(float(first_result.get("x")), 6)
-        lat = round(float(first_result.get("y")), 6)
+        if len(result_documents):
+            first_result = result_documents[0]
+            lon = round(float(first_result.get("x")), 6)
+            lat = round(float(first_result.get("y")), 6)
 
-        return (lon, lat)
+            return (lon, lat)
 
-    else:
-        print(
-            f"{log_time_func()} - Navigation: {keyword}의 카카오 지도 주소로 검색 실패, 키워드로 검색 START"
-        )
+        else:
+            print(
+                f"{log_time_func()} - Navigation: {keyword}의 카카오 지도 주소로 검색 실패, 키워드로 검색 START"
+            )
 
-        # 주소로 검색에 실패하는 경우, 키워드로 검색하게 함
-        return search_keyword_func(keyword)
+            # 주소로 검색에 실패하는 경우, 키워드로 검색하게 함
+            return search_keyword_func(keyword)
+    except Exception as err:
+        print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 반환 FAILED")
+        print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
+
+        return (0, 0)
 
 
 # T Map 도보 경로 API 요청 함수
@@ -195,15 +201,17 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
 
     route_response = requests.post(route_url, headers=headers, params=route_params)
 
-    if route_response.status_code == 200:
+    try:
         # print("안될 땐 얘가 안됨")
         route_data = route_response.json()
         # pprint(route_data)
         return route_data
-    else:
+    except Exception as err:
         print(
             f"{log_time_func()} - Navigation: TMAP에서 받아온 데이터 JSON으로 변경 불가"
         )
+        print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
+
         return None
 
 
