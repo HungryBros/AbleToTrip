@@ -111,7 +111,7 @@ fun OnboardingPage(
                     scope.launch {
                         PreferencesManager.setOnboardingComplete(navController.context, true)
                         navController.navigate(NavRoute.LOGIN.routeName) {
-                            popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
+                            popUpTo(NavRoute.HOME.routeName) { inclusive = true }
                         }
                     }
                 },
@@ -154,8 +154,6 @@ fun OnboardingContent(
                 modifier =
                     Modifier
                         .fillMaxSize()
-//                        .fillMaxWidth()
-//                        .height(600.dp)
                         .padding(16.dp),
             )
         }
@@ -175,67 +173,3 @@ fun OnboardingContent(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun OnboardingScreenPreview() {
-    OnboardingScreen(navController = rememberNavController())
-}
-
-@Preview(showBackground = true)
-@Composable
-fun OnboardingPage0Preview() {
-    OnboardingContent(
-        imageResId = R.drawable.onboard1,
-        text =
-            buildAnnotatedString {
-                append("내 주변 ")
-                withStyle(style = SpanStyle(color = Color.Green, fontWeight = FontWeight.Bold)) {
-                    append("무장애 관광지")
-                }
-                append("를 찾아보세요")
-            },
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun OnboardingPage1Preview() {
-    OnboardingContent(
-        imageResId = R.drawable.onboard1,
-        text =
-            buildAnnotatedString {
-                append("도보 - 지하철 길안내는 물론\n")
-                withStyle(style = SpanStyle(color = Color.Green, fontWeight = FontWeight.Bold)) {
-                    append("엘리베이터 설치 경로를 우선으로")
-                }
-            },
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun OnboardingPage2Preview() {
-    OnboardingContent(
-        imageResId = R.drawable.onboard1,
-        text =
-            buildAnnotatedString {
-                append("지하철 장애인 화장실 안내와\n경로 상세 안내까지")
-            },
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun OnboardingPage3Preview() {
-    OnboardingContent(
-        imageResId = R.drawable.onboard1,
-        text =
-            buildAnnotatedString {
-                withStyle(style = SpanStyle(color = Color.Green, fontWeight = FontWeight.Bold)) {
-                    append("여행가기쉬운지도")
-                }
-                append("와 함께\n집까지 길 안내")
-            },
-        isLastPage = true,
-    )
-}
