@@ -250,7 +250,7 @@ def navigation(request):
             user = get_user(request)
             print(f"{log_time_func()} - Navigation: REQUEST USER: {user}")
 
-            # cache.set(user, cached_subway_stops, 3600 * 2)
+            cache.set(user, cached_subway_stops, 3600 * 2)
             print(f"{log_time_func()} - Navigation: REDIS 저장 SUCCESS")
 
             # 엘레베이터 출구 찾기
@@ -410,29 +410,29 @@ def navigation(request):
 
             print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 SUCCESS")
 
-            # # Calculate ETA
-            # additional_ETA = get_additional_ETA_func(
-            #     departure_pedestrian_distance,
-            #     departure_pedestrian_duration,
-            #     arrival_pedestrian_distance,
-            #     arrival_pedestrian_duration,
-            #     subway_stops,
-            # )
+            # Calculate ETA
+            additional_ETA = get_additional_ETA_func(
+                departure_pedestrian_distance,
+                departure_pedestrian_duration,
+                arrival_pedestrian_distance,
+                arrival_pedestrian_duration,
+                subway_stops,
+            )
 
-            # # 총 시간 계산
-            # google_duration = (
-            #     google_duration
-            #     + departure_pedestrian_duration
-            #     + arrival_pedestrian_duration
-            #     - google_route_pedestrian_departure_duration
-            #     - google_route_pedestrian_arrival_duration
-            #     + additional_ETA
-            # )
+            # 총 시간 계산
+            google_duration = (
+                google_duration
+                + departure_pedestrian_duration
+                + arrival_pedestrian_duration
+                - google_route_pedestrian_departure_duration
+                - google_route_pedestrian_arrival_duration
+                + additional_ETA
+            )
 
-            # print(f"{log_time_func()} - Navigation: ETA 계산 SUCCESS")
-            # print(
-            #     f"{log_time_func()} - Navigation: Additional / Total ETA (min) - {additional_ETA} / {google_duration}"
-            # )
+            print(f"{log_time_func()} - Navigation: ETA 계산 SUCCESS")
+            print(
+                f"{log_time_func()} - Navigation: Additional / Total ETA (min) - {additional_ETA} / {google_duration}"
+            )
 
             message = "경로 탐색에 성공했어요!\n지하철을 이용하는 경로를 안내할게요"
 
