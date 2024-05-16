@@ -40,10 +40,66 @@ def navigation(request):
 
     ######################## 1) T Map 경로 API Request ########################
     # T map 경로 요청
-    departure_lon, departure_lat = coordinate_request_func(origin)
-    arrival_lon, arrival_lat = coordinate_request_func(destination)
 
-    if not (departure_lon and departure_lat and arrival_lon and arrival_lat):
+    try:
+        departure_lon, departure_lat = coordinate_request_func(origin)
+        arrival_lon, arrival_lat = coordinate_request_func(destination)
+
+        if not (departure_lon and departure_lat and arrival_lon and arrival_lat):
+
+            message = "경로를 받아올 수 없어요.\n출발지와 도착지를 확인해주세요."
+
+            return Response(
+                navigation_response_func(message, 0, False),
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        # T Map: "출발지 - 도착지" 도보 경로 요청
+        pedestrian_route = pedestrian_request_func(
+            departure_lon,
+            departure_lat,
+            arrival_lon,
+            arrival_lat,
+        )
+
+        (
+            pedestrian_coordinate_list,
+            pedestrian_description_list,
+            tmap_duration,
+            distance,
+        ) = get_tmap_info_func(pedestrian_route)
+
+        # Pedestrain response value init
+        pedestrian_polyline_info = list()
+        pedestrian_detail_route_info = list()
+
+        pedestrian_polyline_info.append(
+            {
+                "type": "walk",
+                "info": pedestrian_coordinate_list,
+            }
+        )
+
+        pedestrian_detail_route_info.append(
+            {
+                "type": "walk",
+                "info": pedestrian_description_list,
+            }
+        )
+
+        message = "경로 탐색에 성공했어요!\n도보 경로를 안내할게요"
+
+        pedestrian_response_value = navigation_response_func(
+            message,
+            tmap_duration,
+            False,
+            pedestrian_polyline_info,
+            pedestrian_detail_route_info,
+        )
+
+    except Exception as err:
+        print(f"{log_time_func()} - Navigation: 경로 탐색 FAILED")
+        print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
 
         message = "경로를 받아올 수 없어요.\n출발지와 도착지를 확인해주세요."
 
@@ -51,49 +107,6 @@ def navigation(request):
             navigation_response_func(message, 0, False),
             status=status.HTTP_204_NO_CONTENT,
         )
-
-    # T Map: "출발지 - 도착지" 도보 경로 요청
-    pedestrian_route = pedestrian_request_func(
-        departure_lon,
-        departure_lat,
-        arrival_lon,
-        arrival_lat,
-    )
-
-    (
-        pedestrian_coordinate_list,
-        pedestrian_description_list,
-        tmap_duration,
-        distance,
-    ) = get_tmap_info_func(pedestrian_route)
-
-    # Pedestrain response value init
-    pedestrian_polyline_info = list()
-    pedestrian_detail_route_info = list()
-
-    pedestrian_polyline_info.append(
-        {
-            "type": "walk",
-            "info": pedestrian_coordinate_list,
-        }
-    )
-
-    pedestrian_detail_route_info.append(
-        {
-            "type": "walk",
-            "info": pedestrian_description_list,
-        }
-    )
-
-    message = "경로 탐색에 성공했어요!\n도보 경로를 안내할게요"
-
-    pedestrian_response_value = navigation_response_func(
-        message,
-        tmap_duration,
-        False,
-        pedestrian_polyline_info,
-        pedestrian_detail_route_info,
-    )
 
     ##################### 2) Google Maps 경로 API Request #####################
 
