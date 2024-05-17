@@ -261,7 +261,6 @@ fun TotalRouteGoogleMap(
             departureResource.data?.let {
                 mystartpoint = it
                 startMarkerState.position = it
-                println("start end : $mystartpoint")
             }
         }
     }
@@ -271,7 +270,6 @@ fun TotalRouteGoogleMap(
             arrivalResource.data?.let {
                 myendpoint = it
                 endMarkerState.position = it
-                println("start end : $myendpoint")
             }
         }
     }
@@ -302,7 +300,6 @@ fun TotalRouteGoogleMap(
                 }
             }
             Resource.Status.ERROR -> {
-                val errorMessage = resource.message
                 if (enterLoading && !hasErrorOccurred) {
                     hasErrorOccurred = true
                     failopenDialogstate.value = true
@@ -332,7 +329,6 @@ fun TotalRouteGoogleMap(
         hasErrorOccurred = false
         coroutineScope.launch {
             cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
-            println("polylineOptionsList data : $polylineDataList")
         }
     }
 
@@ -345,11 +341,9 @@ fun TotalRouteGoogleMap(
             onMapLoaded = {
                 coroutineScope.launch {
                     cameraPositionState.animate(CameraUpdateFactory.newLatLngBounds(multicameraState, 130))
-                    println("polylineOptionsList data : $polylineDataList")
                 }
             },
         ) {
-            println("data check check : in $walkDataList2")
             Polyline(
                 points = walkDataList1.points,
                 color = walkDataList1.color,
@@ -362,7 +356,6 @@ fun TotalRouteGoogleMap(
                 pattern = dotPattern,
             )
             polylineDataList.forEach { polylineData ->
-                println("walk data : $polylineData")
                 Polyline(
                     points = polylineData.points,
                     color = polylineData.color,

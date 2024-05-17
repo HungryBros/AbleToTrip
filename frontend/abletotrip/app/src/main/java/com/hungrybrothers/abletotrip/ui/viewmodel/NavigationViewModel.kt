@@ -210,10 +210,7 @@ data class Resource<out T>(val status: Status, val data: T?, val message: String
 data class NavigationData(
     val message: String,
     val duration: Int,
-//    val is_bus_exist: Boolean,
     val is_subway_exist: Boolean,
-//    val is_pedestrian_route: Boolean,
-//    val is_pedestrian_route: Boolean,
     val polyline_info: List<PolylineInfo>,
     val detail_route_info: List<DetailRouteInfo>,
 )
@@ -254,68 +251,22 @@ data class ErrorData(
     val message: String,
 )
 
-// suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
-//    val client =
-//        HttpClient(CIO) {
-//            install(ContentNegotiation) {
-//                json(
-//                    Json {
-//                        // JSON 설정: 예를 들어, 직렬화 기능을 커스터마이즈할 수 있습니다.
-//                        prettyPrint = true
-//                        isLenient = true
-//                    },
-//                )
-//            }
-//            install(Logging) {
-//                logger = Logger.DEFAULT
-//                level = LogLevel.BODY
-//            }
-//        }
-//
-//    println("Received data: $incodedpolyline")
-//    val requestBody =
-//        buildJsonObject {
-//            put("input", incodedpolyline)
-//            put("type", "decode")
-//        }
-//    println("Received data: aaaa  $requestBody")
-//    val response: HttpResponse =
-//        client.post("https://apihut.in/api/polyline") {
-//            setBody(requestBody)
-//            headers {
-//                append("X-Avatar-Key", "bd92b6bd-fbcc-4dfd-a68d-d225d2c7f8c3")
-//                append(HttpHeaders.ContentType, "application/json")
-//                append(HttpHeaders.Accept, "application/json")
-//            }
-//        }
-//    println("Received data: $response")
-//    val responseBody = response.bodyAsText()
-//    val data = Json { ignoreUnknownKeys = true }.decodeFromString<PolylineResponse>(responseBody)
-//    return data
-// }
-
 suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
     try {
-        println("Received data: $incodedpolyline")
         val requestBody =
             buildJsonObject {
                 put("input", incodedpolyline)
             }
-        println("Sending data: $requestBody")
         val response =
-//            client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
-//            client.post("http://10.0.2.2:8000/navigation/polyline/") {
             client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
                 contentType(ContentType.Application.Json)
                 setBody(requestBody)
             }
         val responseBody = response.bodyAsText()
         val data = Json { ignoreUnknownKeys = true }.decodeFromString<PolylineResponse>(responseBody)
-        println("Received response body: $responseBody")
         return data
     } catch (e: Exception) {
-        println("Error in fetchPolylineData: ${e.message}")
-        throw e // 또는 적절한 에러 처리를 할 수 있도록 변경
+        throw e
     }
 }
 
