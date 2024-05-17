@@ -11,11 +11,7 @@ class MyAppApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
-        // Kakao SDK 초기화
         initializeKakaoSDK()
-
-        // Places API 초기화
         initializePlacesAPI()
     }
 

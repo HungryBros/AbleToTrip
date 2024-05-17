@@ -1,6 +1,5 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
-import android.util.Log
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -79,7 +78,6 @@ fun TotalRouteScreen(
     val totalRouteModal = remember { mutableStateOf(false) }
     val openDialog = remember { mutableStateOf(false) }
     val failopenDialog = remember { mutableStateOf(false) }
-    println("im so angry : ${openDialog.value}")
     if (openDialog.value && messageInfo != null) {
         AlertDialog(
             onDismissRequest = {
@@ -182,8 +180,7 @@ fun TotalRouteBottomBox(
                 Modifier
                     .weight(1f)
                     .fillMaxSize()
-                    .background(CustomTertiary)
-                    .clickable(onClick = { /* TODO: Define what happens when the box is clicked */ }),
+                    .background(CustomTertiary),
             contentAlignment = Alignment.Center,
             content = {
                 Text(
@@ -205,11 +202,9 @@ fun TotalRouteBottomBox(
                     .background(CustomPrimary)
                     .clickable(onClick = {
                         navController.navigate(NavRoute.GUIDE.routeName) {
-                            // 현재 경로를 뒤로가기 스택에서 제거
                             popUpTo(
                                 navController.currentBackStackEntry?.destination?.route ?: NavRoute.GUIDE.routeName,
                             ) { inclusive = true }
-                            // 새로운 경로가 이미 스택 상단에 있을 경우 중복 생성을 방지
                             launchSingleTop = true
                         }
                     }),
@@ -244,12 +239,11 @@ fun TotalRouteGoogleMap(
         navigationViewModel.fetchNavigationData(departure = departure, arrival = arrival)
     }
 
-    // LiveData를 Compose 상태로 변환
+    // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
     val navigationData by navigationViewModel.navigationData.observeAsState()
     val polylineDataList by navigationViewModel.polylineDataList.observeAsState(initial = emptyList())
     val walkDataList1 by navigationViewModel.walkDataList1.observeAsState(PolylineData(emptyList(), Color.Blue))
     val walkDataList2 by navigationViewModel.walkDataList2.observeAsState(PolylineData(emptyList(), Color.Blue))
-    // `LiveData`를 관찰하여 동적으로 업데이트되는 지점
     val departureResource by navigationViewModel.departureData.observeAsState(Resource.loading(null))
     val arrivalResource by navigationViewModel.arrivalData.observeAsState(Resource.loading(null))
 
@@ -286,19 +280,11 @@ fun TotalRouteGoogleMap(
 
     var enterLoading by remember { mutableStateOf(false) }
     var hasErrorOccurred by remember { mutableStateOf(false) }
-    // navigationData의 상태에 따른 UI 처리
     var modalcheck by remember { mutableStateOf(true) }
+    // navigationData의 상태에 따른 UI 처리
     navigationData?.let { resource ->
-        println("resource status : ${resource.status}")
         when (resource.status) {
             Resource.Status.SUCCESS -> {
-                val data = resource.data
-                // navigationData에서 필요한 작업을 수행하세요
-//                Log.d("TotalRouteGoogleMap", "${data?.is_bus_exist}")
-
-                Log.d("TotalRouteGoogleMap", "Start Point: $mystartpoint, End Point: $myendpoint")
-                Log.d("TotalRouteGoogleMap", "navigationData: $navigationData")
-
                 val lastWalkPoint = walkDataList1.points.lastOrNull()
                 val firstPolylinePoint = polylineDataList.firstOrNull()?.points?.firstOrNull()
 
@@ -308,43 +294,23 @@ fun TotalRouteGoogleMap(
                 if (enterLoading && modalcheck) {
                     openDialogState.value = true
                     modalcheck = !modalcheck
-                    Log.d("modalcheck", "navigationData: $modalcheck")
-                    Log.d("modalcheck", "navigationData: ${openDialogState.value}")
                 }
-//                println("dotted check : $polylineDataList")
-//
-//                println("dotted check : $lastWalkPoint")
-//                println("dotted check : $firstPolylinePoint")
-//                println("dotted check : $lastPolylinePoint")
-//                println("dotted check : $firstWalkPoint")
                 if (lastWalkPoint != null && firstPolylinePoint != null && lastPolylinePoint != null && firstWalkPoint != null) {
-                    // 새로운 polyline 생성
                     dottedPolylineList1 = listOf(lastWalkPoint, firstPolylinePoint)
                     dottedPolylineList2 = listOf(lastPolylinePoint, firstWalkPoint)
-//                    println("dotted check : $dottedPolylineList1")
-//                    println("dotted check : $dottedPolylineList2")
                 } else {
                 }
             }
             Resource.Status.ERROR -> {
                 val errorMessage = resource.message
-                // 오류 처리
-                Log.e("TotalRouteGoogleMap", "Error: $errorMessage")
                 if (enterLoading && !hasErrorOccurred) {
-                    hasErrorOccurred = true // 오류 발생 표시
-                    failopenDialogstate.value = true // 오류 발생 시 다이얼로그 표시
+                    hasErrorOccurred = true
+                    failopenDialogstate.value = true
                 } else {
-                    // 필요한 경우 else 블럭에 다른 처리를 추가할 수 있습니다.
                 }
             }
             Resource.Status.LOADING -> {
-                // 로딩 중 처리
-//                modalcheck = true
-//                openDialogState.value = false
-//                hasErrorOccurred = false
-//                failopenDialogstate.value = false
                 enterLoading = true
-                Log.d("TotalRouteGoogleMap", "Loading navigation data...")
             }
         }
     }
@@ -484,7 +450,6 @@ fun TotalRouteGoogleMap(
 @Preview(showBackground = true)
 @Composable
 fun PreviewTotalRouteScreen() {
-    // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
     TotalRouteScreen(
         navController = rememberNavController(),
         departure = null,

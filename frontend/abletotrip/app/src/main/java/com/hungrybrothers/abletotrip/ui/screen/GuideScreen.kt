@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Looper
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -238,9 +237,15 @@ fun GoogleMapGuide(
         if (gpsPoint != null) {
             coroutineScope.launch {
                 val nearestPoint =
-                    findNearestPoint(gpsPoint, walkDataList1.points + polylineDataList.flatMap { it.points })
+                    findNearestPoint(
+                        gpsPoint,
+                        walkDataList1.points + polylineDataList.flatMap { it.points } + walkDataList2.points,
+                    )
                 val nextPoint =
-                    findNextPoint(nearestPoint, walkDataList1.points + polylineDataList.flatMap { it.points })
+                    findNextPoint(
+                        nearestPoint,
+                        walkDataList1.points + polylineDataList.flatMap { it.points } + walkDataList2.points,
+                    )
                 if (nearestPoint != null && nextPoint != null) {
                     val bearing = calculateBearing(gpsPoint, nextPoint)
                     val cameraPosition = CameraPosition(gpsPoint, 18f, 55f, bearing)
@@ -551,7 +556,6 @@ fun startFrequentLocationUpdates(
                 locationResult.locations.lastOrNull()?.let { location ->
                     val latitude = location.latitude.toString()
                     val longitude = location.longitude.toString()
-                    Log.d("LocationUpdates", "Updated Latitude: $latitude, Longitude: $longitude")
                     currentLocationViewModel.setLocation(latitude, longitude)
                 }
             }

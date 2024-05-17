@@ -51,7 +51,6 @@ fun AutocompleteTextField2(
                             -16
                         ).dp,
                     ),
-                // 아이콘 사이의 간격을 4dp로 설정
             ) {
                 if (text.isNotEmpty()) {
                     IconButton(onClick = onClear) {
@@ -71,8 +70,8 @@ fun AutocompleteTextField2(
                 focusedContainerColor = CustomWhiteSmoke,
                 unfocusedContainerColor = CustomWhite,
                 cursorColor = MaterialTheme.colorScheme.onSurface,
-                focusedIndicatorColor = CustomWhiteSmoke, // 포커스 상태에서 밑줄 제거
-                unfocusedIndicatorColor = CustomWhite, // 비포커스 상태에서
+                focusedIndicatorColor = CustomWhiteSmoke,
+                unfocusedIndicatorColor = CustomWhite,
             ),
         shape = RoundedCornerShape(8.dp),
     )
