@@ -261,8 +261,8 @@ def get_additional_ETA_func(
 
     eta_model_input_data = {
         "distance_to_station": [departure_pedestrian_distance],
-        "duration_to_station": [departure_pedestrian_duration // 7 * 4],
         "distance_from_station": [arrival_pedestrian_distance],
+        "duration_to_station": [departure_pedestrian_duration // 7 * 4],
         "duration_from_station": [arrival_pedestrian_duration // 7 * 4],
         "transfer_count": [len(subway_stops) - 1],
     }
