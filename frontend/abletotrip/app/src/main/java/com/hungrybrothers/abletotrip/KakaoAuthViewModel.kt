@@ -39,13 +39,11 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
     private val _loginResult = MutableLiveData<HttpStatusCode?>()
     val loginResult: LiveData<HttpStatusCode?> = _loginResult
 
-    // MasterKey 생성
     private val masterKey =
         MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
 
-    // EncryptedSharedPreferences 생성
     private val encryptedPrefs =
         EncryptedSharedPreferences.create(
             context,
@@ -56,16 +54,13 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
         )
 
     init {
-        // 앱이 시작될 때 자동 로그인을 시도
         attemptAutoLogin()
     }
 
-    // 로그인 상태를 변경하는 메서드
     fun setLoggedIn(loggedIn: Boolean) {
         _loggedIn.value = loggedIn
     }
 
-    // 카카오 사용자 정보 요청 함수
     fun fetchKakaoUserInfo(token: OAuthToken) {
         UserApiClient.instance.me { user: User?, error: Throwable? ->
             if (error != null) {
@@ -79,7 +74,6 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    // 로그인 시 토큰을 EncryptedSharedPreferences에 저장하는 함수
     private fun saveToken(token: OAuthToken) {
         encryptedPrefs.edit()
             .putString(TOKEN_KEY, token.accessToken)
@@ -89,7 +83,6 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
             .apply()
     }
 
-    // EncryptedSharedPreferences에서 토큰을 불러오는 함수
     private fun loadToken(): OAuthToken? {
         val accessToken = encryptedPrefs.getString(TOKEN_KEY, null) ?: return null
         val accessTokenExpiresAt = Date(encryptedPrefs.getLong(ACCESS_TOKEN_EXPIRES_AT_KEY, 0L))
@@ -103,7 +96,6 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
         )
     }
 
-    // 앱이 시작될 때 자동 로그인을 시도하는 함수
     private fun attemptAutoLogin() {
         val token = loadToken()
         if (token != null) {
@@ -129,19 +121,15 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
             }
         }
 
-        // 카카오톡이 설치되어 있으면 카카오톡으로 로그인, 아니면 카카오계정으로 로그인
         if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
             UserApiClient.instance.loginWithKakaoTalk(context) { token, error ->
                 if (error != null) {
                     Log.e(TAG, "카카오톡으로 로그인 실패", error)
 
-                    // 사용자가 카카오톡 설치 후 디바이스 권한 요청 화면에서 로그인을 취소한 경우,
-                    // 의도적인 로그인 취소로 보고 카카오계정으로 로그인 시도 없이 로그인 취소로 처리 (예: 뒤로 가기)
                     if (error is ClientError && error.reason == ClientErrorCause.Cancelled) {
                         return@loginWithKakaoTalk
                     }
 
-                    // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인 시도
                     UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
                 } else if (token != null) {
                     Log.i(TAG, "카카오톡으로 로그인 성공 ${token.accessToken}")
@@ -167,14 +155,13 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
                             ),
                         )
                     }
-                _loginResult.postValue(response.status) // 로그인 결과 상태 코드 업데이트
+                _loginResult.postValue(response.status)
             } catch (e: Exception) {
                 Log.e(TAG, "서버로 토큰과 이메일 전송 중 오류 발생: ${e.message}")
             }
         }
     }
 
-    // 로그아웃 시 토큰 및 상태 초기화
     fun clearAuthData() {
         encryptedPrefs.edit()
             .remove(TOKEN_KEY)

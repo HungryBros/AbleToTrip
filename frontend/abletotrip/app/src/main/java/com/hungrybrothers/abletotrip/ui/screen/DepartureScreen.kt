@@ -102,10 +102,10 @@ fun DepartureTopBox(
 ) {
     val myendpoint: String = arrivaladdress // 밑에 텍스트칸
     val context = LocalContext.current
-    val keyboardController = LocalSoftwareKeyboardController.current // 키보드 컨트롤
+    val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current // 커서 포인터 컨트롤
-    val places by autocompleteViewModel.places.observeAsState(initial = emptyList()) // 받아온 전체 플레이스
-    var selectedAddress by remember { mutableStateOf<String?>(null) } // 선택한 주소의 상세주소
+    val places by autocompleteViewModel.places.observeAsState(initial = emptyList())
+    var selectedAddress by remember { mutableStateOf<String?>(null) }
 
     val departureAddress =
         produceState<String?>(initialValue = null) {
@@ -113,10 +113,10 @@ fun DepartureTopBox(
             value = address
         }
 
-    val textFieldValue = remember { mutableStateOf(departureAddress.value ?: "") } // 텍스트 필드 초기값 설정
+    val textFieldValue = remember { mutableStateOf(departureAddress.value ?: "") }
 
-    var showPlacesList by remember { mutableStateOf(true) } // 받아온데이터 보여줄지 말지
-    val textState2 = remember { mutableStateOf(TextFieldValue()) } // 밑에 텍스트칸
+    var showPlacesList by remember { mutableStateOf(true) }
+    val textState2 = remember { mutableStateOf(TextFieldValue()) }
 
     // departureAddress가 업데이트 될 때 textFieldValue도 업데이트
     LaunchedEffect(departureAddress.value) {
@@ -149,7 +149,7 @@ fun DepartureTopBox(
                     keyboardController?.hide()
                 },
                 onTargetClick = {
-                    coroutineScope.launch { // 코루틴 스코프 내에서 suspend 함수 호출
+                    coroutineScope.launch {
                         val currentLocation = getCurrentLocationAddress(context, currentLocationViewModel)
                         textFieldValue.value = currentLocation ?: ""
                         keyboardController?.hide()
