@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.cache import cache
 from member.utils import is_logged_in, get_user
-from pprint import pprint
 
 # Import Models and Serializers
 from .models import Restroom
@@ -37,9 +36,7 @@ def navigation(request):
     destination = request.data.get("arrival")
     print(f"{log_time_func()} - Navigation: 출발 / 도착 - {origin} / {destination}")
 
-    ######################## 1) T Map 경로 API Request ########################
     # T map 경로 요청
-
     try:
         departure_lon, departure_lat = coordinate_request_func(origin)
         arrival_lon, arrival_lat = coordinate_request_func(destination)
@@ -53,7 +50,7 @@ def navigation(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # T Map: "출발지 - 도착지" 도보 경로 요청
+        # T Map "출발지 - 도착지" 도보 경로 요청
         pedestrian_route = pedestrian_request_func(
             departure_lon,
             departure_lat,
@@ -96,11 +93,9 @@ def navigation(request):
             pedestrian_detail_route_info,
         )
 
-        print("여기까진 잘 넘어옴~")
-
     except Exception as err:
         print(f"{log_time_func()} - Navigation: 경로 탐색 FAILED")
-        print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
+        print(f"{log_time_func()} - Navigation: EXCEPTION ERROR: {err}")
 
         message = "경로를 받아올 수 없어요.\n출발지와 도착지를 확인해주세요."
 
@@ -109,10 +104,9 @@ def navigation(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    ##################### 2) Google Maps 경로 API Request #####################
+    # Google Maps 경로 API Request
 
     try:
-
         mode = "transit"  # Options : walking, driving, bicycling, transit
         transit_mode = "subway"
 
@@ -121,8 +115,7 @@ def navigation(request):
         # Routes & Steps 데이터
         steps, google_duration = get_steps_func(response_json)
 
-    except Exception as err:
-
+    except:
         pedestrian_response_value["message"] = (
             "대중교통 경로를 받아올 수 없어요.\n도보 경로로 안내합니다."
         )
@@ -132,7 +125,7 @@ def navigation(request):
             status=status.HTTP_200_OK,
         )
 
-    ############################# 도보 경로랑 대중교통경로 1차 비교 #############################
+    # 도보 경로랑 대중교통 경로 1차 비교
 
     if tmap_duration <= 15 or abs(google_duration - tmap_duration) <= 5:
         print(f"{log_time_func()} - Navigation: 1차 비교에서 도보가 더 낫다!")
@@ -141,7 +134,7 @@ def navigation(request):
             status=status.HTTP_200_OK,
         )
 
-    ################################### 지하철 있는지 확인 ###################################
+    # 지하철 있는지 확인
 
     # Step, travel_mode 리스트 Init
     step_list = list()
@@ -150,7 +143,7 @@ def navigation(request):
     # Transit Flags
     is_subway_exist = True  # "SUBWAY" 유무
 
-    # 각 Step 확인
+    # 각 Step 확인 및 저장
     for step in steps:
         travel_mode = step.get("travel_mode")
 
@@ -167,9 +160,8 @@ def navigation(request):
 
                 break
 
-        # "travel_mode"가 버스가 아닌 경우
-        step_list.append(step)  # step을 각각의 원소로 저장
-        step_travel_mode_list.append(travel_mode)  # 각 스텝의 travel_mode를 저장
+        step_list.append(step)
+        step_travel_mode_list.append(travel_mode)
 
     google_route_pedestrian_departure_duration = int(
         steps[0].get("duration").get("text").rstrip("분")
@@ -177,8 +169,6 @@ def navigation(request):
     google_route_pedestrian_arrival_duration = int(
         steps[-1].get("duration").get("text").rstrip("분")
     )
-
-    ############################## 경로에 버스가 있는 경우 ##############################
 
     # 1) "지하철 x" -> 도보 경로 안내
     if not is_subway_exist:
@@ -193,13 +183,9 @@ def navigation(request):
             status=status.HTTP_200_OK,
         )
 
-    ################################ 지하철 경로가 있는 경우 ##################################
-
     # 2) "지하철 o" -> 지하철 경로 안내
     else:
         try:
-            print(f"{log_time_func()} - Navigation: 지하철 경로 탐색")
-
             step_length = len(step_travel_mode_list)
 
             # 지하철 구간 각 polyline 및 경로 상세 정보 추출
@@ -242,24 +228,16 @@ def navigation(request):
                 cached_subway_stops.append(f"{arrival_station_name} {line_number}")
                 subway_stops.append(arrival_station_fullname)
 
-            print(
-                f"{log_time_func()} - Navigation: CACHED STATIONS for REDIS: {cached_subway_stops}"
-            )
-
-            # 유저 이메일 가져오기
             user = get_user(request)
-            print(f"{log_time_func()} - Navigation: REQUEST USER: {user}")
 
             cache.set(user, cached_subway_stops, 3600 * 2)
-            print(f"{log_time_func()} - Navigation: REDIS 저장 SUCCESS")
+            print(
+                f"{log_time_func()} - Navigation: {user} 의 지하철 경로 REDIS 저장 SUCCESS"
+            )
 
             # 엘레베이터 출구 찾기
             departure_station_elevator_exit = find_exit_func(subway_stops[0])
             arrival_station_elevator_exit = find_exit_func(subway_stops[-1])
-
-            print("지하철", subway_stops)
-
-            ################################################ 엘출 없는 경우 ################################################
 
             # 두 출구 하나라도 엘레베이터가 없는 경우 => 도보 경로 안내
             if not (departure_station_elevator_exit and arrival_station_elevator_exit):
@@ -280,22 +258,12 @@ def navigation(request):
                     status=status.HTTP_200_OK,
                 )
 
-            ########################################## 엘출 있는 경우 ##########################################
-
-            print(
-                f"{log_time_func()} - Navigation: DB에서 엘레베이터 출구 탐색 SUCCESS"
-            )
-
             # 두 엘레베이터 출구의 좌표값, tuple: (lon, lat)
             departure_exit_lon, departure_exit_lat = coordinate_request_func(
                 departure_station_elevator_exit
             )
             arrival_exit_lon, arrival_exit_lat = coordinate_request_func(
                 arrival_station_elevator_exit
-            )
-
-            print(
-                f"{log_time_func()} - Navigation: 엘레베이터 출구 카카오 좌표 반환 SUCCESS"
             )
 
             # 지하철 출입구의 Kakao Maps API 결과 없을 때
@@ -321,22 +289,14 @@ def navigation(request):
 
             # Google Maps 경로 API에서 출발, 도착지 좌표 반환
             start_lon, start_lat = get_point_coordinate_func(steps, 1)
-            print(f"{log_time_func()} - Navigation: 출발지 좌표 반환 SUCCESS")
-
             end_lon, end_lat = get_point_coordinate_func(steps, 0)
-            print(f"{log_time_func()} - Navigation: 도착지 좌표 반환 SUCCESS")
 
-            ############################### 여기 안되는 경우 있음 ###############################
-            ####################### 출발 - 서울대입구역앞 / 도착 - 서울암사동유적지 #######################
             # T Map: "출발지 - 승차역 엘레베이터 출구" 도보 경로 요청
             start_pedestrian_route = pedestrian_request_func(
                 start_lon,
                 start_lat,
                 departure_exit_lon,
                 departure_exit_lat,
-            )
-            print(
-                f"{log_time_func()} - Navigation: 출발지 - 승차역 엘베 출구 T Map 도보 경로 요청 SUCCESS"
             )
 
             # T Map: "하차역 엘레베이터 출구 - 도착지" 도보 경로 요청
@@ -345,9 +305,6 @@ def navigation(request):
                 arrival_exit_lat,
                 end_lon,
                 end_lat,
-            )
-            print(
-                f"{log_time_func()} - Navigation: 하차역 엘베 출구 - 도착지 T Map 도보 경로 요청 SUCCESS"
             )
 
             (
@@ -408,8 +365,6 @@ def navigation(request):
                 }
             )
 
-            print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 SUCCESS")
-
             # Calculate ETA
             additional_ETA = get_additional_ETA_func(
                 departure_pedestrian_distance,
@@ -429,7 +384,6 @@ def navigation(request):
                 + additional_ETA
             )
 
-            print(f"{log_time_func()} - Navigation: ETA 계산 SUCCESS")
             print(
                 f"{log_time_func()} - Navigation: Additional / Total ETA (min) - {additional_ETA} / {google_duration}"
             )
@@ -444,15 +398,18 @@ def navigation(request):
                 subway_detail_route_info,
             )
 
+            print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 SUCCESS")
+
             return Response(
                 subway_response_value,
                 status=status.HTTP_200_OK,
             )
 
         except Exception as err:
-            print(f"{log_time_func()} - Navigation: 지하철 경로 탐색 FAILED")
-            print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
-            print(f"{log_time_func()} - Navigation: 도보 경로로 대체 안내")
+            print(
+                f"{log_time_func()} - Navigation: 지하철 경로 탐색 FAILED, 도보 경로로 대체 안내"
+            )
+            print(f"{log_time_func()} - Navigation: EXCEPTION ERROR: {err}")
 
             pedestrian_response_value["message"] = (
                 "지하철을 이용하는 경로가 없어요.\n도보 경로를 안내할게요."
@@ -482,7 +439,7 @@ def restroom(request):
             station_fullname__in=cached_subway_stops
         )
 
-        # 특정 필드만 출력
+        # 특정 필드만 추출
         restrooms = filtered_restrooms.values(
             "station_fullname",
             "is_outside",
@@ -517,5 +474,4 @@ def restroom(request):
         return Response({"restrooms": restrooms})
 
     else:
-        print(f"{log_time_func()} - Restroom: 화장실 탐색 종료")
         return Response({"restrooms": ""})

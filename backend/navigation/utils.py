@@ -7,8 +7,6 @@ import requests
 import joblib
 import time
 import re
-from pprint import pprint
-import json
 
 # Import Models and Serializers
 from .models import Convenient
@@ -35,15 +33,11 @@ def log_time_func():
 # Google Maps 경로 API 요청 함수
 def direction_request_func(origin, destination, mode, transit_mode=None):
     prefix_url = "https://maps.googleapis.com/maps/api/directions/json?"
-    origin_parameter_url = (
-        f"&origin={origin}"  # 좌표로 넣는 법: origin=41.43206,-81.38992
-    )
+    origin_parameter_url = f"&origin={origin}"
     destination_parameter_url = f"&destination={destination}"
     mode_parameter_url = f"&mode={mode}"
     transit_mode_parameter_url = (
-        f"&transit_mode={transit_mode}"
-        if transit_mode != None
-        else ""  # 삼항연산자: 값이 없으면 빈 문자열로
+        f"&transit_mode={transit_mode}" if transit_mode != None else ""
     )
     suffix_url = f"&language=ko&key={GOOGLE_MAPS_API_KEY}"
 
@@ -67,7 +61,6 @@ def get_steps_func(data):
     legs = routes[0].get("legs")
     steps = legs[0].get("steps")
 
-    # x시간 y분으로 나올 때도 생각해야 함
     duration_text = legs[0].get("duration").get("text")
     if " " in duration_text:
         hour_text, minute_text = duration_text.split()
@@ -104,7 +97,6 @@ def find_exit_func(station_name):
         info_serializer = ConvenientSerializer(station_info)
         info = info_serializer.data.get("elevator_location")
 
-        # 엘리베이터가 없는 경우 => 컷
         if not info.strip() or info[0] != "승":
             return None
 
@@ -155,8 +147,7 @@ def coordinate_request_func(keyword):
             keyword = keyword.replace("대한민국 서울", "서울", 1)
 
         api = Local(service_key=KAKAO_MAPS_API_KEY)
-        # result = api.search_address(keyword, dataframe=False)
-        result = api.search_keyword(keyword, dataframe=False)
+        result = api.search_address(keyword, dataframe=False)
         result_documents = result.get("documents")
 
         if len(result_documents):
@@ -173,6 +164,7 @@ def coordinate_request_func(keyword):
 
             # 주소로 검색에 실패하는 경우, 키워드로 검색하게 함
             return search_keyword_func(keyword)
+
     except Exception as err:
         print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 반환 FAILED")
         print(f"{log_time_func()} - Navigation: EXCEPT ERROR: {err}")
@@ -186,10 +178,10 @@ def pedestrian_request_func(start_lon, start_lat, end_lon, end_lat):
 
     route_params = {
         "version": 1,
-        "startX": start_lon,  # 출발지 경도(lon)
-        "startY": start_lat,  # 출발지 위도(lat)
-        "endX": end_lon,  # 목적지 경도(lon)
-        "endY": end_lat,  # 목적지 위도(lat)
+        "startX": start_lon,
+        "startY": start_lat,
+        "endX": end_lon,
+        "endY": end_lat,
         "startName": "%EC%B6%9C%EB%B0%9C",
         "endName": "%EB%8F%84%EC%B0%A9",
     }
@@ -230,7 +222,7 @@ def get_tmap_info_func(data):
 
         # type: Point/LineString
         if geometry.get("type") == "LineString":
-            coordinates = geometry.get("coordinates")  # 1/2차원 좌표 리스트
+            coordinates = geometry.get("coordinates")
             properties = feature.get("properties")
             distance_meters += properties.get("distance")
             duration_seconds += properties.get("time")
@@ -272,8 +264,8 @@ def get_additional_ETA_func(
 
     eta_model_input_data = {
         "distance_to_station": [departure_pedestrian_distance],
-        "distance_from_station": [departure_pedestrian_duration // 7 * 4],
-        "duration_to_station": [arrival_pedestrian_distance],  # 하차역 - 도착지 거리(m)
+        "duration_to_station": [departure_pedestrian_duration // 7 * 4],
+        "distance_from_station": [arrival_pedestrian_distance],
         "duration_from_station": [arrival_pedestrian_duration // 7 * 4],
         "transfer_count": [len(subway_stops) - 1],
     }
