@@ -117,13 +117,10 @@ def find_exit_func(station_name):
         return None
 
 
-# Kakao Maps 좌표반환 API 요청 함수(키워드)
-def search_keyword_func(keyword):
-    if keyword.startswith("대한민국 서울"):
-        keyword = keyword.replace("대한민국 서울", "서울", 1)
-
+# Kakao Maps 좌표반환 API 요청 함수(주소)
+def search_address_func(keyword):
     api = Local(service_key=KAKAO_MAPS_API_KEY)
-    result = api.search_keyword(keyword, dataframe=False)
+    result = api.search_address(keyword, dataframe=False)
     result_documents = result.get("documents")
 
     if len(result_documents):
@@ -140,14 +137,14 @@ def search_keyword_func(keyword):
         return (0, 0)
 
 
-# Kakao Maps 좌표반환 API 요청 함수(주소)
+# Kakao Maps 좌표반환 API 요청 함수(키워드)
 def coordinate_request_func(keyword):
     try:
         if keyword.startswith("대한민국 서울"):
             keyword = keyword.replace("대한민국 서울", "서울", 1)
 
         api = Local(service_key=KAKAO_MAPS_API_KEY)
-        result = api.search_address(keyword, dataframe=False)
+        result = api.search_keyword(keyword, dataframe=False)
         result_documents = result.get("documents")
 
         if len(result_documents):
@@ -159,11 +156,11 @@ def coordinate_request_func(keyword):
 
         else:
             print(
-                f"{log_time_func()} - Navigation: {keyword}의 카카오 지도 주소로 검색 실패, 키워드로 검색 START"
+                f"{log_time_func()} - Navigation: {keyword}의 카카오 지도 키워드로 검색 실패, 주소로 검색 START"
             )
 
-            # 주소로 검색에 실패하는 경우, 키워드로 검색하게 함
-            return search_keyword_func(keyword)
+            # 키워드 검색에 실패하는 경우, 주소로 검색하게 함
+            return search_address_func(keyword)
 
     except Exception as err:
         print(f"{log_time_func()} - Navigation: 카카오 지도 좌표 반환 FAILED")
