@@ -154,11 +154,9 @@ fun DisplaySearchResultScreen(
                 }
                 val bounds = boundsBuilder.build()
 
-                // Calculate padding for the bounds, 100 pixels in this case
                 val padding = 150
                 val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, padding)
 
-                // Move the camera to the calculated bounds
                 cameraPositionState.move(cameraUpdate)
             }
         }
@@ -174,14 +172,6 @@ fun DisplaySearchResultScreen(
                 items(searchResultData!!.attractions!!) { attraction ->
                     SearchResultItem(attraction, navController)
                 }
-//                item {
-//                    if (viewModel.isLoading) {
-//                        CircularProgressIndicator(
-//                            color = CustomPrimary,
-//                            modifier = Modifier.align(Alignment.CenterHorizontally),
-//                        )
-//                    }
-//                }
             }
         }
     } else {
@@ -239,7 +229,6 @@ fun SearchResultItem(
             Column(
                 modifier = Modifier.weight(1f),
             ) {
-                // 텍스트를 나란히 표시하기 위해 Row 사용
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),

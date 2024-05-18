@@ -73,19 +73,13 @@ class NavigationViewModel : ViewModel() {
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                println("viewmodel check : $departure")
-                println("viewmodel check : $arrival")
                 val requestBody =
                     buildJsonObject {
                         put("departure", departure ?: "")
                         put("arrival", arrival ?: "")
-//                        put("departure", "멀티캠퍼스 역삼")
-//                        put("arrival", "도곡근린공원")
                     }
-                println("viewmodel check : $requestBody")
                 val response: HttpResponse =
                     client.post("http://k10a607.p.ssafy.io:8087/navigation/search-direction/") {
-//                    client.post("http://10.0.2.2:8000/navigation/search-direction/") {
                         contentType(ContentType.Application.Json)
                         setBody(requestBody)
                     }
@@ -94,7 +88,7 @@ class NavigationViewModel : ViewModel() {
                     val data = Json { ignoreUnknownKeys = true }.decodeFromString<NavigationData>(responseBody)
                     _navigationData.postValue(Resource.success(data))
 
-                    println("viewmodel check responseBody : $responseBody")
+                    println("navigationData check : $responseBody")
 
                     _departureData.postValue(
                         Resource.success(
@@ -116,23 +110,21 @@ class NavigationViewModel : ViewModel() {
                             } ?: error("No polyline info available"),
                         ),
                     )
-                    _duration.postValue(data.duration) // duration 업데이트
-                    _detailRouteInfo.postValue(data.detail_route_info) // detail_route_info 업데이트
+                    _duration.postValue(data.duration)
+                    _detailRouteInfo.postValue(data.detail_route_info)
                     _messageInfo.postValue(data.message)
 
                     val polylineData =
                         data.polyline_info.flatMap { polylineInfo ->
                             polylineInfo.info.map { info ->
                                 async {
-                                    // 노선 타입에 따라 색상을 결정합니다.
                                     val color =
                                         when (polylineInfo.type) {
-                                            // 지하철 노선에 따른 색상 적용
                                             "subway" -> {
                                                 val line = info.line ?: ""
                                                 subwayColor[line] ?: Color.Red
                                             }
-                                            else -> Color.Green // 기타 경로는 초록색 적용
+                                            else -> Color.Green
                                         }
 
                                     val points =
@@ -145,10 +137,10 @@ class NavigationViewModel : ViewModel() {
                                     PolylineData(points, color)
                                 }
                             }
-                        }.awaitAll().filterNot { it.points.isEmpty() } // 비어 있는 points를 제외합니다.
+                        }.awaitAll().filterNot { it.points.isEmpty() }
                     val walkoneData =
                         data.polyline_info
-                            .firstOrNull { it.type == "walk" } // 첫 번째 walk만 가져옴
+                            .firstOrNull { it.type == "walk" }
                             ?.info
                             ?.map { info ->
                                 LatLng(info.latitude ?: 37.501286, info.longitude ?: 127.0396029)
@@ -156,7 +148,7 @@ class NavigationViewModel : ViewModel() {
                             ?: emptyList()
                     val walktwoData =
                         data.polyline_info
-                            .lastOrNull { it.type == "walk" } // 마지막 번째 walk만 가져옴
+                            .lastOrNull { it.type == "walk" }
                             ?.info
                             ?.map { info ->
                                 LatLng(info.latitude ?: 37.501286, info.longitude ?: 127.0396029)
@@ -166,20 +158,16 @@ class NavigationViewModel : ViewModel() {
                         walkDataList1.postValue(PolylineData(walkoneData, Color.Blue))
                         walkDataList2.postValue(PolylineData(walktwoData, Color.Blue))
                         polylineDataList.postValue(polylineData)
-                        println("data check check : one $walkoneData")
-                        println("data check check : one $walktwoData")
                     }
                 } else {
                     val responseBody = response.bodyAsText()
-                    println("Response error body: $responseBody") // 실패 응답 본문을 로그로 출력
 
                     // JSON 응답 파싱
                     val errorData = Json { ignoreUnknownKeys = true }.decodeFromString<ErrorData>(responseBody)
-                    println("Error message from server: ${errorData.message}") // 서버로부터의 에러 메시지 출력
+                    println("Error message from server: ${errorData.message}")
 
                     _errorMessageInfo.postValue(errorData.message)
 
-//                    isErrorOccurred = true // 오류가 발생했음을 표시
                     _navigationData.postValue(
                         Resource.error(
                             "Failed to load data: HTTP ${response.status.value}",
@@ -222,10 +210,7 @@ data class Resource<out T>(val status: Status, val data: T?, val message: String
 data class NavigationData(
     val message: String,
     val duration: Int,
-//    val is_bus_exist: Boolean,
     val is_subway_exist: Boolean,
-//    val is_pedestrian_route: Boolean,
-//    val is_pedestrian_route: Boolean,
     val polyline_info: List<PolylineInfo>,
     val detail_route_info: List<DetailRouteInfo>,
 )
@@ -266,68 +251,22 @@ data class ErrorData(
     val message: String,
 )
 
-// suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
-//    val client =
-//        HttpClient(CIO) {
-//            install(ContentNegotiation) {
-//                json(
-//                    Json {
-//                        // JSON 설정: 예를 들어, 직렬화 기능을 커스터마이즈할 수 있습니다.
-//                        prettyPrint = true
-//                        isLenient = true
-//                    },
-//                )
-//            }
-//            install(Logging) {
-//                logger = Logger.DEFAULT
-//                level = LogLevel.BODY
-//            }
-//        }
-//
-//    println("Received data: $incodedpolyline")
-//    val requestBody =
-//        buildJsonObject {
-//            put("input", incodedpolyline)
-//            put("type", "decode")
-//        }
-//    println("Received data: aaaa  $requestBody")
-//    val response: HttpResponse =
-//        client.post("https://apihut.in/api/polyline") {
-//            setBody(requestBody)
-//            headers {
-//                append("X-Avatar-Key", "bd92b6bd-fbcc-4dfd-a68d-d225d2c7f8c3")
-//                append(HttpHeaders.ContentType, "application/json")
-//                append(HttpHeaders.Accept, "application/json")
-//            }
-//        }
-//    println("Received data: $response")
-//    val responseBody = response.bodyAsText()
-//    val data = Json { ignoreUnknownKeys = true }.decodeFromString<PolylineResponse>(responseBody)
-//    return data
-// }
-
 suspend fun fetchPolylineData(incodedpolyline: String?): PolylineResponse {
     try {
-        println("Received data: $incodedpolyline")
         val requestBody =
             buildJsonObject {
                 put("input", incodedpolyline)
             }
-        println("Sending data: $requestBody")
         val response =
-//            client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
-//            client.post("http://10.0.2.2:8000/navigation/polyline/") {
             client.post("http://k10a607.p.ssafy.io:8087/navigation/polyline/") {
                 contentType(ContentType.Application.Json)
                 setBody(requestBody)
             }
         val responseBody = response.bodyAsText()
         val data = Json { ignoreUnknownKeys = true }.decodeFromString<PolylineResponse>(responseBody)
-        println("Received response body: $responseBody")
         return data
     } catch (e: Exception) {
-        println("Error in fetchPolylineData: ${e.message}")
-        throw e // 또는 적절한 에러 처리를 할 수 있도록 변경
+        throw e
     }
 }
 

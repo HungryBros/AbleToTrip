@@ -20,12 +20,10 @@ import com.hungrybrothers.abletotrip.ui.screen.OnboardingScreen
 import com.hungrybrothers.abletotrip.ui.screen.SearchScreen
 import com.hungrybrothers.abletotrip.ui.screen.ShowMoreScreen
 import com.hungrybrothers.abletotrip.ui.screen.SplashScreen
-import com.hungrybrothers.abletotrip.ui.screen.TestNavFile
 import com.hungrybrothers.abletotrip.ui.screen.TotalRouteScreen
 import com.hungrybrothers.abletotrip.ui.viewmodel.CurrentLocationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.NavigationViewModel
 import com.hungrybrothers.abletotrip.ui.viewmodel.PlaceCompleteViewModel
-import com.kakao.sdk.common.KakaoSdk.type
 
 enum class NavRoute(val routeName: String, val description: String) {
     SPLASH("SPLASH", "스플래시화면"),
@@ -38,7 +36,6 @@ enum class NavRoute(val routeName: String, val description: String) {
     DEPARTURE("DEPARTURE", "출발화면"),
     TOTAL_ROUTE("TOTAL_ROUTE", "전체경로화면"),
     GUIDE("GUIDE", "길안내화면"),
-    TESTNAV("TESTNAV", "네브테스트"),
     SHOWMORE("SHOWMORE", "더보기"),
 }
 
@@ -128,6 +125,5 @@ fun NavGraphBuilder.home(
         composable(
             NavRoute.GUIDE.routeName,
         ) { GuideScreen(navController, navigationViewModel, currentLocationViewModel) }
-        composable(NavRoute.TESTNAV.routeName) { TestNavFile(navController) }
     }
 }

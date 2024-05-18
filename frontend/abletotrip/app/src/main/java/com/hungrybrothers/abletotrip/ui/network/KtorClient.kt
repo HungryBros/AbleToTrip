@@ -1,6 +1,5 @@
 package com.hungrybrothers.abletotrip.ui.network
 
-import android.util.Log
 import com.hungrybrothers.abletotrip.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -43,7 +42,6 @@ object KtorClient {
                 if (authToken != null) {
                     header(HttpHeaders.Authorization, "Bearer $authToken")
                 }
-                Log.d("Kakao헤더확인", "Bearer $authToken")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 url.takeFrom(BASE_URL + url.encodedPath)
             }
