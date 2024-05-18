@@ -46,7 +46,7 @@ fun OnboardingScreen(navController: NavController) {
             inactiveColor = Color.Gray,
         )
         HorizontalPager(
-            count = 4, // 페이지 수를 여기서 지정
+            count = 4,
             state = pagerState,
             modifier = Modifier.weight(1f),
         ) { page ->
@@ -145,7 +145,7 @@ fun OnboardingContent(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(), // 텍스트를 가운데 정렬하기 위해 전체 너비 사용
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(32.dp))
             Image(

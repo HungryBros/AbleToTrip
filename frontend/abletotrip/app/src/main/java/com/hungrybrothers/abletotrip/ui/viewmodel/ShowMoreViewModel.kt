@@ -1,6 +1,5 @@
 package com.hungrybrothers.abletotrip.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hungrybrothers.abletotrip.ui.datatype.Catalog2Attractions
@@ -16,7 +15,7 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
 
     private var currentPage = 1
     private var lastPageReached = false
-    private var isLoading = false // 데이터 로드 중인지 상태 추가
+    private var isLoading = false
 
     fun loadInitialData(
         latitude: String,
@@ -33,7 +32,7 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
         longitude: String,
         category: String,
     ) {
-        if (lastPageReached || isLoading) return // 로드 중이거나 마지막 페이지에 도달한 경우 더 이상 로드하지 않음
+        if (lastPageReached || isLoading) return
         fetchData(latitude, longitude, category, currentPage)
     }
 
@@ -47,8 +46,6 @@ class ShowMoreViewModel(private val repository: ShowMoreInfoRepository) : ViewMo
         viewModelScope.launch(Dispatchers.IO) {
             isLoading = true
             val result = repository.fetchShowMoreInfoData(latitude, longitude, category, page)
-            Log.d("ShowMoreViewModel", "page = $page")
-            Log.d("ShowMoreViewModel", "result = $result")
             isLoading = false
             if (result != null) {
                 if (reset) {

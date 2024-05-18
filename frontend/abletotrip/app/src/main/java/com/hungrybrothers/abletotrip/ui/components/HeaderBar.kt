@@ -51,15 +51,7 @@ fun HeaderBar(
                     )
                 }
             }
-            println("searchDontClick $searchClick")
             IconButton(
-//                onClick = {
-//                    if (searchClick) {
-//                        println("searchDontClick $showBackButton")
-//                        navController.navigate(NavRoute.HOME.routeName)
-//                    }
-//
-//                },
                 onClick = {
                     if (searchClick) {
                         navController.navigate(NavRoute.HOME.routeName) {

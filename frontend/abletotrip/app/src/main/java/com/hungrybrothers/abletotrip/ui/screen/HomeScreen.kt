@@ -132,10 +132,8 @@ fun HomeScreen(
             contract = ActivityResultContracts.RequestPermission(),
             onResult = { isGranted: Boolean ->
                 if (isGranted) {
-                    Log.d("HomeScreen", "Location permission granted.")
                     startLocationUpdates(context, currentLocationViewModel)
                 } else {
-                    Log.d("HomeScreen", "Location permission denied.")
                     Toast.makeText(context, "위치 권한이 거부되었습니다.", Toast.LENGTH_LONG).show()
                     currentLocationViewModel.setLocation(null, null)
                 }
@@ -145,11 +143,9 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         when (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
             PackageManager.PERMISSION_GRANTED -> {
-                Log.d("HomeScreen", "Location permission already granted.")
                 startLocationUpdates(context, currentLocationViewModel)
             }
             else -> {
-                Log.d("HomeScreen", "Requesting location permission.")
                 locationPermissionRequest.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
@@ -165,10 +161,8 @@ fun HomeScreen(
                             android.Manifest.permission.ACCESS_FINE_LOCATION,
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
-                        Log.d("HomeScreen", "Location permission granted on resume.")
                         startLocationUpdates(context, currentLocationViewModel)
                     } else {
-                        Log.d("HomeScreen", "Location permission denied on resume.")
                     }
                 }
             }
@@ -260,7 +254,6 @@ fun HomeScreen(
         FloatingActionMenu(
             navController = navController,
             kakaoAuthViewModel = kakaoAuthViewModel,
-            currentLocationViewModel = currentLocationViewModel,
             modifier =
                 Modifier
                     .align(Alignment.BottomEnd)
@@ -273,7 +266,6 @@ fun HomeScreen(
 fun FloatingActionMenu(
     navController: NavController,
     kakaoAuthViewModel: KakaoAuthViewModel,
-    currentLocationViewModel: CurrentLocationViewModel,
     modifier: Modifier = Modifier,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -345,9 +337,9 @@ fun GohomeActionButton(navController: NavController) {
             scope.launch {
                 val userData = userInfoRepository.fetchUserInfoData()
                 if (userData != null) {
-                    val arrivalLatitude = userData.latitude ?: 37.5665 // 사용자 데이터 혹은 기본값
-                    val arrivalLongitude = userData.longitude ?: 126.9780 // 사용자 데이터 혹은 기본값
-                    val arrivalAddress = userData.address ?: "서울특별시 중구 태평로1가 31" // 사용자 데이터 혹은 기본값
+                    val arrivalLatitude = userData.latitude ?: 37.5665
+                    val arrivalLongitude = userData.longitude ?: 126.9780
+                    val arrivalAddress = userData.address ?: "서울특별시 중구 태평로1가 31"
 
                     if (arrivalAddress.isNotEmpty() && userData.latitude != null && userData.longitude != null) {
                         navController.navigate(
@@ -795,7 +787,6 @@ fun startLocationUpdates(
                 locationResult.locations.lastOrNull()?.let { location ->
                     val latitude = location.latitude.toString()
                     val longitude = location.longitude.toString()
-                    Log.d("LocationUpdates", "Updated Latitude: $latitude, Longitude: $longitude")
                     currentLocationViewModel.setLocation(latitude, longitude)
                 }
             }
@@ -806,7 +797,6 @@ fun startLocationUpdates(
         location?.let {
             val latitude = it.latitude.toString()
             val longitude = it.longitude.toString()
-            Log.d("LocationUpdates", "Initial Latitude: $latitude, Longitude: $longitude")
             currentLocationViewModel.setLocation(latitude, longitude)
         } ?: run {
             // 만약 마지막 위치를 가져오지 못하면, 위치 업데이트 요청을 시작합니다.
