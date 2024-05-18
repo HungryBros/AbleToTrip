@@ -83,20 +83,15 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    // 카카오 로그인
-    implementation("com.kakao.sdk:v2-user:2.20.1") // 카카오 로그인 API 모듈
-    // security저장소
+    implementation("com.kakao.sdk:v2-user:2.20.1")
+
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-    // 네비게이션
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    // 구글 지도 라이브러리
     implementation("com.google.maps.android:maps-compose:2.7.2")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
-//    implementation("com.google.maps.android:maps-compose-utils:4.3.5")
-//    implementation("com.google.maps.android:maps-compose-widgets:4.3.5")
-    //    아이콘아티팩트 추가
+
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("io.ktor:ktor-client-core:$ktor_version")
@@ -109,27 +104,21 @@ dependencies {
 
     implementation("io.ktor:ktor-client-serialization:2.3.10")
 
-    // LiveData
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
-    // Lifecycles only (without ViewModel or LiveData)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
-    // Lifecycle utilities for Compose
     implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version")
-    // Saved state module for ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
     implementation("androidx.compose.runtime:runtime:1.6.6")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.6")
     implementation("androidx.compose.runtime:runtime-rxjava2:1.6.6")
-    // 구글 autocomplete
+
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.9.23"))
     implementation("com.google.android.libraries.places:places:3.3.0")
-    // 레이아웃, 그리기, 입력등 기기와 상호작용할때 필요한 compose UI의 기본적인 구성요소
+
     implementation("androidx.compose.ui:ui:1.6.6")
-    // 이미지 로드를 위해 라이브러리
+
     implementation("io.coil-kt:coil-compose:2.6.0")
-    // 데이터 저장을 위해
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-    // 온보딩 페이지
     implementation("com.google.accompanist:accompanist-pager:0.24.13-rc")
     implementation("com.google.accompanist:accompanist-pager-indicators:0.24.13-rc")
 }
@@ -138,6 +127,6 @@ secrets {
     propertiesFileName = "secrets.properties"
     defaultPropertiesFileName = "local.defaults.properties"
 
-    ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
-    ignoreList.add("sdk.*") // Ignore all keys matching the regexp "sdk.*"
+    ignoreList.add("keyToIgnore")
+    ignoreList.add("sdk.*")
 }

@@ -69,7 +69,6 @@ fun DetailScreen(
         if (itemId != null) {
             attractionDetailViewModel.fetchAttractionDetailData(itemId)
         } else {
-            Log.e("DetailScreen", "Invalid item ID: $itemId")
         }
     }
 
@@ -88,7 +87,7 @@ fun DetailScreen(
 
         if (attractionDetail == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = CustomPrimary) // 데이터 로딩 중 표시
+                CircularProgressIndicator(color = CustomPrimary)
             }
         } else {
             Column(
@@ -174,7 +173,6 @@ fun RouteButton(
     Button(
         onClick = {
             navController.navigate("DEPARTURE/${latitude.toFloat()}/${longitude.toFloat()}/$lotNumberAddress")
-            Log.d("DetailRouteBotton", "DetailRouteBotton = $lotNumberAddress")
         },
         modifier =
             modifier
@@ -224,7 +222,6 @@ fun InfoLinkRow(
             if (!text.isNullOrEmpty()) {
                 var link = "$schemePrefix$text"
 
-                // Ensure link starts with http:// or https://
                 if (!link.startsWith("http://") && !link.startsWith("https://") && schemePrefix == "http://") {
                     link = "http://$text"
                 }
@@ -341,29 +338,4 @@ fun FacilityItem(
             color = Color.Black,
         )
     }
-}
-
-@Composable
-fun DrawXMark() {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        drawXMark(this)
-    }
-}
-
-private fun drawXMark(scope: DrawScope) {
-    val size = scope.size.minDimension
-    val strokeWidth = size / 8
-    val path =
-        Path().apply {
-            moveTo(0f, 0f)
-            lineTo(size, size)
-            moveTo(size, 0f)
-            lineTo(0f, size)
-        }
-
-    scope.drawPath(
-        path = path,
-        color = Color.Gray,
-        style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidth),
-    )
 }

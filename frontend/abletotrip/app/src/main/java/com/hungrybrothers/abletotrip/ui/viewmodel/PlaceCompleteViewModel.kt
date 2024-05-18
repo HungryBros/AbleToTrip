@@ -20,7 +20,6 @@ class PlaceCompleteViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun queryPlaces(query: String) {
-        Log.d("Place: newQueryString", "newQuery $query")
         val apiKey = BuildConfig.PLACES_API_KEY
         if (apiKey.isEmpty() || apiKey == "DEFAULT_API_KEY") {
             Log.e("Place: Error ", "No api key")
@@ -39,15 +38,12 @@ class PlaceCompleteViewModel(application: Application) : AndroidViewModel(applic
         placesClient.findAutocompletePredictions(request).addOnSuccessListener { response ->
             val placesList =
                 response.autocompletePredictions.map { prediction ->
-                    // 각 prediction 정보에서 ID와 이름을 추출하여 Place 객체 생성
                     Place.builder()
                         .setId(prediction.placeId)
                         .setName(prediction.getPrimaryText(null).toString())
                         .setAddress(prediction.getSecondaryText(null).toString())
                         .build()
                 }
-            Log.d("Places: PlaceModelView : placeList", "Predictions received: $placesList")
-            Log.d("Places: PlaceModelView : placeList갯수", "Predictions received갯수: ${placesList.count()}")
             _places.postValue(placesList)
         }.addOnFailureListener { exception ->
             Log.e("Places: PlaceModelView Error", "Error fetching predictions", exception)

@@ -76,8 +76,8 @@ fun SearchBar(
                     focusedContainerColor = Color.LightGray,
                     unfocusedContainerColor = Color.White,
                     cursorColor = MaterialTheme.colorScheme.onSurface,
-                    focusedIndicatorColor = Color.White, // 포커스 상태에서 밑줄 제거
-                    unfocusedIndicatorColor = Color.Gray, // 비포커스 상태에서
+                    focusedIndicatorColor = Color.White,
+                    unfocusedIndicatorColor = Color.Gray,
                 ),
             shape = RoundedCornerShape(12.dp),
         )

@@ -1,8 +1,6 @@
 package com.hungrybrothers.abletotrip.ui.screen
 
 import android.widget.Toast
-import android.window.SplashScreen
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -27,42 +25,6 @@ import com.hungrybrothers.abletotrip.data.preferences.PreferencesManager
 import com.hungrybrothers.abletotrip.ui.navigation.NavRoute
 import com.hungrybrothers.abletotrip.ui.theme.CustomPrimary
 import kotlinx.coroutines.delay
-
-// private const val SPTIME: Long = 3000
-
-// @Composable
-// fun SplashScreen(navController: NavController) {
-//    val context = LocalContext.current
-//    val viewModel: KakaoAuthViewModel = viewModel()
-//    val loggedIn by viewModel.loggedIn.observeAsState()
-//    val loginResult by viewModel.loginResult.observeAsState()
-//
-//    LaunchedEffect(loggedIn, loginResult) {
-//        delay(SPTIME)
-//        when {
-//            loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.OK -> {
-//                navController.navigate(NavRoute.HOME.routeName) {
-//                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
-//                }
-//                Toast.makeText(context, "로그인 성공! 환영합니다.", Toast.LENGTH_SHORT).show()
-//            }
-//            loggedIn == true && loginResult == io.ktor.http.HttpStatusCode.Accepted -> {
-//                navController.navigate(NavRoute.ADDRESS.routeName) {
-//                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
-//                }
-//                Toast.makeText(context, "주소를 입력해 주세요.", Toast.LENGTH_SHORT).show()
-//            }
-//            else -> {
-//                navController.navigate(NavRoute.LOGIN.routeName) {
-//                    popUpTo(NavRoute.SPLASH.routeName) { inclusive = true }
-//                }
-//                Toast.makeText(context, "로그인이 필요합니다.", Toast.LENGTH_LONG).show()
-//            }
-//        }
-//    }
-//
-//    Splash()
-// }
 
 private const val SPTIME: Long = 3000
 

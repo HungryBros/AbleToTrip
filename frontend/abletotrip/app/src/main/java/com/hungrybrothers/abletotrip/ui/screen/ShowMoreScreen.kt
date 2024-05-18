@@ -109,7 +109,7 @@ fun ShowMoreScreen(
             placeholder = "검색어를 입력해주세요.",
             onClear = {
                 searchText = ""
-                keyboardController?.hide() // 키보드를 숨깁니다.
+                keyboardController?.hide()
             },
         )
         Text(
@@ -161,18 +161,6 @@ fun DisplayMoreAttractionsScreen(
                 MoreAttractionItem(attraction, navController)
             }
         }
-
-//        item {
-//            Box(
-//                modifier =
-//                    Modifier
-//                        .fillMaxWidth()
-//                        .padding(8.dp),
-//                contentAlignment = Alignment.Center,
-//            ) {
-//                CircularProgressIndicator(color = CustomPrimary)
-//            }
-//        }
     }
 
     LaunchedEffect(listState) {
@@ -221,7 +209,6 @@ fun MoreAttractionItem(
             Column(
                 modifier = Modifier.weight(1f).padding(),
             ) {
-                // 텍스트를 나란히 표시하기 위해 Row 사용
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),

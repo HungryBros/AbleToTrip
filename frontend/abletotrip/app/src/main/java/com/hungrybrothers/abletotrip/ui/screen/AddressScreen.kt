@@ -97,8 +97,6 @@ suspend fun postAddress(
     lng: Double,
 ): Boolean {
     return withContext(Dispatchers.IO) {
-        Log.d("Places: button post", "POST 요청 시작: $address") // 요청 시작 로그
-        Log.d("placesss = ", "address = $address , lat = $lat,lng = $lng")
         try {
             KtorClient.client.post("member/info/") {
                 contentType(ContentType.Application.Json)
@@ -161,17 +159,10 @@ fun AddressScreen(
                         selectedPlaceId = null
                         selectedAddress = null
                         showPlacesList = false
-                        keyboardController?.hide() // 키보드를 숨깁니다.
+                        keyboardController?.hide()
                     },
                 )
                 if (showPlacesList) {
-//                    PlacesList(places = places) { Place ->
-//                        selectedPlaceId = Place.id
-//                        selectedAddress = Place.address
-//                        textFieldValue = Place.name
-//                        showPlacesList = false
-//                        keyboardController?.hide() // 주소 선택시 키보드 숨기기
-//                    }
                     PlacesList(places = places) { place, isValid ->
                         if (isValid) {
                             selectedPlaceId = place.id
@@ -187,7 +178,6 @@ fun AddressScreen(
                     }
                 }
 
-                Log.d("Places : AddressScreen", "places = ${autocompleteViewModel.places.value}")
             }
             Spacer(Modifier.weight(1f))
             CompleteButton(navController, nameInput = textFieldValue, addressInput = selectedAddress, selectedPlaceId)
@@ -244,7 +234,6 @@ fun CompleteButton(
 @Preview(showBackground = true)
 @Composable
 fun PreviewAddressScreen() {
-    // rememberNavController를 사용하여 Preview에서 NavController를 제공합니다.
     AddressScreen(
         navController = rememberNavController(),
         autocompleteViewModel =
