@@ -80,7 +80,7 @@
 - **IDE** : `Visual Studio Code` `Android Studio Jellyfish`
 - **FE** : `Kotlin 1.9.0` `Ktor 2.3.10` `lifecycle 2.7.0`
 - **BE** : `Python 3.12` `Django 5.0.4`
-- **AI** : `Python 3.12` `xgboost 2.0.3` `Pandas 2.2.2`
+- **AI** : `Python 3.12` `Scikit-learn 1.4.2` `xgboost 2.0.3` `Pandas 2.2.2`
 - **INFRA** : `Ubuntu 22.04.4 LTS` `Docker 26.1.0` `jenkins 2.440.3` `Redis 5.0.4` `PostgreSQL 16.2`
 
 ## 기술 스택
