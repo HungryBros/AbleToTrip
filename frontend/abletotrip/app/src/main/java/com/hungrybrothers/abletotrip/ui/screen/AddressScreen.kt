@@ -45,10 +45,12 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -61,7 +63,7 @@ import kotlinx.serialization.json.Json
 
 suspend fun fetchPlaceDetails(
     placeId: String,
-    apiKey: String,
+    apiKey: String = BuildConfig.google_api_key,
 ): PlaceLocation? {
     return withContext(Dispatchers.IO) {
         val client =
@@ -82,7 +84,10 @@ suspend fun fetchPlaceDetails(
                 parameter("place_id", placeId)
                 parameter("fields", "geometry/location")
                 parameter("key", apiKey)
+                header("X-Android-Package", BuildConfig.APPLICATION_ID)
+                header("X-Android-Cert", BuildConfig.SHA1_CERTIFICATE)
             }
+        println("response check : ${response.bodyAsText()}")
         if (response.status == HttpStatusCode.OK) {
             response.body<PlaceDetailsResponse>().result.geometry.location
         } else {
@@ -177,7 +182,6 @@ fun AddressScreen(
                         }
                     }
                 }
-
             }
             Spacer(Modifier.weight(1f))
             CompleteButton(navController, nameInput = textFieldValue, addressInput = selectedAddress, selectedPlaceId)
@@ -204,10 +208,11 @@ fun CompleteButton(
         onClick = {
             if (addressInput != null && selectedPlaceId != null) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    val apiKey = BuildConfig.PLACES_API_KEY
+                    val apiKey = BuildConfig.google_api_key
                     val placeDetails = fetchPlaceDetails(selectedPlaceId, apiKey)
                     if (placeDetails != null) {
                         val isSuccess = postAddress("$addressInput $nameInput", placeDetails.lat, placeDetails.lng)
+                        Log.d("isSuccess", "$isSuccess, $addressInput, $nameInput")
                         if (isSuccess) {
                             navController.navigate(NavRoute.HOME.routeName)
                         }
