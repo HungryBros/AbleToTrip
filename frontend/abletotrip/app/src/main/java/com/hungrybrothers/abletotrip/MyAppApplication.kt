@@ -22,7 +22,7 @@ class MyAppApplication : Application() {
     }
 
     private fun initializePlacesAPI() {
-        val apiKey = BuildConfig.PLACES_API_KEY
+        val apiKey = BuildConfig.google_api_key
         if (apiKey.isEmpty() || apiKey == "DEFAULT_API_KEY") {
             Log.e("장소", "No API key")
             return

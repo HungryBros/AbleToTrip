@@ -20,12 +20,10 @@ class PlaceCompleteViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun queryPlaces(query: String) {
-        val apiKey = BuildConfig.PLACES_API_KEY
+        val apiKey = BuildConfig.google_api_key
         if (apiKey.isEmpty() || apiKey == "DEFAULT_API_KEY") {
-            Log.e("Place: Error ", "No api key")
             return
         }
-        Log.d("Place: api", "api로드 성공")
 
         val token = AutocompleteSessionToken.newInstance()
         val request =
