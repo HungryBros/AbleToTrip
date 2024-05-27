@@ -189,7 +189,7 @@ fun AddressScreen(
     }
 }
 
-// 완료버튼
+// 주소 완료 버튼
 @Composable
 fun CompleteButton(
     navController: NavController,
