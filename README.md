@@ -32,9 +32,9 @@
             <a href="https://github.com/dforce103">송찬의</a>
         </td>
         <td align="center" width="16%">
-            <a href="https://github.com/hello1334"><img width="75%" src="https://github.com/hello1334.png"/></a>
+            <a href="https://github.com/jeongeonhwi"><img width="75%" src="https://github.com/jeongeonhwi.png"/></a>
             <br />
-            <a href="https://github.com/hello1334">전건휘</a>
+            <a href="https://github.com/jeongeonhwi">전건휘</a>
         </td>
         <td align="center" width="16%">
             <a href="https://github.com/sgryu23"><img width="75%" src="https://github.com/sgryu23.png"/></a>
